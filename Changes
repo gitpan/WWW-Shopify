@@ -1,0 +1,6 @@
+Revision history for Perl extension WWW::Shopify.
+
+0.01  Sat Dec  1 13:12:34 2012
+	- original version; created by h2xs 1.23 with options
+		-AX -n WWW::Shopify
+
