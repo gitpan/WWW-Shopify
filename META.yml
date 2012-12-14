@@ -1,7 +1,7 @@
 ---
 abstract: 'Main object representing acess to a particular Shopify store.'
 author:
-  - 'Adam <adam@>'
+  - 'Adam <adamdharrison@gmail.com>'
 build_requires:
   ExtUtils::MakeMaker: 0
 configure_requires:
@@ -17,5 +17,9 @@ no_index:
   directory:
     - t
     - inc
-requires: {}
-version: 0.01
+requires:
+  Crypt::Eksblowfish: 0
+  Data::Dumper: 0
+  Data::Random: 0
+  String::Random: 0
+version: 0.02

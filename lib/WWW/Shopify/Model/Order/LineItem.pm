@@ -23,6 +23,7 @@ sub stats($) { return {
 	"variant_title" => new WWW::Shopify::Field::String::Words(1,3),
 	"vendor" => new WWW::Shopify::Field::String(),
 	"name" => new WWW::Shopify::Field::String::Words(1, 3),
+	"properties" => => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem::Property"),
 	"variant_inventory_management" => new WWW::Shopify::Field::String("(shopify|manual)")};
 }
 

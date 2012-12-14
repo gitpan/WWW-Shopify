@@ -5,8 +5,17 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'WWW::Shopify',
     VERSION_FROM      => 'lib/WWW/Shopify.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {
+		'Crypt::Eksblowfish',
+		'TryCatch',
+		'Data::Random',
+		'IO::CaptureOutput',
+		'Data::Dumper',
+		'DateTime::Format::MySQL',
+		'String::Random',
+		'Locale::Currency::Format'
+	}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/WWW/Shopify.pm', # retrieve abstract from module
-       AUTHOR         => 'Adam <adam@>') : ()),
+       AUTHOR         => 'Adam <adamdharrison@gmail.com>') : ()),
 );

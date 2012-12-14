@@ -254,6 +254,7 @@ sub transform_name($) {
 sub get_all_limit($$@) {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 
 	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->all();
@@ -264,6 +265,7 @@ sub get_all_limit($$@) {
 sub get_all($$@) {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	return $self->get_all_limit($package, $specs) if (exists $specs->{"limit"} && $specs->{"limit"} <= WWW::Shopify->PULLING_ITEM_LIMIT);
 	if ($package->countable()) {
@@ -285,6 +287,7 @@ sub get_shop($) {
 sub get_count($$@) {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	return $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->count();
 }

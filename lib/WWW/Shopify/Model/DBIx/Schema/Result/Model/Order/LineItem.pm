@@ -25,15 +25,16 @@ use warnings;
 		__PACKAGE__->table('shopify_line_items');	
 		__PACKAGE__->add_columns('sku', { data_type => 'varchar(255)', is_nullable => 1 },
 			'fulfillment_service', { data_type => 'varchar(255)', is_nullable => 1 },
+			'product_id', { data_type => 'int', is_nullable => 1 },
+			'id', { data_type => 'int',  },
 			'grams', { data_type => 'int', is_nullable => 1 },
 			'quantity', { data_type => 'int', is_nullable => 1 },
 			'name', { data_type => 'varchar(255)', is_nullable => 1 },
+			'properties', { data_type => 'int', is_nullable => 1 },
 			'variant_title', { data_type => 'varchar(255)', is_nullable => 1 },
-			'product_id', { data_type => 'int', is_nullable => 1 },
 			'fulfillment_status', { data_type => 'varchar(255)', is_nullable => 1 },
 			'variant_id', { data_type => 'int', is_nullable => 1 },
 			'price', { data_type => 'decimal', is_nullable => 1 },
-			'id', { data_type => 'int',  },
 			'title', { data_type => 'varchar(255)', is_nullable => 1 },
 			'variant_inventory_management', { data_type => 'varchar(255)', is_nullable => 1 },
 			'requires_shipping', { data_type => 'bool', is_nullable => 1 },
@@ -43,6 +44,8 @@ use warnings;
 		__PACKAGE__->set_primary_key('id');
 		
 		__PACKAGE__->has_one(product_id => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'id');
+		__PACKAGE__->has_many(line_itemsproperties => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::LineItemProperty', 'line_item_id');
+		__PACKAGE__->many_to_many(properties => 'line_itemsproperties', 'property');
 		__PACKAGE__->belongs_to(variant => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'variant_id');
 		sub represents($) { return 'WWW::Shopify::Model::Order::LineItem'; }
 		

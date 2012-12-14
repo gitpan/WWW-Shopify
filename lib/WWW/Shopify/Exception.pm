@@ -8,7 +8,7 @@ use Devel::StackTrace;
 package WWW::Shopify::Exception;
 use Data::Dumper;
 use overload 
-	'""' => sub { return "Error: " . $_[0]->{'error'} };
+	'""' => sub { return "Error: " . Dumper($_[0]->{'error'}) };
 # Generic constructor; class is blessed with the package that new specifies, and contains a hash specified inside the parentheses of a new call.
 # Example: new WWW::Shopify::Exception('try' => 'catch'); $_[0] is 'WWW::Shopify::Exception', $_[1] is {'try' => 'catch'}.
 # The object will be of type WWW::Shopify::Exception, and have the contents of {'try' => 'catch'}.

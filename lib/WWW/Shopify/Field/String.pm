@@ -130,10 +130,9 @@ sub generate($) {
 
 package WWW::Shopify::Field::String::Enum;
 use parent 'WWW::Shopify::Field::String';
-
-sub generate($) {
-	return $_[0]->{arguments}->[0]->[int(rand(int(@{$_[0]->{arguments}->[0]})))];
-}
+use List::Util qw(first);
+sub generate($) { return $_[0]->{arguments}->[0]->[int(rand(int(@{$_[0]->{arguments}->[0]})))]; }
+sub validate($) { return (defined first { $_ eq $_[1] } @{$_[0]->{arguments}}); }
 
 package WWW::Shopify::Field::String::Custom;
 use parent 'WWW::Shopify::Field::String';

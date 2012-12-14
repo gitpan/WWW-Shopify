@@ -58,7 +58,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use constant {
 	RELATION_OWN_ONE => 0,
@@ -126,8 +126,8 @@ sub api_key { $_[0]->{apiKey} = $_[1] if defined $_[1]; return $_[0]->{api_key};
 sub shop_url { $_[0]->{shopUrl} = $_[1] if defined $_[1]; return $_[0]->{shop_url}; }
 
 sub translate_model($) {
-	return $_[0] if $_[0] =~ m/WWW::Shopify::Model/;
-	return "WWW::Shopify::Model::" . $_[0];
+	return $_[1] if $_[1] =~ m/WWW::Shopify::Model/;
+	return "WWW::Shopify::Model::" . $_[1];
 }
 
 use constant {
@@ -149,6 +149,7 @@ sub resolve_trailing_url($$$) {
 
 sub get_all_limit($$@) {
 	my ($self, $package, $specs) = @_;
+	$package = $self->translate_model($package);
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}) . ".json", $specs);
 
 	my @return = ();
@@ -162,6 +163,7 @@ sub get_all_limit($$@) {
 
 sub get_all($$@) {
 	my ($self, $package, $specs) = @_;
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 
 	return $self->get_all_limit($package, $specs) if (exists $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT);
@@ -176,15 +178,15 @@ sub get_all($$@) {
 }
 
 sub get_shop($) {
-	my $SA = shift;
+	my ($self) = @_;
 	my $package = 'WWW::Shopify::Model::Shop';
-
-	my ($decoded, $response) = $SA->get_url("/admin/" . $package->singular() . ".json");
+	my ($decoded, $response) = $self->get_url("/admin/" . $package->singular() . ".json");
 	return $package->from_json($decoded->{$package->singular()});
 }
 
 sub get_count($$@) {
 	my ($self, $package, $specs) = @_;
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	die "Cannot count $package." unless $package->countable();
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}) . "/count.json", $specs);
@@ -193,6 +195,7 @@ sub get_count($$@) {
 
 sub get($$$@) {
 	my ($self, $package, $id, $specs) = @_;
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 
 	my $plural = $package->plural();
@@ -217,7 +220,7 @@ sub create($$@) {
 	my ($self, $item) = @_;
 	$self->validate_item(ref($item));
 	my $specs = {};
-	die new WWW::Shopify::Exception("Missing minimal creation member $_.") if first { !defined $item->{$_} } (@{$item->minimal()});
+	die new WWW::Shopify::Exception("Missing minimal creation member.") if first { !defined $item->{$_} } (@{$item->minimal()});
 	for (keys(%$item)) {
 		$specs->{$_} = $item->{$_};
 	}
@@ -259,7 +262,7 @@ sub delete {
 # This function is solely for charges.
 sub activate {
 	my ($self, $object) = @_;
-	die new WWW::Shopify::Exception("You must activate charges.") unless defined $object && $object->activatable;
+	die new WWW::Shopify::Exception("You can only activate charges.") unless defined $object && $object->activatable;
 	my $specs = {};
 	my $fields = $object->fields();
 	for (keys(%$fields)) { $specs->{$_} = $object->$_(); }
@@ -273,6 +276,58 @@ sub is_valid { eval { $_[0]->get_count('WWW::Shopify::Model::Prouduct'); }; retu
 
 # Internal methods.
 sub validate_item { eval { die unless $_[1]; $_[1]->is_item; }; die new WWW::Shopify::Exception($_[1] . " is not an item!") if ($@); }
+
+
+=head2 verify_webhook
+
+Shopify webhook authentication. ALMOST the same as login authentication, but, of course, because this is shopify they've got a different system. 'Cause you know, one's not good enough.
+
+Follows this: http://wiki.shopify.com/Verifying_Webhooks.
+
+=cut
+
+use Exporter 'import';
+our @EXPORT_OK = qw(verify_webhook verify_login verify_proxy);
+use Digest::MD5 'md5_hex';
+use MIME::Base64;
+use Digest::SHA qw(hmac_sha256_hex hmac_sha256_base64);
+
+sub verify_webhook {
+	my ($x_shopify_hmac_sha256, $request_body, $shared_secret) = @_;
+	my $calc_signature = hmac_sha256_base64((defined $request_body) ? $request_body : "", $shared_secret);
+	while (length($calc_signature) % 4) { $calc_signature .= '='; }
+	return $x_shopify_hmac_sha256 eq $calc_signature;
+}
+
+=head2 verify_login
+
+Shopify app dashboard verification (when someone clicks Login on the app dashboard).
+
+This one was kinda random, 'cause they say it's like a webhook, but it's actually like legacy auth.
+
+Also, they don't have a code parameter. For whatever reason.
+
+=cut
+
+sub verify_login {
+	my ($shared_secret, $params) = @_;
+	my $calc_signature = md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params))));
+	return $calc_signature eq $params->{signature};
+}
+
+=head2 verify_proxy
+
+Same as verify_login.
+
+=cut
+
+sub verify_proxy { return shift->verify_login(@_); }
+
+=head2 update_item
+
+Simple convenience method; updates a DB object with the data contained with a JSON-esque object.
+
+=cut
 
 =head1 SEE ALSO
 

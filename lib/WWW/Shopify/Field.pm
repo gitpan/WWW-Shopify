@@ -21,6 +21,7 @@ sub qualifier { return undef; }
 sub to_shopify($$) { return $_[1]; }
 sub from_shopify($$) { return $_[1]; }
 sub generate($) { die; }
+sub validate($) { die; }
 
 package WWW::Shopify::Field::Hook;
 use parent 'WWW::Shopify::Field';
@@ -38,55 +39,57 @@ sub is_reference { return shift->{internal}->is_reference(@_); }
 
 package WWW::Shopify::Field::Int;
 use parent 'WWW::Shopify::Field';
+use String::Numeric qw(is_int);
 sub sql_type { return "int"; }
 sub generate($) { 
 	return int(rand(10000)) if (int(@{$_[0]->{arguments}}) == 0);
 	return $_[0]->{arguments}->[0] if (int(@{$_[0]->{arguments}}) == 1);
 	return int(rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1) + $_[0]->{arguments}->[0]);
 }
+sub validate($$) { return is_int($_[1]); }
 
 package WWW::Shopify::Field::Boolean;
+use Scalar::Util qw(looks_like_number);
 use parent 'WWW::Shopify::Field';
 sub sql_type { return "bool"; }
-sub generate($) {
-	return (rand() < 0.5);
-}
+sub generate($) { return (rand() < 0.5); }
+sub validate($$) { return looks_like_number($_[1]) ? ($_[1] == 0 || $_[1] == 1) : (lc($_[1]) == 'true' || lc($_[1]) == 'false'); }
 
 package WWW::Shopify::Field::Float;
 use parent 'WWW::Shopify::Field';
+use String::Numeric qw(is_float);
 sub sql_type { return "float"; }
 sub generate($) {
 	return rand() * 10000.0 if (int(@{$_[0]->{arguments}}) == 0); 
 	return $_[0]->{arguments}->[0] if (int(@{$_[0]->{arguments}}) == 1);
 	return rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1) + $_[0]->{arguments}->[0];
 }
+sub validate($$) { return is_float($_[1]); }
 
 package WWW::Shopify::Field::Timezone;
 use parent 'WWW::Shopify::Field';
 sub sql_type { return "varchar(255)"; }
-sub generate($) {
-	return "(GMT-05:00) Eastern Time (US & Canada)";
-}
+sub generate($) { return "(GMT-05:00) Eastern Time (US & Canada)"; }
+
 
 package WWW::Shopify::Field::Currency;
 use parent 'WWW::Shopify::Field';
 sub sql_type { return "varchar(255)"; }
-sub generate($) {
-	return rand() < 0.5 ? "USD" : "CAD";
-}
+sub generate($) { return rand() < 0.5 ? "USD" : "CAD"; }
 
 package WWW::Shopify::Field::Money;
 use parent 'WWW::Shopify::Field';
+use String::Numeric qw(is_float);
 sub sql_type { return "decimal"; }
-sub generate($) {
-	return sprintf("%.2f", rand(10000));
-}
+sub generate($) { return sprintf("%.2f", rand(10000)); }
+sub validate($) { return undef unless $_[1] =~ m/\s*\$?\s*$/; return is_float($`); }
 
 package WWW::Shopify::Field::Date;
 use parent 'WWW::Shopify::Field';
 sub sql_type { return 'datetime'; }
 sub to_shopify { die new WWW::Shopify::Exception($_[1]) unless $_[1] =~ m/(\d+-\d+-\d+) (\d+:\d+:\d+)/; return "$1T$2"; }
 sub from_shopify { die new WWW::Shopify::Exception($_[1]) unless $_[1] =~ m/(\d+-\d+-\d+)T(\d+:\d+:\d+)/; return "$1 $2"; }
+sub validate($) { return scalar($_[1] =~ m/(\d+-\d+-\d+)T?(\d+:\d+:\d+)/); }
 
 sub generate($) {
 	my %hash = @{$_[0]->{arguments}};
