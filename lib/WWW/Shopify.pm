@@ -6,6 +6,14 @@ WWW::Shopify - Main object representing acess to a particular Shopify store.
 
 =cut
 
+=head1 DISCLAIMER
+
+WWW::Shopify is my first official CPAN module, so please bear with me as I try to sort out all the bugs, and deal with the unfamiliar CPAN infrastructure. Don't expect this to work out of the box as of yet, I'm still learning exactly how things are working.
+
+Thanks for your understanding.
+
+=cut
+
 =head1 DESCRIPTION
 
 WWW::Shopify represents a way to grab and upload data to a particular shopify store.
@@ -58,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use constant {
 	RELATION_OWN_ONE => 0,
@@ -131,7 +139,7 @@ sub translate_model($) {
 }
 
 use constant {
-	PULLING_ITEM_LIMIT => 50
+	PULLING_ITEM_LIMIT => 250
 };
 
 sub get_url($$@) { return $_[0]->url_handler()->get_url($_[0]->encode_url($_[1]), $_[2]); }
@@ -161,6 +169,7 @@ sub get_all_limit($$@) {
 	return @return;
 }
 
+use POSIX qw/ceil/;
 sub get_all($$@) {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
@@ -168,9 +177,16 @@ sub get_all($$@) {
 
 	return $self->get_all_limit($package, $specs) if (exists $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT);
 	if ($package->countable()) {
-		my $itemCount = $self->get_count($package, $specs);
-		return $self->get_all_limit($package, $specs) if ($itemCount <= PULLING_ITEM_LIMIT);
-		die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $itemCount > PULLING_ITEM_LIMIT;
+		my $item_count = $self->get_count($package, $specs);
+		die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*200;
+		return $self->get_all_limit($package, $specs) if ($item_count <= PULLING_ITEM_LIMIT);
+		my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
+		my @items = ();
+		for (my $c = 0; $c < $page_count; ++$c) {
+			$specs->{page} = ($c+1);
+			push(@items, $self->get_all_limit($package, $specs));
+		}
+		return @items;
 	}
 	else {
 		return $self->get_all_limit($package, $specs);
@@ -312,6 +328,7 @@ Also, they don't have a code parameter. For whatever reason.
 sub verify_login {
 	my ($shared_secret, $params) = @_;
 	my $calc_signature = md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params))));
+	return undef unless $params->{signature};
 	return $calc_signature eq $params->{signature};
 }
 
@@ -339,7 +356,7 @@ Adam Harrison (adamdharrison@gmail.com)
 
 =head1 LICENSE
 
-See LICENSE in the main directory.
+MIT License
 
 =cut
 

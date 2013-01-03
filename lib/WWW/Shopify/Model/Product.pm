@@ -38,7 +38,6 @@ sub mods($) { return {
 	"title" => new WWW::Shopify::Field::String::Words(1,2),
 	"vendor" => new WWW::Shopify::Field::String::Words(1,2),
 	"tags" => new WWW::Shopify::Field::String::Words(1,7),
-	"description" => new WWW::Shopify::Field::String::Words(1,40),
 	"images" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Image"),
 	"options" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Option") };
 }

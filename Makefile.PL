@@ -1,21 +1,23 @@
-use 5.012004;
-use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    NAME              => 'WWW::Shopify',
-    VERSION_FROM      => 'lib/WWW/Shopify.pm', # finds $VERSION
-    PREREQ_PM         => {
-		'Crypt::Eksblowfish',
-		'TryCatch',
-		'Data::Random',
-		'IO::CaptureOutput',
-		'Data::Dumper',
-		'DateTime::Format::MySQL',
-		'String::Random',
-		'Locale::Currency::Format'
-	}, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/WWW/Shopify.pm', # retrieve abstract from module
-       AUTHOR         => 'Adam <adamdharrison@gmail.com>') : ()),
-);
+use inc::Module::Install;
+
+name 'WWW-Shopify';
+all_from 'lib/WWW/Shopify.pm';
+requires 'Crypt::Eksblowfish';
+requires 'TryCatch';
+requires 'Data::Random';
+requires 'IO::CaptureOutput';
+requires 'Data::Dumper';
+requires 'DateTime::Format::MySQL';
+requires 'String::Random';
+requires 'Locale::Currency::Format';
+requires 'DBIx::Class';
+requires 'LWP::UserAgent';
+requires 'String::Numeric';
+requires 'DateTime';
+requires 'File::Slurp';
+requires 'SQL::Translator';
+requires 'LWP::Protocol::https';
+author 'Adam Harrison <adamdharrison@gmail.com>';
+license_from 'lib/WWW/Shopify.pm';
+
+WriteAll;

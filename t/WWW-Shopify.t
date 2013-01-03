@@ -24,7 +24,7 @@ cmp_ok(int(@products), '>', 0);
 my $product1 = $products[int(rand(@products))];
 my $product2 = $sa->get('WWW::Shopify::Model::Product', $product1->id);
 is($product1->id, $product2->id);
-is($product1->description, $product2->description);
+is($product1->handle, $product2->handle);
 is($sa->associate->id, $sa->get_shop->id);
 
 done_testing;

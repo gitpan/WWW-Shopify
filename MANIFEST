@@ -4,7 +4,6 @@ MANIFEST
 README
 t/WWW-Shopify.t
 lib/WWW/Shopify.pm
-lib/WWW/Shopify.pm
 lib/WWW/Shopify/Test.pm
 lib/WWW/Shopify/Utils/Liquid.pm
 lib/WWW/Shopify/Private.pm
@@ -58,6 +57,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Theme.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollection/Rule.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollection/Image.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Customer.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LineItemProperty.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Cart/LineItem.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product/Image.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product/Variant.pm
@@ -78,6 +78,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ClientDetails.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/LineItem.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/PaymentDetails.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/DiscountCode.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/LineItem/Property.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/NoteAttributes.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ShippingLine.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment/Receipt.pm
@@ -91,6 +92,7 @@ lib/WWW/Shopify/Model/Order/ClientDetails.pm
 lib/WWW/Shopify/Model/Order/LineItem.pm
 lib/WWW/Shopify/Model/Order/PaymentDetails.pm
 lib/WWW/Shopify/Model/Order/DiscountCode.pm
+lib/WWW/Shopify/Model/Order/LineItem/Property.pm
 lib/WWW/Shopify/Model/Order/NoteAttributes.pm
 lib/WWW/Shopify/Model/Order/ShippingLine.pm
 lib/WWW/Shopify/Model/Order/Fulfillment/Receipt.pm
@@ -98,5 +100,3 @@ lib/WWW/Shopify/Model/Order/Fulfillment.pm
 lib/WWW/Shopify/Model/Article.pm
 lib/WWW/Shopify/Model/Transaction.pm
 lib/WWW/Shopify/Model/Checkout.pm
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)

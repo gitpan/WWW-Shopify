@@ -24,7 +24,6 @@ use warnings;
 		
 		__PACKAGE__->table('shopify_products');	
 		__PACKAGE__->add_columns('published_at', { data_type => 'datetime', is_nullable => 1 },
-			'description', { data_type => 'varchar(255)', is_nullable => 1 },
 			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
 			'product_type', { data_type => 'varchar(255)', is_nullable => 1 },
 			'template_suffix', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -32,8 +31,8 @@ use warnings;
 			'handle', { data_type => 'varchar(255)', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
 			'id', { data_type => 'int',  },
-			'title', { data_type => 'varchar(255)', is_nullable => 1 },
 			'body_html', { data_type => 'text', is_nullable => 1 },
+			'title', { data_type => 'varchar(255)', is_nullable => 1 },
 			'vendor', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
