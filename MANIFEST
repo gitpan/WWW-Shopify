@@ -1,5 +1,5 @@
 Changes
-Makefile.PL
+Build.PL
 MANIFEST
 README
 t/WWW-Shopify.t
@@ -100,3 +100,5 @@ lib/WWW/Shopify/Model/Order/Fulfillment.pm
 lib/WWW/Shopify/Model/Article.pm
 lib/WWW/Shopify/Model/Transaction.pm
 lib/WWW/Shopify/Model/Checkout.pm
+META.yml
+META.json
