@@ -15,10 +15,11 @@ name: WWW-Shopify
 no_index:
   directory:
     - lib/WWW/Shopify/Model/DBIx
+    - lib/WWW/SHopify/Field
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.05
+    version: 0.06
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -425,6 +426,7 @@ requires:
   Data::Random: 0.08
   DateTime: 0.78
   DateTime::Format::MySQL: 0.04
+  Devel::StackTrace: 1.30
   File::Slurp: 9999.19
   HTTP::Request::Common: 6.04
   IO::CaptureOutput: 1.1102
@@ -436,4 +438,4 @@ requires:
   SQL::Translator: 0.11016
   String::Numeric: 0.9
   String::Random: 0.22
-version: 0.05
+version: 0.06

@@ -15,7 +15,8 @@
    "name" : "WWW-Shopify",
    "no_index" : {
       "directory" : [
-         "lib/WWW/Shopify/Model/DBIx"
+         "lib/WWW/Shopify/Model/DBIx",
+         "lib/WWW/SHopify/Field"
       ]
    },
    "prereqs" : {
@@ -32,6 +33,7 @@
             "Data::Random" : "0.08",
             "DateTime" : "0.78",
             "DateTime::Format::MySQL" : "0.04",
+            "Devel::StackTrace" : "1.30",
             "File::Slurp" : "9999.19",
             "HTTP::Request::Common" : "6.04",
             "IO::CaptureOutput" : "1.1102",
@@ -49,7 +51,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.05"
+         "version" : "0.06"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -585,5 +587,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.05"
+   "version" : "0.06"
 }

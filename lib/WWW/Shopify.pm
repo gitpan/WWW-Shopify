@@ -30,7 +30,7 @@ In order to get a list of all products, we can do the following:
 	my $SA = new WWW::Shopify::Public($ShopURL, $APIKey, $AccessToken);
 
 	# Here we call get_all, OO style, and specify the entity we want to get.
-	my @Products = $SA->get_all('WWW::Shopify::Product');
+	my @Products = $SA->get_all('Product');
 
 In this way, we can get and modify all the different types of shopify stuffs.
 
@@ -38,18 +38,18 @@ If you don't want to be using a public app, and just want to make a private app,
 
 	# Here we instantiate a copy of the private API object this time, which means we don't need an access token, we just need a password.
 	my $sa = new WWW::Shopify::Private($shop_url, $api_key, $password);
-	my @Products = $SA->get_all('WWW::Shopify::Model::Product');
+	my @Products = $SA->get_all('Product');
 
 Easy enough.
 
 To insert a Webhook, we'd do the following.
 
-	my $webhook = new WWW::Shopify::Webhook({topic => "orders/create", address => $URL, format => "json"});
+	my $webhook = new WWW::Shopify::Model::Webhook({topic => "orders/create", address => $URL, format => "json"});
 	$SA->create($Webhook);
 
 And that's all there is to it. To delete all the webhooks in a store, we'd do:
 
-	my @Webhooks = $SA->get_all('WWW::Shopify::Webhook');
+	my @Webhooks = $SA->get_all('Webhook');
 	for (@Webhooks) {
 		$SA->delete($_);
 	}
@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use constant {
 	RELATION_OWN_ONE => 0,

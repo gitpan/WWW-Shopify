@@ -13,6 +13,7 @@ my $build = Module::Build->new(
 		'Data::Dumper' => '2.139',
 		'DateTime::Format::MySQL' => '0.04',
 		'String::Random' => '0.22',
+		'Devel::StackTrace' => '1.30',
 		'Locale::Currency::Format' => '1.30',
 		'DBIx::Class' => '0.08204',
 		'LWP::UserAgent' => '6.04',
@@ -27,7 +28,7 @@ my $build = Module::Build->new(
 	},
 	meta_merge => {
 		no_index => {
-	    		directory => [ 'lib/WWW/Shopify/Model/DBIx' ]
+	    		directory => [ 'lib/WWW/Shopify/Model/DBIx', 'lib/WWW/SHopify/Field' ]
 		}
 	}
 );
