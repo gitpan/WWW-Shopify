@@ -6,6 +6,7 @@ use warnings;
 use Data::Dumper;
 
 package WWW::Shopify::Model::Item;
+use DateTime;
 
 =head1 NAME
 
@@ -90,12 +91,24 @@ sub singular {
 	# Here, we have an object, so run this function again with the package name.
 	return singular(ref($_[0]));
 }
+# Specifies in a text-friendly manner the FULL specific name of this package.
+sub singular_fully_qualified { 
+	if (!ref($_[0])) {
+		die $_[0] unless $_[0] =~ m/Model::([:\w]+)$/;
+		my $name = lc($1);
+		$name =~ s/\:\:/-/g;
+		return $name;
+	}
+	# Here, we have an object, so run this function again with the package name.
+	return singular_fully_qualified(ref($_[0]));
+}
 sub plural { return $_[0]->singular() . "s"; }
 sub container { return $_[0]->parent; }
 
 # I cannot fucking believe I'm doing this. Everything can be counted.
 # Oh, except themes. We don't count those. For some arbitrary reason.
 sub countable { return 1; }
+sub needs_login { return undef; }
 
 sub stats() { return {}; }
 sub mods() { return {}; }
@@ -139,7 +152,30 @@ sub from_json($$) {
 				}
 			}
 			else {
-				$self->{$_} = $json->{$_};
+				if (ref($ref->{$_}) eq "WWW::Shopify::Field::Date" && $json->{$_}) {
+					if ($json->{$_} =~ m/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)([+-]\d+):(\d+)/) {
+						$self->{$_} = DateTime->new(
+							year      => $1,
+							month     => $2,
+							day       => $3,
+							hour      => $4,
+							minute    => $5,
+							second    => $6,
+							time_zone => $7 . $8,
+						);
+					}
+					else {
+						die new WWW::Shopify::Exception("Unable to parse date " . $json->{$_}) unless $json->{$_} =~ m/(\d+)-(\d+)-(\d+)/;
+						$self->{$_} = DateTime->new(
+							year      => $1,
+							month     => $2,
+							day       => $3
+						);
+					}
+				}
+				else {
+					$self->{$_} = $json->{$_};
+				}
 			}
 		}
 	}
@@ -184,6 +220,10 @@ sub to_json($) {
 		}
 		else {
 			$final->{$key} = $self->$key();
+			if ($final->{$key} && ref($final->{$key}) eq "DateTime") {
+				$final->{$key} = $final->{$key}->strftime('%Y-%m-%dT%H-%M-%S%z');
+				$final->{$key} =~ s/(\d\d)$/:$1/;
+			}
 		}
 	}
 	return $final;

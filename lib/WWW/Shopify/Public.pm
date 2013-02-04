@@ -42,6 +42,8 @@ sub new($$$$) {
 		_url_handler => undef
 	}, $class;
 	$self->url_handler(new WWW::Shopify::URLHandler($self));
+	$UA->cookie_jar({ file => "/tmp/.cookies.txt" });
+	$UA->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
 	$UA->default_header("X-Shopify-Access-Token" => $access_token);
 	return $self;
 }

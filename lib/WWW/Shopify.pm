@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use constant {
 	RELATION_OWN_ONE => 0,
@@ -94,8 +94,11 @@ sub get_url($$@) {
 	my $request = HTTP::Request->new("GET", $uri);
 	$request->header("Accept" => "application/json");
 	my $response = $self->parent->ua->request($request);
-	die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
-	die new WWW::Shopify::Exception($response) unless ($response->is_success);
+	if (!$response->is_success) {
+		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
+		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
+		die new WWW::Shopify::Exception($response);
+	}
 	my $decoded = JSON::decode_json($response->content);
 	return ($decoded, $response);
 }
@@ -104,10 +107,13 @@ sub use_url($$$$) {
 	my ($self, $method, $url, $hash) = @_;
 	my $request = HTTP::Request->new($method, $url);
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");
-	$request->content(JSON::encode_json($hash));
+	$request->content($hash ? JSON::encode_json($hash) : undef);
 	my $response = $self->parent->ua->request($request);
-	die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
-	die new WWW::Shopify::Exception($response) unless ($response->is_success);
+	if (!$response->is_success) {
+		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
+		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
+		die new WWW::Shopify::Exception($response);
+	}
 	my $decoded = (length($response->content) >= 2) ? JSON::decode_json($response->content) : undef;
 	return ($decoded, $response);
 }
@@ -130,8 +136,8 @@ Gets/sets the shop url that we're going to be making calls to.
 =cut
 
 # Modifiable Attributes
-sub api_key { $_[0]->{apiKey} = $_[1] if defined $_[1]; return $_[0]->{api_key}; }
-sub shop_url { $_[0]->{shopUrl} = $_[1] if defined $_[1]; return $_[0]->{shop_url}; }
+sub api_key { $_[0]->{_api_key} = $_[1] if defined $_[1]; return $_[0]->{_api_key}; }
+sub shop_url { $_[0]->{_shop_url} = $_[1] if defined $_[1]; return $_[0]->{_shop_url}; }
 
 sub translate_model($) {
 	return $_[1] if $_[1] =~ m/WWW::Shopify::Model/;
@@ -232,28 +238,54 @@ sub get($$$@) {
 }
 
 use List::Util qw(first);
-sub create($$@) {
+use HTTP::Request::Common;
+sub create {
 	my ($self, $item) = @_;
 	$self->validate_item(ref($item));
 	my $specs = {};
-	die new WWW::Shopify::Exception("Missing minimal creation member.") if first { !defined $item->{$_} } (@{$item->minimal()});
+	my $missing = first { !defined $item->{$_} } (@{$item->minimal()});
+	die new WWW::Shopify::Exception("Missing minimal creation member: $missing in " . ref($item)) if $missing;
+	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	for (keys(%$item)) {
-		$specs->{$_} = $item->{$_};
+		if ($item->{$_} && ref($item->{$_}) eq "DateTime") {
+			$specs->{$_} = $item->{$_}->strftime('%Y-%m-%dT%H-%M-%S%z');
+			$specs->{$_} =~ s/(\d\d)$/:$1/;
+		}
+		else {
+			$specs->{$_} = $item->{$_};
+		}
+	}
+	if ($item->needs_login) {
+		my @fields = map { my $a; $item->singular . "[$_]" => $specs->{$_} } keys(%$specs);
+		my $url = $self->encode_url($self->resolve_trailing_url($item, $specs->{parent})) . ".json";
+		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, @fields], Accept => 'application/json');
+	 	my $json = JSON::decode_json($response->decoded_content);
+		return ref($item)->from_json($json->{$item->singular});
 	}
 	my ($decoded, $response) = $self->post_url($self->resolve_trailing_url($item, $specs->{parent}) . ".json", {$item->singular() => $specs});
 	my $element = $decoded->{$item->singular()};
-
 	return ref($item)->from_json($element);
 }
 
 sub update {
 	my ($self, $class) = @_;
 	$self->validate_item(ref($class));
+	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
 
 	my $mods = $class->mods();
 	my $plural = $class->plural();
 	my $vars = {};
-	for (keys(%{$mods})) { $vars->{$_} = $class->$_ if exists $class->{$_}; }
+	for (keys(%{$mods})) { 
+		if (exists $class->{$_}) {
+			if ($class->$_ && ref($class->$_) eq "DateTime") {
+				$vars->{$_} = $class->$_->strftime('%Y-%m-%dT%H-%M-%S%z');
+				$vars->{$_} =~ s/(\d\d)$/:$1/;
+			}
+			else {
+				$vars->{$_} = $class->$_;
+			}
+		}
+	}
 	my $hash = { $class->singular() => $vars };
 	my ($decoded, $response);
 	if (ref($class) !~ m/Asset/) {
@@ -268,9 +300,17 @@ sub update {
 sub delete {
 	my ($self, $class) = @_;
 	$self->validate_item(ref($class));
+	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
 	my $plural = $class->plural();
 	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($class)) unless ref($class) =~ m/Model/;
-	my ($decoded, $response) = $self->delete_url($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json");
+	if ($class->needs_login) {
+		my $url = $self->encode_url($self->resolve_trailing_url($class, $class->parent)) . "/" . $class->id();
+		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, "_method" => "delete"], Accept => 'application/json');
+		return $response;
+	}
+	else {
+		my ($decoded, $response) = $self->delete_url($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json");
+	}
 
 	return 1;
 }
@@ -281,14 +321,60 @@ sub activate {
 	die new WWW::Shopify::Exception("You can only activate charges.") unless defined $object && $object->activatable;
 	my $specs = {};
 	my $fields = $object->fields();
-	for (keys(%$fields)) { $specs->{$_} = $object->$_(); }
+	for (keys(%$fields)) {
+		if ($object->$_ && ref($object->$_) eq "DateTime") {
+			$specs->{$_} = $object->$_->strftime('%Y-%m-%dT%H-%M-%S%z');
+			$specs->{$_} =~ s/(\d\d)$/:$1/;
+		}
+		else {
+			$specs->{$_} = $object->$_;
+		}
+	}
 
 	my ($decoded, $response) = $self->post_url("/admin/" . $object->plural() . "/" . $object->id() . "/activate.json", {$object->singular() => $specs});
 
 	return 1;
 }
 
-sub is_valid { eval { $_[0]->get_count('WWW::Shopify::Model::Prouduct'); }; return undef if ($@); return 1; }
+use HTTP::Request::Common;
+sub login_admin {
+	my ($self, $username, $password) = @_;
+	return 1 if $self->{last_login_check} && (time - $self->{last_login_check}) < 1000;
+	my $ua = $self->ua;
+	die new WWW::Shopify::Exception("Unable to login as admin without a cookie jar.") unless defined $ua->cookie_jar;
+	my $res = $ua->get("https://" . $self->shop_url . "/admin/auth/login");
+	die new WWW::Shopify::Exception("Unable to get login page.") unless $res->is_success;
+	die new WWW::Shopify::Exception("Unable to find authenticity token.") unless $res->decoded_content =~ m/name="authenticity_token".*?value="(\S+)"/ms;
+	my $authenticity_token = $1;
+	my $req = POST "https://" . $self->shop_url . "/admin/auth/login", [
+		login => $username,
+		password => $password,
+		remember => 1,
+		commit => "Sign In",
+		authenticity_token => $authenticity_token
+	];
+	$res = $ua->request($req);
+	die new WWW::Shopify::Exception("Unable to complete request: " . $res->decoded_content) unless $res->is_success || $res->code == 302;
+	die new WWW::Shopify::Exception("Unable to login: $1.") if $res->decoded_content =~ m/class="status system-error">(.*?)<\/div>/;
+	$self->{last_login_check} = time;
+	$self->{authenticity_token} = $authenticity_token;
+	return 1;
+}
+
+sub logged_in_admin {
+	my ($self) = @_;
+	return 1 if $self->{last_login_check} && (time - $self->{last_login_check}) < 1000;
+	my $ua = $self->ua;
+	die new WWW::Shopify::Exception("Unable to login as admin without a cookie jar.") unless defined $ua->cookie_jar;
+	my $res = $ua->get('https://' . $self->shop_url . '/admin/discounts/count.json');
+	if ($res->is_success) {
+		$self->{last_login_check} = time;
+		return 1;
+	}
+	return undef;
+}
+
+sub is_valid { eval { $_[0]->get_count('WWW::Shopify::Model::Product'); }; return undef if ($@); return 1; }
 
 # Internal methods.
 sub validate_item { eval { die unless $_[1]; $_[1]->is_item; }; die new WWW::Shopify::Exception($_[1] . " is not an item!") if ($@); }

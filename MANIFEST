@@ -34,6 +34,7 @@ lib/WWW/Shopify/Model/Product/Variant.pm
 lib/WWW/Shopify/Model/Product/Option.pm
 lib/WWW/Shopify/Model/CustomCollection.pm
 lib/WWW/Shopify/Model/Product.pm
+lib/WWW/Shopify/Model/Discount.pm
 lib/WWW/Shopify/Model/Cart.pm
 lib/WWW/Shopify/Model/Asset.pm
 lib/WWW/Shopify/Model/Transaction/Receipt.pm
@@ -64,6 +65,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product/Variant.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product/Option.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Cart.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Asset.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction/Receipt.pm
@@ -100,5 +102,7 @@ lib/WWW/Shopify/Model/Order/Fulfillment.pm
 lib/WWW/Shopify/Model/Article.pm
 lib/WWW/Shopify/Model/Transaction.pm
 lib/WWW/Shopify/Model/Checkout.pm
+MYMETA.json
+MYMETA.yml
 META.yml
 META.json

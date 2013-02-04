@@ -5,24 +5,30 @@ my $build = Module::Build->new(
 	license_from => 'lib/WWW/Shopify.pm',
 	dist_author_from => 'lib/WWW/Shopify.pm',
 	dist_version_from => 'lib/WWW/Shopify.pm',
+	configure_requires => { 'Module::Build' => 0.38 },
 	requires => {
-		'Crypt::Eksblowfish' => 0,
-		'Data::Random' => 0,
-		'IO::CaptureOutput' => 0,
-		'Data::Dumper' => 0,
-		'DateTime::Format::MySQL' => 0,
-		'String::Random' => 0,
-		'Locale::Currency::Format' => 0,
-		'DBIx::Class' => 0,
-		'LWP::UserAgent' => 0,
-		'String::Numeric' => 0,
-		'DateTime' => 0,
-		'File::Slurp' => 0,
-		'SQL::Translator' => 0,
-		'MIME::Base64' => 0,
-		'JSON' => 0,
-		'LWP::Protocol::https' => 0
+		'Crypt::Eksblowfish' => '0.009',
+		'Data::Random' => '0.08',
+		'IO::CaptureOutput' => '1.1102',
+		'Data::Dumper' => '2.139',
+		'DateTime::Format::MySQL' => '0.04',
+		'String::Random' => '0.22',
+		'Locale::Currency::Format' => '1.30',
+		'DBIx::Class' => '0.08204',
+		'LWP::UserAgent' => '6.04',
+		'String::Numeric' => '0.9',
+		'DateTime' => '0.78',
+		'File::Slurp' => '9999.19',
+		'SQL::Translator' => '0.11016',
+		'MIME::Base64' => '3.13',
+		'JSON' => '2.53',
+		'LWP::Protocol::https' => '6.03',
+		'HTTP::Request::Common' => '6.04',
 	},
-	meta_merge => {no_index => {directory => ['lib/WWW/Shopify/Model/DBIx/Result']}}
+	meta_merge => {
+		no_index => {
+	    		directory => [ 'lib/WWW/Shopify/Model/DBIx' ]
+		}
+	}
 );
 $build->create_build_script;

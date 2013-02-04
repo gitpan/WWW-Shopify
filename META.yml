@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.120921'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -14,11 +14,11 @@ meta-spec:
 name: WWW-Shopify
 no_index:
   directory:
-    - lib/WWW/Shopify/Model/DBIx/Result
+    - lib/WWW/Shopify/Model/DBIx
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.04
+    version: 0.05
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -29,6 +29,9 @@ provides:
     file: lib/WWW/Shopify/Exception.pm
     version: 0
   WWW::Shopify::Exception::DBError:
+    file: lib/WWW/Shopify/Exception.pm
+    version: 0
+  WWW::Shopify::Exception::InvalidKey:
     file: lib/WWW/Shopify/Exception.pm
     version: 0
   WWW::Shopify::Field:
@@ -211,6 +214,9 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerGroup:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerGroup.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm
     version: 0
@@ -303,6 +309,9 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Webhook.pm
+    version: 0
+  WWW::Shopify::Model::Discount:
+    file: lib/WWW/Shopify/Model/Discount.pm
     version: 0
   WWW::Shopify::Model::Item:
     file: lib/WWW/Shopify/Model/Item.pm
@@ -410,20 +419,21 @@ provides:
     file: lib/WWW/Shopify/URLHandler/Queued.pm
     version: 0
 requires:
-  Crypt::Eksblowfish: 0
-  DBIx::Class: 0
-  Data::Dumper: 0
-  Data::Random: 0
-  DateTime: 0
-  DateTime::Format::MySQL: 0
-  File::Slurp: 0
-  IO::CaptureOutput: 0
-  JSON: 0
-  LWP::Protocol::https: 0
-  LWP::UserAgent: 0
-  Locale::Currency::Format: 0
-  MIME::Base64: 0
-  SQL::Translator: 0
-  String::Numeric: 0
-  String::Random: 0
-version: 0.04
+  Crypt::Eksblowfish: 0.009
+  DBIx::Class: 0.08204
+  Data::Dumper: 2.139
+  Data::Random: 0.08
+  DateTime: 0.78
+  DateTime::Format::MySQL: 0.04
+  File::Slurp: 9999.19
+  HTTP::Request::Common: 6.04
+  IO::CaptureOutput: 1.1102
+  JSON: 2.53
+  LWP::Protocol::https: 6.03
+  LWP::UserAgent: 6.04
+  Locale::Currency::Format: 1.30
+  MIME::Base64: 3.13
+  SQL::Translator: 0.11016
+  String::Numeric: 0.9
+  String::Random: 0.22
+version: 0.05
