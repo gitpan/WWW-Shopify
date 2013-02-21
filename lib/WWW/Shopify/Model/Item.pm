@@ -112,6 +112,8 @@ sub needs_login { return undef; }
 
 sub stats() { return {}; }
 sub mods() { return {}; }
+# List of fields that should be filled automatically on creation.
+sub on_create { return (); }
 sub is_nested() { return undef; }
 
 sub identifier($) { return "id"; }
@@ -120,6 +122,11 @@ sub creatable($) { return 1; }
 sub updatable($) { return 1; }
 sub deletable($) { return 1; }
 sub activatable($) { return undef; }
+
+# I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?
+sub create_method { return "POST"; }
+sub update_method { return "PUT"; }
+sub delete_method { return "DELETE"; }
 
 sub get_all { my $package = shift; my $SA = shift; my $specs = shift; return $SA->getAll($package, $specs); }
 sub get_count { my $package = shift; my $SA = shift; return $SA->typicalGetCount($package, shift); }
@@ -191,7 +198,8 @@ sub to_json($) {
 	my ($self) = @_;
 	my $fields = $self->fields();
 	my $final = {};
-	foreach my $key (keys(%$fields)) {
+	foreach my $key (keys(%$self)) {
+		next unless exists $fields->{$key};
 		if ($fields->{$key}->is_relation()) {
 			if ($fields->{$key}->is_many()) {
 				if (defined $self->$key()) {
@@ -221,7 +229,7 @@ sub to_json($) {
 		else {
 			$final->{$key} = $self->$key();
 			if ($final->{$key} && ref($final->{$key}) eq "DateTime") {
-				$final->{$key} = $final->{$key}->strftime('%Y-%m-%dT%H-%M-%S%z');
+				$final->{$key} = $final->{$key}->strftime('%Y-%m-%dT%H:%M:%S%z');
 				$final->{$key} =~ s/(\d\d)$/:$1/;
 			}
 		}

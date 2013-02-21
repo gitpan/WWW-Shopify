@@ -16,7 +16,7 @@
    "no_index" : {
       "directory" : [
          "lib/WWW/Shopify/Model/DBIx",
-         "lib/WWW/SHopify/Field"
+         "lib/WWW/Shopify/Field"
       ]
    },
    "prereqs" : {
@@ -31,6 +31,7 @@
             "DBIx::Class" : "0.08204",
             "Data::Dumper" : "2.139",
             "Data::Random" : "0.08",
+            "Date::Calc" : "6.3",
             "DateTime" : "0.78",
             "DateTime::Format::MySQL" : "0.04",
             "Devel::StackTrace" : "1.30",
@@ -44,14 +45,15 @@
             "MIME::Base64" : "3.13",
             "SQL::Translator" : "0.11016",
             "String::Numeric" : "0.9",
-            "String::Random" : "0.22"
+            "String::Random" : "0.22",
+            "URI::Escape" : "3.31"
          }
       }
    },
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.06"
+         "version" : "0.07"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -174,6 +176,10 @@
          "version" : 0
       },
       "WWW::Shopify::Field::String::Hostname" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Hostname::Shopify" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
@@ -587,5 +593,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.06"
+   "version" : "0.07"
 }

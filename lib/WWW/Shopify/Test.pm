@@ -47,13 +47,20 @@ use String::Random qw(random_regex random_string);
 use Data::Random;
 use List::Util qw(shuffle first);
 
+use Module::Find;
+# Make sure we include all our models so that when people call the model, we actually know what they're talking about.
+BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); }
+
+
 sub new($$) {
-	my ($package, $dbschema) = @_;
-	return bless {
+	my ($package, $dbschema, $shop) = @_;
+	my $self = bless {
 		_db => $dbschema,
 		_associatedShop => undef,
 		_mapper => new WWW::Shopify::Common::DBIx()
 	}, $package;
+	$self->associate($shop) if $shop;
+	return $self;
 }
 
 =head2 ASSOCIATION METHODS
@@ -70,8 +77,14 @@ sub associate($$) {
 	my $self = $_[0];
 	if (defined $_[1]) {
 		my $shop = $_[1];
-		die ref($shop) unless ref($shop) =~ m/Model::.*Shop$/;
-		$self->{_associatedShop} = $shop;
+		if (ref($shop)) {
+			die ref($shop) unless ref($shop) =~ m/Model::.*Shop$/;
+			$self->{_associatedShop} = $shop;
+		}
+		else {
+			$self->associate($self->{_db}->resultset('Model::Shop')->find({myshopify_domain => $shop}));
+			die new WWW::Shopify::Exception("Can't find shop $shop to associate with.") unless $self->associate;
+		}
 	}
 	return $self->{_associatedShop};
 }
@@ -93,27 +106,27 @@ sub associate_randomly {
 
 Calls associate with a shop that is NOT in the list of urls that you pass into this function.
 
-	$SA->associateUnlinked(['hostname1', 'hostname2']);
+	$SA->associate_unlinked('hostname1', 'hostname2');
 
 =cut
 
-sub associate_unlinked($$) {
-	my ($self, $ids) = @_;
-	my @shops = $self->{_db}->resultset('Model::Shop')->search( { myshopify_domain => { 'NOT IN' => $ids } } )->all();
+sub associate_unlinked {
+	my ($self, @ids) = @_;
+	my @shops = $self->{_db}->resultset('Model::Shop')->search( { myshopify_domain => { 'NOT IN' => [@ids] } } )->all();
 	die new WWW::Shopify::Exception("Unable to associate unlinked; no unlinked shops.") unless int(@shops) > 0;
 	return $self->associate($shops[rand(int(@shops))]);
 }
 
-=head3 associate_unlinked
+=head3 associate_linked
 
 Calls associate with a shop that is in the list of urls that you pass in to this function.
 
-	$SA->associateLinked(['hostname1', 'hostname2']);
+	$SA->associate_linked('hostname1', 'hostname2');
 
 =cut
 
 # Associates with a paricular shop that IS part of the app.
-sub associate_linked($$$) {
+sub associate_linked {
 	my ($self, $ids) = @_;
 	my $condition = map { { myshopify_domain => $_ } }  @$ids;
 	my @shops = $self->{_db}->resultset('Model::Shop')->search( { myshopify_domain => { 'IN' => $ids } } )->all();
@@ -267,7 +280,8 @@ sub get_all($$@) {
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
-	return $self->get_all_limit($package, $specs) if (exists $specs->{"limit"} && $specs->{"limit"} <= WWW::Shopify->PULLING_ITEM_LIMIT);
+	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
+	return $self->get_all_limit($package, $specs) if ($specs->{"limit"} <= WWW::Shopify->PULLING_ITEM_LIMIT);
 	if ($package->countable()) {
 		my $itemCount = $self->get_count($package, $specs);
 		return $self->get_all_limit($package, $specs) if ($itemCount <= WWW::Shopify->PULLING_ITEM_LIMIT);
@@ -295,6 +309,7 @@ sub get_count($$@) {
 sub get($$$@) {
 	my ($self, $package, $id, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	my $row = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->find($id);
 	return $self->{_mapper}->to_shopify($row);
@@ -318,10 +333,10 @@ sub create($$@) {
 	for (@{$item->minimal()}) {
 		die "Missing minimal creation member $_." unless defined $item->{$_};
 	}
-	for (keys(%$item)) {
-		$specs->{$_} = $item->{$_};
-	}
-	
+	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
+
+	$specs = $item->to_json();
+
 	my $fields = $package->fields();
 	# So, if we have a field called id, we generate it.
 	if (exists $fields->{id} && !exists $specs->{id}) {
@@ -331,10 +346,9 @@ sub create($$@) {
 			last unless defined $item;
 		}
 	}
-	for (keys(%$fields)) {
-		if ($_ ne "id" && $fields->{$_}->is_qualifier() && $fields->{$_}->qualifier() eq "on_create") {
-			$specs->{$_} = $fields->{$_}->generate();
-		}
+	my @fillable_on_creation = $package->on_create();
+	for (@fillable_on_creation) {
+		$specs->{$_} = $fields->{$_}->generate();
 	}
 	# We're also going to have to generate a bunch of fields.
 	if (exists $fields->{confirmation_url}) {
@@ -350,18 +364,20 @@ sub create($$@) {
 sub update {
 	my ($self, $item) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($item));
 	$item->update;
 	return $self->{_mapper}->to_shopify($item);
 }
 
 sub delete {
-	my ($self, $class) = @_;
+	my ($self, $item) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	$self->validate_item(ref($class));
-	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($class)) unless ref($class) =~ m/Model/;
+	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
+	$self->validate_item(ref($item));
+	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($item)) unless ref($item) =~ m/Model/;
 
-	$self->{_db}->resultset(transform_name(ref($class)))->search({ id => $class->id() })->delete;
+	$self->{_db}->resultset(transform_name(ref($item)))->search({ id => $item->id() })->delete;
 
 	return 1;
 }
@@ -379,6 +395,69 @@ sub activate {
 
 	return $self->{_mapper}->to_shopify($object);
 }
+
+use Digest::MD5 qw(md5_hex);
+sub login_admin {
+	my ($self, $username, $password) = @_;
+	return 1 if $self->{last_login_check} && (time - $self->{last_login_check}) < 1000;
+	$self->{last_login_check} = time;
+	$self->{authenticity_token} = md5_hex(rand());
+	return 1;
+}
+
+sub logged_in_admin {
+	my ($self) = @_;
+	return 1 if $self->{last_login_check} && (time - $self->{last_login_check}) < 1000;
+	$self->{last_login_check} = time;
+	return 1;
+}
+
+=head2 authorize_url([scope], redirect)
+
+When the shop doesn't have an access_token, this is what you should be redirecting your client to. Inputs should be your scope, as an array, and the url you want to redirect to.
+
+=cut
+
+use URI::Escape;
+sub authorize_url {
+	my ($self, $scope, $redirect) = (@_);
+	die new WWW::Shopify::Exception("Unable to exchange tokens when shop is not associated.") unless $self->associate;
+
+	my $hostname = $self->associate->myshopify_domain;
+	my %parameters = (
+		'client_id' => $self->api_key,
+		'scope' => join(",", @$scope),
+		'redirect_uri' => $redirect
+	);
+	return "https://$hostname/admin/oauth/authorize?" . join("&", map { "$_=" . uri_escape($parameters{$_}) } keys(%parameters));
+}
+
+=head2 exchange_token(shared_secret, code)
+
+When you have a temporary code, which you should get from authorize_url's redirect and you want to exchange it for a token, you call this.
+
+=cut
+
+sub exchange_token {
+	my ($self, $shared_secret, $code) = (@_);
+	
+	die new WWW::Shopify::Exception("Unable to exchange tokens when shop is not associated.") unless $self->associate;
+
+	my $req = HTTP::Request->new(POST => "https://" . $self->shop_url . "/admin/oauth/access_token");
+  	$req->content_type('application/x-www-form-urlencoded');
+	my %parameters = (
+		'client_id' => $self->api_key,
+		'client_secret' => $shared_secret,
+		'code' => $code
+	);
+	return md5_hex($self->api_key . $self->shop_url);
+}
+
+sub shop_url {
+	die new WWW::Shopify::Exception("Can't get a url, unless we're associated.") unless $_[0]->associate;
+	return $_[0]->associate->myshopify_domain;
+}
+sub api_key { return md5_hex(''); }
 
 =head1 SEE ALSO
 

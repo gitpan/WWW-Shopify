@@ -25,10 +25,12 @@ my $build = Module::Build->new(
 		'JSON' => '2.53',
 		'LWP::Protocol::https' => '6.03',
 		'HTTP::Request::Common' => '6.04',
+		'Date::Calc' => '6.3',
+		'URI::Escape' => '3.31'
 	},
 	meta_merge => {
 		no_index => {
-	    		directory => [ 'lib/WWW/Shopify/Model/DBIx', 'lib/WWW/SHopify/Field' ]
+	    		directory => [ 'lib/WWW/Shopify/Model/DBIx', 'lib/WWW/Shopify/Field' ]
 		}
 	}
 );

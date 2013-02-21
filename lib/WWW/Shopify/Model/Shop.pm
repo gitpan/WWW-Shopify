@@ -53,7 +53,7 @@ sub stats { return {
 	"taxes_included" => new WWW::Shopify::Field::String(),
 	"tax_shipping" => new WWW::Shopify::Field::String(),
 	"plan_name" => new WWW::Shopify::Field::String::Words(1),
-	"myshopify_domain" => new WWW::Shopify::Field::String::Hostname("myshopify.com")};
+	"myshopify_domain" => new WWW::Shopify::Field::String::Hostname::Shopify};
 }
 
 sub creatable($) { return undef; }

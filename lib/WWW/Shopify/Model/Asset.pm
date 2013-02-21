@@ -26,7 +26,9 @@ sub stats($) { return {
 	"content_type" => new WWW::Shopify::Field::String("image/(gif|jpg|png)"),
 	"size" => new WWW::Shopify::Field::Int(1, 5000)};
 }
-sub minimal($) { return ["path", "target"]; }
+sub minimal($) { return ["key"]; }
+
+sub create_method { return "PUT"; }
 
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
 

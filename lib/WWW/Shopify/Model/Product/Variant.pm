@@ -29,7 +29,7 @@ sub stats() { return {
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')};
 }
-sub minimal() { return []; }
+sub minimal() { return ["option1", "price"]; }
 
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
 

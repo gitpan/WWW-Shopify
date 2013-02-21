@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use constant {
 	RELATION_OWN_ONE => 0,
@@ -90,6 +90,9 @@ sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent};
 sub get_url($$@) {
 	my ($self, $url, $parameters) = @_;
 	my $uri = URI->new($url);
+	for (grep { $parameters->{$_} && ref($parameters->{$_}) eq "DateTime" } keys(%$parameters)) {
+		$parameters->{$_} = $parameters->{$_}->strftime('%Y-%m-%d %H:%M:%S%z')
+	}
 	$uri->query_form($parameters);
 	my $request = HTTP::Request->new("GET", $uri);
 	$request->header("Accept" => "application/json");
@@ -99,7 +102,7 @@ sub get_url($$@) {
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception($response);
 	}
-	my $decoded = JSON::decode_json($response->content);
+	my $decoded = JSON::decode_json($response->decoded_content);
 	return ($decoded, $response);
 }
 
@@ -114,7 +117,7 @@ sub use_url($$$$) {
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception($response);
 	}
-	my $decoded = (length($response->content) >= 2) ? JSON::decode_json($response->content) : undef;
+	my $decoded = (length($response->decoded_content) >= 2) ? JSON::decode_json($response->decoded_content) : undef;
 	return ($decoded, $response);
 }
 sub put_url($$$) { return shift->use_url("PUT", @_); }
@@ -181,7 +184,9 @@ sub get_all($$@) {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 
-	return $self->get_all_limit($package, $specs) if (exists $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT);
+	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
+
+	return $self->get_all_limit($package, $specs) if ($specs->{"limit"} <= PULLING_ITEM_LIMIT);
 	if ($package->countable()) {
 		my $item_count = $self->get_count($package, $specs);
 		die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*200;
@@ -246,23 +251,16 @@ sub create {
 	my $missing = first { !defined $item->{$_} } (@{$item->minimal()});
 	die new WWW::Shopify::Exception("Missing minimal creation member: $missing in " . ref($item)) if $missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
-	for (keys(%$item)) {
-		if ($item->{$_} && ref($item->{$_}) eq "DateTime") {
-			$specs->{$_} = $item->{$_}->strftime('%Y-%m-%dT%H-%M-%S%z');
-			$specs->{$_} =~ s/(\d\d)$/:$1/;
-		}
-		else {
-			$specs->{$_} = $item->{$_};
-		}
-	}
+	$specs = $item->to_json();
 	if ($item->needs_login) {
 		my @fields = map { my $a; $item->singular . "[$_]" => $specs->{$_} } keys(%$specs);
-		my $url = $self->encode_url($self->resolve_trailing_url($item, $specs->{parent})) . ".json";
+		my $url = $self->encode_url($self->resolve_trailing_url($item, $item->{parent})) . ".json";
 		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, @fields], Accept => 'application/json');
 	 	my $json = JSON::decode_json($response->decoded_content);
 		return ref($item)->from_json($json->{$item->singular});
 	}
-	my ($decoded, $response) = $self->post_url($self->resolve_trailing_url($item, $specs->{parent}) . ".json", {$item->singular() => $specs});
+	my $method = lc($item->create_method) . "_url";
+	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, $item->{parent}) . ".json", {$item->singular() => $specs});
 	my $element = $decoded->{$item->singular()};
 	return ref($item)->from_json($element);
 }
@@ -274,24 +272,14 @@ sub update {
 
 	my $mods = $class->mods();
 	my $plural = $class->plural();
-	my $vars = {};
-	for (keys(%{$mods})) { 
-		if (exists $class->{$_}) {
-			if ($class->$_ && ref($class->$_) eq "DateTime") {
-				$vars->{$_} = $class->$_->strftime('%Y-%m-%dT%H-%M-%S%z');
-				$vars->{$_} =~ s/(\d\d)$/:$1/;
-			}
-			else {
-				$vars->{$_} = $class->$_;
-			}
-		}
-	}
+	my $vars = $class->to_json();
 	my $hash = { $class->singular() => $vars };
 	my ($decoded, $response);
+	my $method = lc($class->update_method) . "_url";
 	if (ref($class) !~ m/Asset/) {
-		($decoded, $response) = $self->put_url($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json", $hash);
+		($decoded, $response) = $self->$method($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json", $hash);
 	} else {
-		($decoded, $response) = $self->put_url("/admin/themes/" . $class->{container_id} . "/assets.json", $hash);
+		($decoded, $response) = $self->$method("/admin/themes/" . $class->{container_id} . "/assets.json", $hash);
 	}
 	my $element = $decoded->{$class->singular()};
 	return ref($class)->from_json($element);
@@ -309,7 +297,8 @@ sub delete {
 		return $response;
 	}
 	else {
-		my ($decoded, $response) = $self->delete_url($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json");
+		my $method = lc($class->delete_method) . "_url";
+		my ($decoded, $response) = $self->$method($self->resolve_trailing_url($class, 0) . "/" . $class->id() . ".json");
 	}
 
 	return 1;
@@ -332,8 +321,8 @@ sub activate {
 	}
 
 	my ($decoded, $response) = $self->post_url("/admin/" . $object->plural() . "/" . $object->id() . "/activate.json", {$object->singular() => $specs});
-
-	return 1;
+	my $element = $decoded->{$object->singular()};
+	return ref($object)->from_json($element);
 }
 
 use HTTP::Request::Common;
@@ -379,6 +368,11 @@ sub is_valid { eval { $_[0]->get_count('WWW::Shopify::Model::Product'); }; retur
 # Internal methods.
 sub validate_item { eval { die unless $_[1]; $_[1]->is_item; }; die new WWW::Shopify::Exception($_[1] . " is not an item!") if ($@); }
 
+=head2 calc_webhook_signature
+
+Calculates the webhook_signature based off the shared secret and request body passed in.
+
+=cut
 
 =head2 verify_webhook
 
@@ -389,17 +383,29 @@ Follows this: http://wiki.shopify.com/Verifying_Webhooks.
 =cut
 
 use Exporter 'import';
-our @EXPORT_OK = qw(verify_webhook verify_login verify_proxy);
+our @EXPORT_OK = qw(verify_webhook verify_login verify_proxy calc_webhook_signature calc_login_signature calc_proxy_signature);
 use Digest::MD5 'md5_hex';
-use MIME::Base64;
 use Digest::SHA qw(hmac_sha256_hex hmac_sha256_base64);
+use MIME::Base64;
+
+sub calc_webhook_signature {
+	my ($shared_secret, $request_body) = @_;
+	my $calc_signature = hmac_sha256_base64((defined $request_body) ? $request_body : "", $shared_secret);
+	while (length($calc_signature) % 4) { $calc_signature .= '='; }
+	return $calc_signature;
+}
 
 sub verify_webhook {
 	my ($x_shopify_hmac_sha256, $request_body, $shared_secret) = @_;
-	my $calc_signature = hmac_sha256_base64((defined $request_body) ? $request_body : "", $shared_secret);
-	while (length($calc_signature) % 4) { $calc_signature .= '='; }
-	return $x_shopify_hmac_sha256 eq $calc_signature;
+	return undef unless $x_shopify_hmac_sha256;
+	return $x_shopify_hmac_sha256 eq calc_webhook_signature($shared_secret, $request_body);
 }
+
+=head2 calc_login_signature
+
+Calculates the login signature based on the shared secret and parmaeter hash passed in.
+
+=cut
 
 =head2 verify_login
 
@@ -411,26 +417,39 @@ Also, they don't have a code parameter. For whatever reason.
 
 =cut
 
+sub calc_login_signature {
+	my ($shared_secret, $params) = @_;
+	return md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params))));
+}
+
 sub verify_login {
 	my ($shared_secret, $params) = @_;
-	my $calc_signature = md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params))));
 	return undef unless $params->{signature};
-	return $calc_signature eq $params->{signature};
+	return calc_login_signature($shared_secret, $params) eq $params->{signature};
 }
+
+=head2 calc_proxy_signature
+
+Based on shared secret/hash of parameters passed in, calculates the proxy signature.
+
+=cut
 
 =head2 verify_proxy
 
-Same as verify_login.
+This is SLIGHTLY different from the above two. For, as far as I can tell, no reason.
 
 =cut
 
-sub verify_proxy { return shift->verify_login(@_); }
+sub calc_proxy_signature {
+	my ($shared_secret, $params) = @_;
+	return hmac_sha256_hex(join("", sort(map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params)))), $shared_secret);
+}
 
-=head2 update_item
-
-Simple convenience method; updates a DB object with the data contained with a JSON-esque object.
-
-=cut
+sub verify_proxy { 
+	my ($shared_secret, $params) = @_;
+	return undef unless $params->{signature};
+	return calc_proxy_signature($shared_secret, $params) eq $params->{signature};
+}
 
 =head1 SEE ALSO
 

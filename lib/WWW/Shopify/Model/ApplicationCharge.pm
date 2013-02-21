@@ -26,6 +26,8 @@ sub countable() { return undef; }
 sub activatable($) { return 1; }
 sub minimal() { return ["name", "price", "return_url"]; }
 
+sub on_create { return ("created_at", "updated_at", "confirmation_url"); }
+
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
 
 1;
