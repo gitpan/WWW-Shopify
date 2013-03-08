@@ -50,7 +50,8 @@ sub stats($) { return {
 #	"shipping_address" => ["WWW::Shopify::Model::Address", WWW::Shopify->RELATION_ONE],
 	"fufillments" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::Fulfillment"),
 #	"client_details" => ["WWW::Shopify::Model::Order::ClientDetails", WWW::Shopify->RELATION_ONE],
-	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer")};
+	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer"),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") };
 }
 
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;

@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Cart::LineItem;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_cartline_items');	
 		__PACKAGE__->add_columns('line_price', { data_type => 'decimal', is_nullable => 1 },
 			'sku', { data_type => 'varchar(255)', is_nullable => 1 },

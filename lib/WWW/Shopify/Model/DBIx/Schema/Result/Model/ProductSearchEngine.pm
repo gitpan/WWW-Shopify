@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductSearchEngine;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_product_search_engines');	
 		__PACKAGE__->add_columns('created_at', { data_type => 'datetime', is_nullable => 1 },
 			'name', { data_type => 'varchar(255)', is_nullable => 1 },

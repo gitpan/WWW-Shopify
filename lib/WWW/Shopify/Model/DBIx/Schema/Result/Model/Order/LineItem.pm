@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_line_items');	
 		__PACKAGE__->add_columns('sku', { data_type => 'varchar(255)', is_nullable => 1 },
 			'fulfillment_service', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -43,7 +44,7 @@ use warnings;
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		
-		__PACKAGE__->has_one(product_id => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'id');
+		__PACKAGE__->belongs_to(product => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'product_id');
 		__PACKAGE__->has_many(line_itemsproperties => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::LineItemProperty', 'line_item_id');
 		__PACKAGE__->many_to_many(properties => 'line_itemsproperties', 'property');
 		__PACKAGE__->belongs_to(variant => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'variant_id');

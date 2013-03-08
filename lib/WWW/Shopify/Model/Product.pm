@@ -39,7 +39,8 @@ sub mods($) { return {
 	"vendor" => new WWW::Shopify::Field::String::Words(1,2),
 	"tags" => new WWW::Shopify::Field::String::Words(1,7),
 	"images" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Image"),
-	"options" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Option") };
+	"options" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Option"),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") };
 }
 sub stats($) { return {
 	"id" => new WWW::Shopify::Field::Identifier(),

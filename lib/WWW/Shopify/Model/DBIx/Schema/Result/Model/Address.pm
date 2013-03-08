@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Address;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_addresses');	
 		__PACKAGE__->add_columns('country', { data_type => 'varchar(255)', is_nullable => 1 },
 			'longitude', { data_type => 'float', is_nullable => 1 },

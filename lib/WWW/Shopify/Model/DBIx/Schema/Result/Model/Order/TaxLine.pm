@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::TaxLine;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_ordertax_lines');	
 		__PACKAGE__->add_columns('rate', { data_type => 'float', is_nullable => 1 },
 			'price', { data_type => 'decimal', is_nullable => 1 },

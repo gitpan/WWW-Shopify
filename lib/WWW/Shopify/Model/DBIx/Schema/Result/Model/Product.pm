@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Product;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_products');	
 		__PACKAGE__->add_columns('published_at', { data_type => 'datetime', is_nullable => 1 },
 			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -31,8 +32,8 @@ use warnings;
 			'handle', { data_type => 'varchar(255)', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
 			'id', { data_type => 'int',  },
-			'body_html', { data_type => 'text', is_nullable => 1 },
 			'title', { data_type => 'varchar(255)', is_nullable => 1 },
+			'body_html', { data_type => 'text', is_nullable => 1 },
 			'vendor', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
@@ -40,6 +41,8 @@ use warnings;
 		
 		__PACKAGE__->has_many(images => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Image', 'product_id');
 		__PACKAGE__->has_many(options => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Option', 'parent_id');
+		__PACKAGE__->has_many(productsmetafields => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldProduct', 'product_id');
+		__PACKAGE__->many_to_many(metafields => 'productsmetafields', 'metafield');
 		__PACKAGE__->has_many(variants => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'product_id');
 		sub represents($) { return 'WWW::Shopify::Model::Product'; }
 		

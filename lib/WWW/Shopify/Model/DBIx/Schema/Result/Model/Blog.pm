@@ -22,19 +22,21 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Blog;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_blogs');	
-		__PACKAGE__->add_columns('created_at', { data_type => 'datetime', is_nullable => 1 },
+		__PACKAGE__->add_columns('tags', { data_type => 'varchar(255)', is_nullable => 1 },
+			'created_at', { data_type => 'datetime', is_nullable => 1 },
 			'handle', { data_type => 'varchar(255)', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
-			'id', { data_type => 'int',  },
 			'title', { data_type => 'varchar(255)', is_nullable => 1 },
+			'id', { data_type => 'int',  },
 			'commentable', { data_type => 'varchar(255)', is_nullable => 1 },
-			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		
-		
+		__PACKAGE__->has_many(blogsmetafields => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::BlogMetafield', 'blog_id');
+		__PACKAGE__->many_to_many(metafields => 'blogsmetafields', 'metafield');
 		sub represents($) { return 'WWW::Shopify::Model::Blog'; }
 		
 	

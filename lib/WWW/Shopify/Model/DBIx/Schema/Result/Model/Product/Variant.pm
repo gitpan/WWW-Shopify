@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_productvariants');	
 		__PACKAGE__->add_columns('option1', { data_type => 'varchar(255)', is_nullable => 1 },
 			'sku', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -33,20 +34,21 @@ use warnings;
 			'inventory_policy', { data_type => 'varchar(255)', is_nullable => 1 },
 			'inventory_management', { data_type => 'varchar(255)', is_nullable => 1 },
 			'grams', { data_type => 'int', is_nullable => 1 },
-			'taxable', { data_type => 'bool', is_nullable => 1 },
 			'option3', { data_type => 'varchar(255)', is_nullable => 1 },
-			'inventory_quantity', { data_type => 'int', is_nullable => 1 },
+			'taxable', { data_type => 'bool', is_nullable => 1 },
 			'option2', { data_type => 'varchar(255)', is_nullable => 1 },
+			'inventory_quantity', { data_type => 'int', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
-			'title', { data_type => 'varchar(255)', is_nullable => 1 },
 			'price', { data_type => 'decimal', is_nullable => 1 },
+			'title', { data_type => 'varchar(255)', is_nullable => 1 },
 			'fufillment_service', { data_type => 'varchar(255)', is_nullable => 1 },
 			'requires_shipping', { data_type => 'bool', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		__PACKAGE__->belongs_to(product => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'product_id');
-		
+		__PACKAGE__->has_many(variantsmetafields => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldVariant', 'variant_id');
+		__PACKAGE__->many_to_many(metafields => 'variantsmetafields', 'metafield');
 		sub represents($) { return 'WWW::Shopify::Model::Product::Variant'; }
 		sub parent_variable($) { return 'product_id'; }
 	

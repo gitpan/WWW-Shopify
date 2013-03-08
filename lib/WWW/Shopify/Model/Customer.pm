@@ -22,8 +22,15 @@ sub stats($) { return {
 	"total_spent" => new WWW::Shopify::Field::Money(),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"tags" => new WWW::Shopify::Field::String::Words(0, 6),
-	"last_order_name" => new WWW::Shopify::Field::String()};
-}
+	"last_order_name" => new WWW::Shopify::Field::String(),
+	"addresses" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Address'),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") 
+}; }
+
+sub minimal { return ["first_name", "last_name", "email"]; }
+sub on_creation { return ("created_at", "updated_at"); }
+
+sub searchable($) { return 1; }
 
 eval(__PACKAGE__->generate_accessors()); die $@ if $@;
 

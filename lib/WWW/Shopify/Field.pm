@@ -86,9 +86,41 @@ sub validate($) { return undef unless $_[1] =~ m/\s*\$?\s*$/; return is_float($`
 
 package WWW::Shopify::Field::Date;
 use parent 'WWW::Shopify::Field';
+use DateTime;
 sub sql_type { return 'datetime'; }
-sub to_shopify { die new WWW::Shopify::Exception($_[1]) unless $_[1] =~ m/(\d+-\d+-\d+) (\d+:\d+:\d+)/; return "$1T$2"; }
-sub from_shopify { die new WWW::Shopify::Exception($_[1]) unless $_[1] =~ m/(\d+-\d+-\d+)T(\d+:\d+:\d+)/; return "$1 $2"; }
+sub to_shopify {
+	my $dt = $_[1];
+	if (ref($dt) eq "DateTime") {
+		my $t = $dt->strftime('%Y-%m-%dT%H:%M:%S%z');
+		$t =~ s/(\d\d)$/:$1/;
+		return $t;
+	}
+	die new WWW::Shopify::Exception($dt) unless $dt =~ m/([\d-]+)\s*T?\s*([\d:]+)/;
+	return "$1T$2";
+}
+sub from_shopify {
+	my $dt; 
+	if ($_[1] =~ m/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)([+-]\d+):(\d+)/) {
+		$dt = DateTime->new(
+			year      => $1,
+			month     => $2,
+			day       => $3,
+			hour      => $4,
+			minute    => $5,
+			second    => $6,
+			time_zone => $7 . $8,
+		);
+	}
+	else {
+		die new WWW::Shopify::Exception("Unable to parse date " . $_[1]) unless $_[1] =~ m/(\d+)-(\d+)-(\d+)/;
+		$dt = DateTime->new(
+			year      => $1,
+			month     => $2,
+			day       => $3
+		);
+	}
+	return $dt;
+}
 sub validate($) { return scalar($_[1] =~ m/(\d+-\d+-\d+)T?(\d+:\d+:\d+)/); }
 
 sub generate($) {

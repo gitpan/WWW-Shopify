@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.120921'
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.07
+    version: 0.08
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -187,6 +187,9 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Address:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Address.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCustomer:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCustomer.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ApplicationCharge.pm
@@ -443,4 +446,4 @@ requires:
   String::Numeric: 0.9
   String::Random: 0.22
   URI::Escape: 3.31
-version: 0.07
+version: 0.08

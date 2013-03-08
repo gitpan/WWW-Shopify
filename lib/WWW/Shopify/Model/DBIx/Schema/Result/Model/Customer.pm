@@ -22,26 +22,32 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Customer;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_customers');	
-		__PACKAGE__->add_columns('last_order_id', { data_type => 'int', is_nullable => 1 },
-			'last_order_name', { data_type => 'varchar(255)', is_nullable => 1 },
+		__PACKAGE__->add_columns('last_order_name', { data_type => 'varchar(255)', is_nullable => 1 },
 			'orders_count', { data_type => 'int', is_nullable => 1 },
-			'accepts_marketing', { data_type => 'bool', is_nullable => 1 },
 			'last_name', { data_type => 'varchar(255)', is_nullable => 1 },
-			'note', { data_type => 'varchar(255)', is_nullable => 1 },
 			'state', { data_type => 'varchar(255)', is_nullable => 1 },
-			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
 			'email', { data_type => 'varchar(255)', is_nullable => 1 },
 			'created_at', { data_type => 'datetime', is_nullable => 1 },
-			'updated_at', { data_type => 'datetime', is_nullable => 1 },
 			'id', { data_type => 'int',  },
-			'first_name', { data_type => 'varchar(255)', is_nullable => 1 },
+			'last_order_id', { data_type => 'int', is_nullable => 1 },
+			'accepts_marketing', { data_type => 'bool', is_nullable => 1 },
+			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
+			'note', { data_type => 'varchar(255)', is_nullable => 1 },
+			'addresses', { data_type => 'int', is_nullable => 1 },
+			'updated_at', { data_type => 'datetime', is_nullable => 1 },
 			'total_spent', { data_type => 'decimal', is_nullable => 1 },
+			'first_name', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		
-		__PACKAGE__->has_one(last_order_id => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'id');
+		__PACKAGE__->belongs_to(last_order => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'last_order_id');
+		__PACKAGE__->has_many(customersmetafields => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerMetafield', 'customer_id');
+		__PACKAGE__->many_to_many(metafields => 'customersmetafields', 'metafield');
+		__PACKAGE__->has_many(customersaddresses => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCustomer', 'customer_id');
+		__PACKAGE__->many_to_many(addresses => 'customersaddresses', 'address');
 		sub represents($) { return 'WWW::Shopify::Model::Customer'; }
 		
 	

@@ -50,7 +50,7 @@ sub new {
 # Determines whether or not the field is pointing to something that has a belong relation.
 # If it is, we don't need a column for it.
 sub is_belonging_field($$) {
-	return $_[1]->is_relation() && $_[1]->relation()->parent() && $_[1]->relation()->parent() eq $_[0];
+	return $_[1]->is_relation() && (($_[1]->relation()->parent() && $_[1]->relation()->parent() eq $_[0]) || $_[1]->relation() =~ "Metafield");
 }
 
 sub strip_head($) {
@@ -165,7 +165,7 @@ sub generateDBIx {
 					}
 				}
 				else {
-					push(@relations, "__PACKAGE__->has_one($_ => '" . transform_package($relation->relation()) . "', 'id');") unless $relation->relation()->is_nested();
+					push(@relations, "__PACKAGE__->belongs_to(" . strip_id($_) . " => '" . transform_package($relation->relation()) . "', '$_');") unless $relation->relation()->is_nested();
 				}
 			}
 		}
@@ -199,6 +199,7 @@ sub generateDBIx {
 		package " . transform_package($package) . ";
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('$tableName');	
 		__PACKAGE__->add_columns(" . join(",\n\t\t\t", @columns) . ");
 		$shopLine
@@ -210,30 +211,51 @@ sub generateDBIx {
 	";
 }
 
+use WWW::Shopify::Common::DBIxGroup;
 # Takes in a schema and a shopify object and maps it to a DBIx existence.
 sub from_shopify($$$@) {
+	my $internal_from = sub {
+		my ($self, $type, $data) = @_;
+		# If we have a class relationship.
+		if ($type->is_relation()) {
+			if ($type->is_many()) {
+				return [] unless $data;
+				my $array = [map { $self->from_shopify($_); } @$data];
+				return $array;
+			}
+			elsif ($type->is_own()) {
+				return {} unless $data;
+				return $self->from_shopify($data);
+			}
+			elsif ($type->is_reference() && $type->is_one()) {
+				return undef unless $data;
+				return $type->from_shopify($data);
+			}
+		}
+		return $type->from_shopify($data);
+	};
+
 	my ($self, $schema, $shopifyObject) = @_;
 	return undef unless $shopifyObject;
-	die new WWW::Shopify::Exception('Invalid object passed into from_shopify: ' . ref($shopifyObject)) unless ref($shopifyObject) =~ m/^WWW::Shopify::Model::/ && ref($shopifyObject) !~ m/WWW::Shopify::Model::DBIx/;
-
-	my $package = ref($shopifyObject);
+	die new WWW::Shopify::Exception('Invalid object passed into to_shopify: ' . ref($shopifyObject) . '.') unless ref($shopifyObject) =~ m/Model::/;
+	my $dbPackage = transform_package(ref($shopifyObject));
+	my $dbObject = $schema->resultset($dbPackage)->new({});
 	my $fields = $shopifyObject->fields();
-	my $hash = {};
-	for (keys(%$fields)) {
-		my $mapped = undef;
-		my $object = $shopifyObject->{$_};
-		next if (ref($object) eq "ARRAY");
-		$mapped = $package->fields()->{$_}->from_shopify($object);
-		$hash->{transform_invalid($_)} = $mapped;
+	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
+
+	foreach my $key (keys(%$fields)) {
+		my $data = $shopifyObject->$key;
+		if ($data) {
+			my $db_value = &$internal_from($self, $fields->{$key}, $data);
+			if ($fields->{$key}->is_relation() && $fields->{$key}->is_many()) {
+				$group->add_children(grep { defined $_ } @$db_value);
+			}
+			else {
+				$dbObject->$key($db_value);
+			}
+		}
 	}
-	die ref($shopifyObject) unless ref($shopifyObject) =~ m/WWW::Shopify::(.*)$/;
-	my $parentId = $shopifyObject->{parent_id};
-	if (defined $parentId) {
-		my $DBIxPackage = transform_package(ref($shopifyObject));
-		$hash->{$DBIxPackage->parent_variable()} = $parentId;
-	}
-	my $rs = $schema->resultset($1)->new_result($hash);
-	return $rs;
+	return $group;
 }
 
 sub to_shopify($$$@) {
@@ -249,6 +271,10 @@ sub to_shopify($$$@) {
 			elsif ($type->is_own()) {
 				return {} unless $data;
 				return $self->to_shopify($data);
+			}
+			elsif ($type->is_reference() && $type->is_one()) {
+				return undef unless $data;
+				return $type->to_shopify($data);
 			}
 		}
 		return $type->to_shopify($data);

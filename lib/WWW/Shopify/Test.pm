@@ -292,6 +292,19 @@ sub get_all($$@) {
 	}
 }
 
+sub search {
+	my ($self, $package, $specs) = @_;
+	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$package = $self->translate_model($package);
+	die new WWW::Shopify::Exception("Unable to search $package; it is not marked as searchable in Shopify's API.") unless $package->searchable;
+	die new WWW::Shopify::Exception("Must have a query to search.") unless $specs && $specs->{query};
+	$self->validate_item($package);
+	my @criteria = split(/\s+/, $specs->{query});
+	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
+	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
+	return map { $self->{_mapper}->to_shopify($_); } @return;
+}
+
 sub get_shop($) {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
@@ -316,11 +329,10 @@ sub get($$$@) {
 }
 
 # Fields that should be filled in by 'shopify'.
-sub post_creation_fields($$) {
-	my ($self, $item, $specs) = @_;
-	my $package = ref($item);
-	if ($package eq "WWW::Shopify::Model::RecurringApplicationCharge" || $package eq "WWW::Shopify::Model::ApplicationCharge") {
-		$specs->{status} = "pending";
+sub post_creation_fields {
+	my ($self, $item) = @_;
+	if (ref($item) =~ m/ApplicationCharge/) {
+		$item->status("pending");
 	}
 }
 
@@ -335,30 +347,33 @@ sub create($$@) {
 	}
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 
-	$specs = $item->to_json();
+	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 
-	my $fields = $package->fields();
-	# So, if we have a field called id, we generate it.
-	if (exists $fields->{id} && !exists $specs->{id}) {
-		while (1) {
-			$specs->{id} = int(rand(10000000));
-			my $item = $self->{_db}->resultset(transform_name($package))->find($specs->{id});
-			last unless defined $item;
+	sub fill_creation {
+		my $self = shift;
+		my %chosen_ids = ();
+		foreach my $item (@_) {
+			my $fields = $item->represents->fields;
+			my @fillable_on_creation = $item->represents->on_create();
+			$item->$_($fields->{$_}->generate()) for (@fillable_on_creation);
+			if (exists $fields->{id}) {
+				while (1) {
+					my $id = int(rand(10000000));
+					$item->id($id);
+					my $test = $self->{_db}->resultset(transform_name($item->represents))->find($id);
+					last unless defined $test && !exists $chosen_ids{$id};
+				}
+				$chosen_ids{$item->id} = 1;
+			}
+			$item->shop_id($self->associate->id);
+			$self->post_creation_fields($item);
 		}
 	}
-	my @fillable_on_creation = $package->on_create();
-	for (@fillable_on_creation) {
-		$specs->{$_} = $fields->{$_}->generate();
-	}
-	# We're also going to have to generate a bunch of fields.
-	if (exists $fields->{confirmation_url}) {
-		$specs->{confirmation_url} = $fields->{confirmation_url}->generate();
-	}
-	$specs->{shop_id} = $self->associate()->id();
-	$self->post_creation_fields($item, $specs);
+	fill_creation($self, $dbixgroup->nested);
+	$dbixgroup->insert;
 
-	my $object = $self->{_db}->resultset(transform_name($package))->create($specs);
-	return $self->{_mapper}->to_shopify($object);
+	my $return = $self->{_mapper}->to_shopify($dbixgroup->contents);
+	return $return;
 }
 
 sub update {
@@ -390,7 +405,7 @@ sub activate {
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
 	die new WWW::Shopify::Exception("Unable to find charge with id: " . $object->id()) unless defined $object;
-	$object->status("activated");
+	$object->status("active");
 	$object->update;
 
 	return $self->{_mapper}->to_shopify($object);

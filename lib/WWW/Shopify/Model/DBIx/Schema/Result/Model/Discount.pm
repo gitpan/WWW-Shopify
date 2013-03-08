@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_discounts');	
 		__PACKAGE__->add_columns('starts_at', { data_type => 'datetime', is_nullable => 1 },
 			'ends_at', { data_type => 'datetime', is_nullable => 1 },
@@ -41,7 +42,7 @@ use warnings;
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		
-		__PACKAGE__->has_one(applies_to_id => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'id');
+		__PACKAGE__->belongs_to(applies_to => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'applies_to_id');
 		__PACKAGE__->belongs_to(applies_to => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'applies_to');
 		sub represents($) { return 'WWW::Shopify::Model::Discount'; }
 		

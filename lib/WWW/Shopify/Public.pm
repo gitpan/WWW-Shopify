@@ -41,7 +41,8 @@ sub new($$$$) {
 		_api_key => $api_key,
 		_access_token => $access_token,
 		_ua => $UA,
-		_url_handler => undef
+		_url_handler => undef,
+		_api_calls => 0
 	}, $class;
 	$self->url_handler(new WWW::Shopify::URLHandler($self));
 	$UA->cookie_jar({ file => "/tmp/.cookies.txt" });
@@ -50,7 +51,21 @@ sub new($$$$) {
 	return $self;
 }
 
+sub api_calls { $_[0]->{_api_calls} = $_[1] if defined $_[1]; return $_[0]->{_api_calls}; }
 sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->{_url_handler}; }
+
+sub get_url {
+	my $self = shift;
+	my ($decoded, $response) = $self->SUPER::get_url(@_);
+	$self->api_calls($1) if ($response->header('x-shopify-shop-api-call-limit') =~ m/^(\d+)/);
+	return ($decoded, $response);
+}
+sub use_url {
+	my $self = shift;
+	my ($decoded, $response) = $self->SUPER::use_url(@_);
+	$self->api_calls($1) if ($response->header('x-shopify-shop-api-call-limit') =~ m/^(\d+)/);
+	return ($decoded, $response);
+}
 
 =head2 encode_url(url)
 

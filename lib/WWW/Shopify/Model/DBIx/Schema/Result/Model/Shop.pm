@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_shops');	
 		__PACKAGE__->add_columns('source', { data_type => 'varchar(255)', is_nullable => 1 },
 			'taxes_included', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -60,6 +61,7 @@ use warnings;
 	__PACKAGE__->has_many(discounts => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount', 'shop_id');
 	__PACKAGE__->has_many(product_search_engines => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductSearchEngine', 'shop_id');
 	__PACKAGE__->has_many(transactions => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction', 'shop_id');
+	__PACKAGE__->has_many(pages => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Page', 'shop_id');
 	__PACKAGE__->has_many(custom_collections => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection', 'shop_id');
 	__PACKAGE__->has_many(checkouts => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout', 'shop_id');
 	__PACKAGE__->has_many(articles => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Article', 'shop_id');

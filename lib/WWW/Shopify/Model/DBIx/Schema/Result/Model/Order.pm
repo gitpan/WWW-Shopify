@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_orders');	
 		__PACKAGE__->add_columns('closed_at', { data_type => 'datetime', is_nullable => 1 },
 			'total_price', { data_type => 'decimal', is_nullable => 1 },
@@ -63,6 +64,8 @@ use warnings;
 		__PACKAGE__->has_many(ordersline_items => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderLineItem', 'order_id');
 		__PACKAGE__->many_to_many(line_items => 'ordersline_items', 'line_item');
 		__PACKAGE__->has_many(fufillments => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment', 'order_id');
+		__PACKAGE__->has_many(ordersmetafields => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldOrder', 'order_id');
+		__PACKAGE__->many_to_many(metafields => 'ordersmetafields', 'metafield');
 		__PACKAGE__->has_many(note_attributes => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::NoteAttributes', 'parent_id');
 		__PACKAGE__->has_many(discount_codes => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::DiscountCode', 'parent_id');
 		__PACKAGE__->has_many(shipping_lines => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingLine', 'parent_id');

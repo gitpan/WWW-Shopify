@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Asset;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_themeassets');	
 		__PACKAGE__->add_columns('attachment', { data_type => 'text', is_nullable => 1 },
 			'value', { data_type => 'text', is_nullable => 1 },

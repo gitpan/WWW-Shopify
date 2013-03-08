@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_metafields');	
 		__PACKAGE__->add_columns('namespace', { data_type => 'varchar(255)', is_nullable => 1 },
 			'value', { data_type => 'varchar(255)', is_nullable => 1 },
@@ -30,14 +31,14 @@ use warnings;
 			'value_type', { data_type => 'varchar(255)', is_nullable => 1 },
 			'created_at', { data_type => 'datetime', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
-			'id', { data_type => 'int',  },
 			'owner_id', { data_type => 'int', is_nullable => 1 },
+			'id', { data_type => 'int',  },
 			'owner_resource', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');
 		
-		__PACKAGE__->has_one(owner_id => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'id');
+		__PACKAGE__->belongs_to(owner => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'owner_id');
 		sub represents($) { return 'WWW::Shopify::Model::Metafield'; }
 		
 	

@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_checkouts');	
 		__PACKAGE__->add_columns('billing_address', { data_type => 'int', is_nullable => 1 },
 			'buyer_accepts_marketing', { data_type => 'bool', is_nullable => 1 },

@@ -15,9 +15,11 @@ sub stats($) { return {
 	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"id" => new WWW::Shopify::Field::Identifier::String(),
 	"sort_order" => new WWW::Shopify::Field::String::Enum(["manual", "automatic"]),
-	"template_suffix" => new WWW::Shopify::Field::String()};
+	"template_suffix" => new WWW::Shopify::Field::String(),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") };
 }
 
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub has_metafields { return 1; }
 
 1;

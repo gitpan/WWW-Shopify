@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_ordertransactions');	
 		__PACKAGE__->add_columns('status', { data_type => 'varchar(255)', is_nullable => 1 },
 			'gateway', { data_type => 'varchar(255)', is_nullable => 1 },

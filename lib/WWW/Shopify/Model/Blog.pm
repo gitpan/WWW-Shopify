@@ -12,7 +12,8 @@ sub mods() { return {
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"handle" => new WWW::Shopify::Field::String::Handle(),
 	"commentable" => new WWW::Shopify::Field::String("(no|yes)"),
-	"tags" => new WWW::Shopify::Field::String()};
+	"tags" => new WWW::Shopify::Field::String(),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") };
 }
 sub stats { return {
 	"id" => new WWW::Shopify::Field::Identifier(),
@@ -25,6 +26,7 @@ sub stats { return {
 }
 # Minimal variables required to create.
 sub minimal() { return ["title"]; }
+sub has_metafields { return 1; }
 
 eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
 

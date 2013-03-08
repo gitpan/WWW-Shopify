@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -53,7 +53,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.07"
+         "version" : "0.08"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -277,6 +277,10 @@
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Address" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Address.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCustomer" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCustomer.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge" : {
@@ -593,5 +597,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.07"
+   "version" : "0.08"
 }

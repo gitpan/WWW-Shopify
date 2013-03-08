@@ -66,13 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.07';
-
-use constant {
-	RELATION_OWN_ONE => 0,
-	RELATION_REF_ONE => 10,
-	RELATION_MANY => 20
-}; 
+our $VERSION = '0.08';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -89,6 +83,7 @@ sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent};
 
 sub get_url($$@) {
 	my ($self, $url, $parameters) = @_;
+	print STDERR "GET $url\n" if $ENV{'SHOPIFY_LOG'};
 	my $uri = URI->new($url);
 	for (grep { $parameters->{$_} && ref($parameters->{$_}) eq "DateTime" } keys(%$parameters)) {
 		$parameters->{$_} = $parameters->{$_}->strftime('%Y-%m-%d %H:%M:%S%z')
@@ -109,6 +104,7 @@ sub get_url($$@) {
 sub use_url($$$$) {
 	my ($self, $method, $url, $hash) = @_;
 	my $request = HTTP::Request->new($method, $url);
+	print STDERR "$method $url\n" if $ENV{'SHOPIFY_LOG'};
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");
 	$request->content($hash ? JSON::encode_json($hash) : undef);
 	my $response = $self->parent->ua->request($request);
@@ -157,29 +153,30 @@ sub put_url($$@) { return $_[0]->url_handler()->put_url($_[0]->encode_url($_[1])
 sub delete_url($$@) { return $_[0]->url_handler()->delete_url($_[0]->encode_url($_[1]), $_[2]); }
 
 sub resolve_trailing_url($$$) {
-	my ($self, $package, $parentId) = @_;
-	my $container = $package->container();
+	my ($self, $package, $parent_id, $parent_container) = @_;
+	my $container = ($parent_container ? $parent_container : $package->container());
 	return "/admin/" . $package->plural() unless (defined $container);
-	die new WWW::Shopify::Exception("Must pass in a 'parent' field, in your specs when calling $package.") unless defined $parentId;
-	return "/admin/" . $container->plural() . "/" . $parentId . "/" . $package->plural();
+	die new WWW::Shopify::Exception("Must pass in a 'parent' field, in your specs when calling $package.") unless defined $parent_id;
+	return "/admin/" . $container->plural() . "/" . $parent_id . "/" . $package->plural();
 }
 
 sub get_all_limit($$@) {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}) . ".json", $specs);
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}, $specs->{parent_container}) . ".json", $specs);
 
 	my @return = ();
 	foreach my $element (@{$decoded->{$package->plural()}}) {
 		my $class = $package->from_json($element);
 		$class->{parent_id} = $specs->{parent} if ($package->container());
+		$class->associate($self);
 		push(@return, $class);
 	}
 	return @return;
 }
 
 use POSIX qw/ceil/;
-sub get_all($$@) {
+sub get_all {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
@@ -216,7 +213,7 @@ sub get_count($$@) {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	die "Cannot count $package." unless $package->countable();
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}) . "/count.json", $specs);
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}, $specs->{parent_container}) . "/count.json", $specs);
 	return $decoded->{'count'};
 }
 
@@ -229,7 +226,7 @@ sub get($$$@) {
 	# We have a special case for asssets, for some arbitrary reason.
 	my ($decoded, $response);
 	if ($package !~ m/Asset/) {
-		($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}) . "/$id.json");
+		($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}, $specs->{parent_container}) . "/$id.json");
 	} else {
 		die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
 		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent} . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}});
@@ -239,7 +236,28 @@ sub get($$$@) {
 	my $element = $decoded->{$package->singular()};
 	my $class = $package->from_json($element);
 	$class->{parent_id} = $specs->{parent} if ($package->container());
+	$class->associate($self);
 	return $class;
+}
+
+sub search {
+	my ($self, $package, $specs) = @_;
+	$package = $self->translate_model($package);
+	die new WWW::Shopify::Exception("Unable to search $package; it is not marked as searchable in Shopify's API.") unless $package->searchable;
+	die new WWW::Shopify::Exception("Must have a query to search.") unless $specs && $specs->{query};
+	$self->validate_item($package);
+
+	my $plural = $package->plural();
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}, $specs->{parent_container}) . "/search.json", $specs);
+
+	my @return = ();
+	foreach my $element (@{$decoded->{$package->plural()}}) {
+		my $class = $package->from_json($element);
+		$class->{parent_id} = $specs->{parent} if ($package->container());
+		$class->associate($self);
+		push(@return, $class);
+	}
+	return @return;
 }
 
 use List::Util qw(first);
@@ -254,15 +272,17 @@ sub create {
 	$specs = $item->to_json();
 	if ($item->needs_login) {
 		my @fields = map { my $a; $item->singular . "[$_]" => $specs->{$_} } keys(%$specs);
-		my $url = $self->encode_url($self->resolve_trailing_url($item, $item->{parent})) . ".json";
+		my $url = $self->encode_url($self->resolve_trailing_url($item, $item->{parent}, $specs->{parent_container})) . ".json";
 		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, @fields], Accept => 'application/json');
 	 	my $json = JSON::decode_json($response->decoded_content);
 		return ref($item)->from_json($json->{$item->singular});
 	}
 	my $method = lc($item->create_method) . "_url";
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, $item->{parent}) . ".json", {$item->singular() => $specs});
+	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, $item->{parent}, $specs->{parent_container}) . ".json", {$item->singular() => $specs});
 	my $element = $decoded->{$item->singular()};
-	return ref($item)->from_json($element);
+	my $object = ref($item)->from_json($element);
+	$object->associate($self);
+	return $object;
 }
 
 sub update {
@@ -282,7 +302,9 @@ sub update {
 		($decoded, $response) = $self->$method("/admin/themes/" . $class->{container_id} . "/assets.json", $hash);
 	}
 	my $element = $decoded->{$class->singular()};
-	return ref($class)->from_json($element);
+	my $object = ref($class)->from_json($element);
+	$object->associate($self);
+	return $object;
 }
 
 sub delete {

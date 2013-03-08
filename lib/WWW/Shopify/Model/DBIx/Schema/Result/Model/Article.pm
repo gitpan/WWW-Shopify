@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Article;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_blogarticles');	
 		__PACKAGE__->add_columns('summary_html', { data_type => 'text', is_nullable => 1 },
 			'published_at', { data_type => 'datetime', is_nullable => 1 },

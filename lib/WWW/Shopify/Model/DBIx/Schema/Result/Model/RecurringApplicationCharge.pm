@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::RecurringApplicationCharge;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_recurring_application_charges');	
 		__PACKAGE__->add_columns('test', { data_type => 'bool', is_nullable => 1 },
 			'trial_days', { data_type => 'int', is_nullable => 1 },

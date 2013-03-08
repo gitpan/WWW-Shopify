@@ -21,7 +21,9 @@ sub mods { return {
 	"taxable" => new WWW::Shopify::Field::Boolean(),
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"compare_at_price" => new WWW::Shopify::Field::Money(),
-	"inventory_quantity" => new WWW::Shopify::Field::Int(1, 20)};
+	"inventory_quantity" => new WWW::Shopify::Field::Int(1, 20),
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") 
+};
 }
 sub stats() { return {
 	"id" => new WWW::Shopify::Field::Identifier(),

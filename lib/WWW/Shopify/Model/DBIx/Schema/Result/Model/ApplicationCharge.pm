@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_application_charges');	
 		__PACKAGE__->add_columns('test', { data_type => 'bool', is_nullable => 1 },
 			'status', { data_type => 'varchar(255)', is_nullable => 1 },

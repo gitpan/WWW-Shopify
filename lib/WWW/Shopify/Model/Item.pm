@@ -118,10 +118,41 @@ sub is_nested() { return undef; }
 
 sub identifier($) { return "id"; }
 
-sub creatable($) { return 1; }
-sub updatable($) { return 1; }
-sub deletable($) { return 1; }
-sub activatable($) { return undef; }
+sub creatable { return 1; }
+sub updatable { return 1; }
+sub deletable { return 1; }
+sub activatable { return undef; }
+sub searchable { return undef; }
+
+sub associate { $_[0]->{associated_sa} = $_[1] if $_[1]; return $_[0]->{associated_sa}; }
+sub create { 
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call create on an unassociated item.") unless $sa;
+	return $sa->create($_[0]);
+}
+sub update { 
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call update on an unassociated item.") unless $sa;
+	return $sa->update($_[0]);
+}
+sub delete { 
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call delete on an unassociated item.") unless $sa;
+	return $sa->delete($_[0]);
+}
+sub activate {
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call activate on an unassociated item.") unless $sa;
+	return $sa->activate($_[0]);
+}
+sub get_metafields {
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call metafields on an unassociated item.") unless $sa;
+	if (!exists $_[0]->{metafields}) {
+		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0]->plural })];
+	}
+	return $_[0]->{metafields};
+}
 
 # I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?
 sub create_method { return "POST"; }
@@ -132,22 +163,24 @@ sub get_all { my $package = shift; my $SA = shift; my $specs = shift; return $SA
 sub get_count { my $package = shift; my $SA = shift; return $SA->typicalGetCount($package, shift); }
 sub fields { my $package = shift; my $returnHash = {}; %$returnHash = (%{$package->mods()}, %{$package->stats()}); return $returnHash; }
 
+# Should modify these to use the date methods in Field.
 sub from_json($$) {
 	my ($package, $json) = @_;
 
 	my $mods = $package->mods();
 	my $stats = $package->stats();
-
+	
 	sub decodeForRef { 
 		my ($self, $json, $ref) = @_;
 		for (keys(%{$ref})) {
 			if ($ref->{$_}->is_relation()) {
 				my $package = $ref->{$_}->relation();
 				if ($ref->{$_}->is_many()) {
+					next unless exists $json->{$package->plural()};
 					$self->{$_} = [];
 					foreach my $object (@{$json->{$package->plural()}}) {
 						my $child = $package->from_json($object);
-						$child->{"parent"} = $self;
+						$child->{parent} = $self;
 						push(@{$self->{$_}}, $child);
 					}
 				}
@@ -243,11 +276,10 @@ sub generate_accessors($) {
 		$eval .= "sub $_ {return \$_[0]->{$_};} ";
 	}
 	for (keys(%{$_[0]->mods()})) {
-		$eval .= "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_};} ";
+		$eval .= "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_};}";
 	}
 	return $eval;
 }
-
 
 =head1 SEE ALSO
 

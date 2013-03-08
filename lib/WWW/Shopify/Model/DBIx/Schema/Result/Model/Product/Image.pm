@@ -22,6 +22,7 @@ use warnings;
 		package WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Image;
 		use base qw/DBIx::Class::Core/;
 		
+		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 		__PACKAGE__->table('shopify_productimages');	
 		__PACKAGE__->add_columns('created_at', { data_type => 'datetime', is_nullable => 1 },
 			'product_id', { data_type => 'int', is_nullable => 1 },
