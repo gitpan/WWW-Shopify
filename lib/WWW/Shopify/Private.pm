@@ -18,7 +18,7 @@ use warnings;
 
 package WWW::Shopify::Private;
 use parent 'WWW::Shopify';
-use File::Temp qw/ tempfile /;;
+use File::Temp qw/ tempfile /;
 
 =head1 METHODS
 
@@ -31,7 +31,7 @@ Creates a new WWW::Shopify::Private object, which allows you to make calls via t
 sub new($$$$) { 
 	my ($class, $shop_url, $api_key, $password) = @_;
 	my $UA = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
-	$UA->timeout(5);
+	$UA->timeout(10);
 	$UA->cookie_jar({ });
 	my $self = bless {
 		_shop_url => $shop_url,
@@ -52,7 +52,11 @@ Modifies the requested url by prepending the api key and the password, as well a
 
 =cut
 
-sub encode_url { return "https://" . $_[0]->api_key . ":" . $_[0]->password . "@" . $_[0]->shop_url . $_[1]; }
+sub encode_url { 
+	my ($self, $url) = @_;
+	return "https://" . $self->shop_url . $url if ($self->logged_in_admin);
+	return "https://" . $self->api_key . ":" . $_[0]->password . "@" . $self->shop_url . $url;
+}
 
 =head2 password([new_password])
 

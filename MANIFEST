@@ -5,6 +5,7 @@ README
 t/WWW-Shopify.t
 lib/WWW/Shopify.pm
 lib/WWW/Shopify/Common/DBIx.pm
+lib/WWW/Shopify/URLHandler.pm
 lib/WWW/Shopify/URLHandler/Queued.pm
 lib/WWW/Shopify/Test.pm
 lib/WWW/Shopify/Exception.pm

@@ -53,7 +53,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.08"
+         "version" : "0.09"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -588,7 +588,7 @@
          "version" : 0
       },
       "WWW::Shopify::URLHandler" : {
-         "file" : "lib/WWW/Shopify.pm",
+         "file" : "lib/WWW/Shopify/URLHandler.pm",
          "version" : 0
       },
       "WWW::Shopify::URLHandler::Queued" : {
@@ -597,5 +597,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.08"
+   "version" : "0.09"
 }

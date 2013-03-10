@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.08
+    version: 0.09
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -420,7 +420,7 @@ provides:
     file: lib/WWW/Shopify/Test.pm
     version: 0
   WWW::Shopify::URLHandler:
-    file: lib/WWW/Shopify.pm
+    file: lib/WWW/Shopify/URLHandler.pm
     version: 0
   WWW::Shopify::URLHandler::Queued:
     file: lib/WWW/Shopify/URLHandler/Queued.pm
@@ -446,4 +446,4 @@ requires:
   String::Numeric: 0.9
   String::Random: 0.22
   URI::Escape: 3.31
-version: 0.08
+version: 0.09

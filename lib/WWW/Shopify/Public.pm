@@ -73,7 +73,7 @@ Modifies the requested url by prepending the api key and the password, as well a
 
 =cut
 
-sub encode_url { return "https://" . $_[0]->{_shop_url} . $_[1]; }
+sub encode_url { return "https://" . $_[0]->shop_url . $_[1]; }
 
 =head2 access_token([access_token])
 

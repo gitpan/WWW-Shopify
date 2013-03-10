@@ -52,26 +52,26 @@ When you have a top level class (see the list in the SEE ALSO section below), yo
 
 getAll - Gets all objects of this type in the store.
 
-	my @Variants = $WWW::Shopify->getAll('WWW::Shopify::Model::Variant', {});
+	my @Products = $SA->getAll('Product');
 
 get - Gets an object with the specified ID.
 
-	my $Product = $WWW::Shopify->get('WWW::Shopify::Model::Product', 324234);
+	my $Product = $SA->get('Product', 324234);
 
 create - Creates the object that's passed in, on the Shopify store. Note that we pass in the hash all the necessary fields as required by L<WWW::Shopify::Model::Product>'s minimal() method.
 
-	my $Product = new WWW::Shopify::Model::Product({title => "My new Product", product_type => "Nice Product", vendor => "Our Shopify Store"});
+	my $Product = $SA->create(new WWW::Shopify::Model::Product({title => "My new Product", product_type => "Nice Product", vendor => "Our Shopify Store"}));
 
 delete - Deletes the shopify object that's passed in.
 
-	my $Product = ....
-	$WWW::Shopify->delete($Product);
+	my $Product = $SA->get('Product', 312443);
+	$SA->delete($Product);
 
 update - Updates the shopify object that's pass in.
 
-	my $Product = $WWW::Shopify->get('WWW::Shopify::Model::Product', 312443);
+	my $Product = $SA->get('Product', 312443);
 	$Product->vendor("A new vendor");
-	$WWW::Shopify->update($Product);
+	$SA->update($Product);
 
 =cut
 
