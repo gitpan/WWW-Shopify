@@ -24,8 +24,16 @@ sub stats($) { return {
 	"tags" => new WWW::Shopify::Field::String::Words(0, 6),
 	"last_order_name" => new WWW::Shopify::Field::String(),
 	"addresses" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Address'),
-	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") 
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
+	"send_email_invite" => new WWW::Shopify::Field::Boolean(),
+	
 }; }
+sub mods {
+	return  {
+		"password" => new WWW::Shopify::Field::String::Password(),
+		"password_confirmation" => new WWW::Shopify::Field::String::Password()
+	};
+}
 
 sub minimal { return ["first_name", "last_name", "email"]; }
 sub on_creation { return ("created_at", "updated_at"); }

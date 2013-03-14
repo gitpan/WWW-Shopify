@@ -26,19 +26,22 @@ use warnings;
 		__PACKAGE__->table('shopify_customers');	
 		__PACKAGE__->add_columns('last_order_name', { data_type => 'varchar(255)', is_nullable => 1 },
 			'orders_count', { data_type => 'int', is_nullable => 1 },
+			'send_email_invite', { data_type => 'bool', is_nullable => 1 },
 			'last_name', { data_type => 'varchar(255)', is_nullable => 1 },
 			'state', { data_type => 'varchar(255)', is_nullable => 1 },
 			'email', { data_type => 'varchar(255)', is_nullable => 1 },
+			'password', { data_type => 'varchar(255)', is_nullable => 1 },
 			'created_at', { data_type => 'datetime', is_nullable => 1 },
+			'password_confirmation', { data_type => 'varchar(255)', is_nullable => 1 },
 			'id', { data_type => 'int',  },
 			'last_order_id', { data_type => 'int', is_nullable => 1 },
 			'accepts_marketing', { data_type => 'bool', is_nullable => 1 },
-			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
 			'note', { data_type => 'varchar(255)', is_nullable => 1 },
+			'tags', { data_type => 'varchar(255)', is_nullable => 1 },
 			'addresses', { data_type => 'int', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
-			'total_spent', { data_type => 'decimal', is_nullable => 1 },
 			'first_name', { data_type => 'varchar(255)', is_nullable => 1 },
+			'total_spent', { data_type => 'decimal', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 		__PACKAGE__->set_primary_key('id');

@@ -215,12 +215,13 @@ use WWW::Shopify::Common::DBIxGroup;
 # Takes in a schema and a shopify object and maps it to a DBIx existence.
 sub from_shopify($$$@) {
 	my $internal_from = sub {
-		my ($self, $type, $data) = @_;
+		my ($self, $schema, $type, $data) = @_;
 		# If we have a class relationship.
 		if ($type->is_relation()) {
 			if ($type->is_many()) {
 				return [] unless $data;
-				my $array = [map { $self->from_shopify($_); } @$data];
+				use Data::Dumper;
+				my $array = [map { $self->from_shopify($schema, $_); } @$data];
 				return $array;
 			}
 			elsif ($type->is_own()) {
@@ -246,7 +247,7 @@ sub from_shopify($$$@) {
 	foreach my $key (keys(%$fields)) {
 		my $data = $shopifyObject->$key;
 		if ($data) {
-			my $db_value = &$internal_from($self, $fields->{$key}, $data);
+			my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data);
 			if ($fields->{$key}->is_relation() && $fields->{$key}->is_many()) {
 				$group->add_children(grep { defined $_ } @$db_value);
 			}

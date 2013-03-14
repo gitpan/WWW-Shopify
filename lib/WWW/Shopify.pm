@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -250,6 +250,7 @@ sub update {
 	my $mods = $class->mods();
 	my $plural = $class->plural();
 	my $vars = $class->to_json();
+	$vars = {map { $_ => $vars->{$_} } grep { exists $mods->{$_} } keys(%$vars)};
 	my $hash = { $class->singular() => $vars };
 	my ($decoded, $response);
 	my $method = lc($class->update_method) . "_url";

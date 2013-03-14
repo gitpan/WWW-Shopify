@@ -8,8 +8,10 @@ BEGIN {
 	use_ok('File::Temp');
 }
 
-my $db = WWW::Shopify::Model::DBIx::Schema->connect('dbi:SQLite:dbname=' . tmpnam(), { RaiseError => 1, AutoCommit => 1 });
+my $dbname = tmpnam();
+my $db = WWW::Shopify::Model::DBIx::Schema->connect('dbi:SQLite:dbname=' . $dbname, { RaiseError => 1, AutoCommit => 1 });
 ok($db);
+print STDERR "Setup db at $dbname.\n";
 
 my $sa = new WWW::Shopify::Test($db);
 
@@ -18,7 +20,7 @@ $sa->generate(['WWW::Shopify::Model::Shop', 'WWW::Shopify::Model::Product']);
 
 $sa->associate_randomly;
 
-my @products = $sa->get_all('WWW::Shopify::Model::Product');
+my @products = $sa->get_all('Product');
 cmp_ok(int(@products), '>', 0);
 
 my $product1 = $products[int(rand(@products))];

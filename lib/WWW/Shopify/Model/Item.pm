@@ -149,7 +149,7 @@ sub get_metafields {
 	my $sa = $_[0]->associate;
 	die new WWW::Shopify::Exception("You cannot call metafields on an unassociated item.") unless $sa;
 	if (!exists $_[0]->{metafields}) {
-		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0]->plural })];
+		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0] })];
 	}
 	return $_[0]->{metafields};
 }

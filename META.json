@@ -53,10 +53,14 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.09"
+         "version" : "0.10"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Common::DBIxGroup" : {
+         "file" : "lib/WWW/Shopify/Common/DBIxGroup.pm",
          "version" : 0
       },
       "WWW::Shopify::Exception" : {
@@ -192,6 +196,10 @@
          "version" : 0
       },
       "WWW::Shopify::Field::String::Name" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Password" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
@@ -597,5 +605,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.09"
+   "version" : "0.10"
 }

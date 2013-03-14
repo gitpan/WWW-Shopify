@@ -19,9 +19,12 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.09
+    version: 0.10
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
+    version: 0
+  WWW::Shopify::Common::DBIxGroup:
+    file: lib/WWW/Shopify/Common/DBIxGroup.pm
     version: 0
   WWW::Shopify::Exception:
     file: lib/WWW/Shopify/Exception.pm
@@ -123,6 +126,9 @@ provides:
     file: lib/WWW/Shopify/Field/String.pm
     version: 0
   WWW::Shopify::Field::String::Name:
+    file: lib/WWW/Shopify/Field/String.pm
+    version: 0
+  WWW::Shopify::Field::String::Password:
     file: lib/WWW/Shopify/Field/String.pm
     version: 0
   WWW::Shopify::Field::String::Phone:
@@ -446,4 +452,4 @@ requires:
   String::Numeric: 0.9
   String::Random: 0.22
   URI::Escape: 3.31
-version: 0.09
+version: 0.10
