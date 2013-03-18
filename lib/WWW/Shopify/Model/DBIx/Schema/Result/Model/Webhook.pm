@@ -37,6 +37,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Webhook'; }
 		
+		
 	
 
 1;

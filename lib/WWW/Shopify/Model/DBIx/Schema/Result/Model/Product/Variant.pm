@@ -51,6 +51,7 @@ use warnings;
 		__PACKAGE__->many_to_many(metafields => 'variantsmetafields', 'metafield');
 		sub represents($) { return 'WWW::Shopify::Model::Product::Variant'; }
 		sub parent_variable($) { return 'product_id'; }
+		
 	
 
 1;

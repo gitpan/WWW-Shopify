@@ -37,6 +37,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Order::ShippingLine'; }
 		sub parent_variable($) { return 'parent_id'; }
+		
 	
 
 1;

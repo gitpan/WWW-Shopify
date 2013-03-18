@@ -46,6 +46,7 @@ use warnings;
 		__PACKAGE__->has_many(variants => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'product_id');
 		sub represents($) { return 'WWW::Shopify::Model::Product'; }
 		
+		
 	
 
 1;

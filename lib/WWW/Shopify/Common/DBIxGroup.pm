@@ -42,10 +42,13 @@ sub insert {
 	my ($self) = @_;
 	print STDERR "Inserting " . ref($self->contents) . "\n";
 	if ($self->parent) {
-		my $parent_var = $self->contents->parent_variable;
-		$self->contents->$parent_var($self->parent->contents->id);
+		my $relationship = "add_to_" . $self->contents->represents->plural;
+		my $columns = {$self->contents->get_columns};
+		$self->parent->contents->$relationship($columns);
 	}
-	$self->contents->insert;
+	else {
+		$self->contents->insert;
+	}
 	$_->insert for ($self->children);
 }
 

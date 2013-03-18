@@ -29,6 +29,9 @@ my $build = Module::Build->new(
 		'URI::Escape' => '3.31'
 	},
 	meta_merge => {
+		resources => {
+			 repository  => 'https://bitbucket.org/bengmn/perl-shopify-api'
+		},
 		no_index => {
 	    		directory => [ 'lib/WWW/Shopify/Model/DBIx', 'lib/WWW/Shopify/Field' ]
 		}

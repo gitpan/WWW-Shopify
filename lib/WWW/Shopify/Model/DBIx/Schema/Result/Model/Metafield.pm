@@ -27,7 +27,7 @@ use warnings;
 		__PACKAGE__->add_columns('namespace', { data_type => 'varchar(255)', is_nullable => 1 },
 			'value', { data_type => 'varchar(255)', is_nullable => 1 },
 			'description', { data_type => 'varchar(255)', is_nullable => 1 },
-			'id', { data_type => 'varchar(255)', is_nullable => 1 },
+			'invalid_key', { data_type => 'varchar(255)', is_nullable => 1 },
 			'value_type', { data_type => 'varchar(255)', is_nullable => 1 },
 			'created_at', { data_type => 'datetime', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
@@ -41,6 +41,7 @@ use warnings;
 		__PACKAGE__->belongs_to(owner => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'owner_id');
 		sub represents($) { return 'WWW::Shopify::Model::Metafield'; }
 		
+		sub key { $_[0]->invalid_key($_[1]) if defined $_[1]; return $_[0]->invalid_key; }
 	
 
 1;

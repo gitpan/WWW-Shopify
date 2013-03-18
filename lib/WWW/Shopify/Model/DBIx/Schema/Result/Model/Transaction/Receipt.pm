@@ -35,6 +35,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Transaction::Receipt'; }
 		sub parent_variable($) { return 'parent_id'; }
+		
 	
 
 1;

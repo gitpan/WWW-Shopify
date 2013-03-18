@@ -43,6 +43,7 @@ use warnings;
 		__PACKAGE__->belongs_to(shipping_address => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Address', 'shipping_address');
 		sub represents($) { return 'WWW::Shopify::Model::Checkout'; }
 		
+		
 	
 
 1;

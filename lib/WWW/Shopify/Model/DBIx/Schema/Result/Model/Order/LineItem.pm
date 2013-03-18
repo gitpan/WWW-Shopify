@@ -50,6 +50,7 @@ use warnings;
 		__PACKAGE__->belongs_to(variant => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'variant_id');
 		sub represents($) { return 'WWW::Shopify::Model::Order::LineItem'; }
 		
+		
 	
 
 1;

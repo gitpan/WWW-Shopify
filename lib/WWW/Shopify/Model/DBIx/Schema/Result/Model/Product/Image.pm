@@ -37,6 +37,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Product::Image'; }
 		sub parent_variable($) { return 'product_id'; }
+		
 	
 
 1;

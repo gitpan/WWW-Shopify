@@ -39,6 +39,7 @@ use warnings;
 		__PACKAGE__->has_many(receipt => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt', 'parent_id');
 		sub represents($) { return 'WWW::Shopify::Model::Transaction'; }
 		sub parent_variable($) { return 'order_id'; }
+		
 	
 
 1;

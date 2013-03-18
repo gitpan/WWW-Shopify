@@ -45,6 +45,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::RecurringApplicationCharge'; }
 		
+		
 	
 
 1;

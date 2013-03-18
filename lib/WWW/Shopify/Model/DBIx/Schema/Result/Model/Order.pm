@@ -73,6 +73,7 @@ use warnings;
 		__PACKAGE__->belongs_to(customer => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Customer', 'customer');
 		sub represents($) { return 'WWW::Shopify::Model::Order'; }
 		
+		
 	
 
 1;

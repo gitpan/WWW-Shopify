@@ -38,6 +38,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Order::PaymentDetails'; }
 		sub parent_variable($) { return 'parent_id'; }
+		
 	
 
 1;

@@ -47,6 +47,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Address'; }
 		
+		
 	
 
 1;

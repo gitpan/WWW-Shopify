@@ -35,6 +35,7 @@ use warnings;
 		__PACKAGE__->has_many(line_items => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Cart::LineItem', 'parent_id');
 		sub represents($) { return 'WWW::Shopify::Model::Cart'; }
 		
+		
 	
 
 1;

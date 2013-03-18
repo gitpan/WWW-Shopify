@@ -43,6 +43,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::ApplicationCharge'; }
 		
+		
 	
 
 1;

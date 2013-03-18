@@ -34,6 +34,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::ProductSearchEngine'; }
 		
+		
 	
 
 1;

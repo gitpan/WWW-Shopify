@@ -53,6 +53,7 @@ use warnings;
 		__PACKAGE__->many_to_many(addresses => 'customersaddresses', 'address');
 		sub represents($) { return 'WWW::Shopify::Model::Customer'; }
 		
+		
 	
 
 1;

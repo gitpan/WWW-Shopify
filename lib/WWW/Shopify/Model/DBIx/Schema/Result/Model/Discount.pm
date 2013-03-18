@@ -46,6 +46,7 @@ use warnings;
 		__PACKAGE__->belongs_to(applies_to => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'applies_to');
 		sub represents($) { return 'WWW::Shopify::Model::Discount'; }
 		
+		
 	
 
 1;

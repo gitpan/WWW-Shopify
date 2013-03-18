@@ -41,6 +41,7 @@ use warnings;
 		__PACKAGE__->has_many(image => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollection::Image', 'parent_id');
 		sub represents($) { return 'WWW::Shopify::Model::SmartCollection'; }
 		
+		
 	
 
 1;

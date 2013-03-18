@@ -28,18 +28,19 @@ use warnings;
 			'value', { data_type => 'text', is_nullable => 1 },
 			'public_url', { data_type => 'varchar(255)', is_nullable => 1 },
 			'size', { data_type => 'int', is_nullable => 1 },
-			'id', { data_type => 'varchar(255)', is_nullable => 1 },
+			'invalid_key', { data_type => 'varchar(255)', is_nullable => 1 },
 			'content_type', { data_type => 'varchar(255)', is_nullable => 1 },
 			'created_at', { data_type => 'datetime', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 },
 			'parent_id', { data_type => 'int', is_nullable => 0 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
-		__PACKAGE__->set_primary_key('id');
+		__PACKAGE__->set_primary_key('invalid_key');
 		__PACKAGE__->belongs_to(theme => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Theme', 'parent_id');
 		
 		sub represents($) { return 'WWW::Shopify::Model::Asset'; }
 		sub parent_variable($) { return 'parent_id'; }
+		sub key { $_[0]->invalid_key($_[1]) if defined $_[1]; return $_[0]->invalid_key; }
 	
 
 1;

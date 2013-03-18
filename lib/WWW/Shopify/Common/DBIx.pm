@@ -69,8 +69,11 @@ sub strip_id($) {
 	return $`;
 }
 
+sub is_invalid {
+	return $_[0] eq "key";
+}
 sub transform_invalid($) {
-	return "id" unless $_[0] ne "key";
+	return "invalid_" . $_[0] if is_invalid($_[0]);
 	return $_[0];
 }
 
@@ -83,12 +86,14 @@ sub generateDBIx {
 	my $columns = "";
 	my @columns = ();
 	my @relationships = ();
+	my @invalidLines = ();
 	# Loop through all the fields (stats, mods) of a package.
 	for (keys(%$fields)) {
 		# Make sure that only the fields that aren't identifiers are nullable.
 		my $attributes = ref($fields->{$_}) ne "WWW::Shopify::Field::Identifier" ? "is_nullable => 1" : "";
 		# Add to our columns the proper type and attributes of the field.
 		push(@columns, "'" . transform_invalid($_) . "', { data_type => '" . $fields->{$_}->sql_type() . "', $attributes }") unless is_belonging_field($package, $fields->{$_});
+		push(@invalidLines, $_) if (is_invalid($_));
 		# Add a column for our relationship to a particular shop, unless this class is WWW::Shopify::*::Shop, of course.
 		# If our column is not a scalar (meaining we have a reference to another class), add it to the relationships array.
 		push(@relationships, $_) if $fields->{$_}->is_relation();
@@ -191,6 +196,8 @@ sub generateDBIx {
 	my $shopLine = "";
 	$shopLine = "__PACKAGE__->belongs_to(shop => '" . transform_package("WWW::Shopify::Model::Shop") . "', 'shop_id');" unless $package =~ m/^WWW::Shopify.*Shop$/ && !defined $package->parent();
 
+	my $invalidLine = join("\n\t\t", map { "sub $_ { \$_[0]->" . transform_invalid($_) . "(\$_[1]) if defined \$_[1]; return \$_[0]->" . transform_invalid($_) . "; }" } @invalidLines);
+
 	my $tableName = $package->plural();
 	$tableName = $package->parent()->singular() . $tableName if $package->parent();
 	$tableName = lc("shopify_$tableName");
@@ -208,6 +215,7 @@ sub generateDBIx {
 		" . join("\n\t\t", @relations) . "
 		sub represents(\$) { return '$package'; }
 		$parentVariable
+		$invalidLine
 	";
 }
 
@@ -245,7 +253,7 @@ sub from_shopify($$$@) {
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
 
 	foreach my $key (keys(%$fields)) {
-		my $data = $shopifyObject->$key;
+		my $data = $shopifyObject->$key();
 		if ($data) {
 			my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data);
 			if ($fields->{$key}->is_relation() && $fields->{$key}->is_many()) {

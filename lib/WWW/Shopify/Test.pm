@@ -433,18 +433,11 @@ When the shop doesn't have an access_token, this is what you should be redirecti
 
 =cut
 
+
 use URI::Escape;
 sub authorize_url {
 	my ($self, $scope, $redirect) = (@_);
-	die new WWW::Shopify::Exception("Unable to exchange tokens when shop is not associated.") unless $self->associate;
-
-	my $hostname = $self->associate->myshopify_domain;
-	my %parameters = (
-		'client_id' => $self->api_key,
-		'scope' => join(",", @$scope),
-		'redirect_uri' => $redirect
-	);
-	return "https://$hostname/admin/oauth/authorize?" . join("&", map { "$_=" . uri_escape($parameters{$_}) } keys(%parameters));
+	return "$redirect?shop=" . $self->associate->myshopify_domain;
 }
 
 =head2 exchange_token(shared_secret, code)

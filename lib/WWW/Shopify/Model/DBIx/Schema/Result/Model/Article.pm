@@ -41,6 +41,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Article'; }
 		sub parent_variable($) { return 'blog_id'; }
+		
 	
 
 1;

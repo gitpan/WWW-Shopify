@@ -36,6 +36,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Theme'; }
 		
+		
 	
 
 1;

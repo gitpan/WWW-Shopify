@@ -39,6 +39,7 @@ use warnings;
 		__PACKAGE__->many_to_many(metafields => 'blogsmetafields', 'metafield');
 		sub represents($) { return 'WWW::Shopify::Model::Blog'; }
 		
+		
 	
 
 1;

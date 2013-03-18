@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.10
+    version: 0.11
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -452,4 +452,6 @@ requires:
   String::Numeric: 0.9
   String::Random: 0.22
   URI::Escape: 3.31
-version: 0.10
+resources:
+  repository: https://bitbucket.org/bengmn/perl-shopify-api
+version: 0.11

@@ -39,6 +39,7 @@ use warnings;
 		__PACKAGE__->many_to_many(metafields => 'custom_collectionsmetafields', 'metafield');
 		sub represents($) { return 'WWW::Shopify::Model::CustomCollection'; }
 		
+		
 	
 
 1;

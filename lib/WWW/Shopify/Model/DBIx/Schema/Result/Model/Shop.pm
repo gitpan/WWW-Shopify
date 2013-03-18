@@ -53,6 +53,7 @@ use warnings;
 		
 		sub represents($) { return 'WWW::Shopify::Model::Shop'; }
 		
+		
 	
 	__PACKAGE__->has_many(script_tags => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::ScriptTag', 'shop_id');
 	__PACKAGE__->has_many(webhooks => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook', 'shop_id');

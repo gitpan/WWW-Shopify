@@ -41,6 +41,7 @@ use warnings;
 		__PACKAGE__->belongs_to(variant => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'variant_id');
 		sub represents($) { return 'WWW::Shopify::Model::Cart::LineItem'; }
 		sub parent_variable($) { return 'parent_id'; }
+		
 	
 
 1;
