@@ -248,7 +248,10 @@ sub from_shopify($$$@) {
 	return undef unless $shopifyObject;
 	die new WWW::Shopify::Exception('Invalid object passed into to_shopify: ' . ref($shopifyObject) . '.') unless ref($shopifyObject) =~ m/Model::/;
 	my $dbPackage = transform_package(ref($shopifyObject));
-	my $dbObject = $schema->resultset($dbPackage)->new({});
+	my $identifier = $shopifyObject->identifier;
+	my $dbObject = undef;
+	$dbObject = $schema->resultset($dbPackage)->find($shopifyObject->$identifier) if $shopifyObject && $shopifyObject->$identifier;
+	$dbObject = $schema->resultset($dbPackage)->new({}) unless $dbObject;
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
 

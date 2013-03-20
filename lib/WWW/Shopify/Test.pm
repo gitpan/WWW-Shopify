@@ -272,7 +272,7 @@ sub get_all_limit($$@) {
 
 	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->all();
 	splice(@return, WWW::Shopify->PULLING_ITEM_LIMIT) if (int(@return) > WWW::Shopify->PULLING_ITEM_LIMIT);
-	return map { $self->{_mapper}->to_shopify($_); } @return;
+	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $obj } @return;
 }
 
 sub get_all($$@) {
@@ -302,13 +302,15 @@ sub search {
 	my @criteria = split(/\s+/, $specs->{query});
 	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
 	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
-	return map { $self->{_mapper}->to_shopify($_); } @return;
+	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $obj } @return;
 }
 
 sub get_shop($) {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	return $self->{_mapper}->to_shopify($self->associate());
+	my $obj = $self->{_mapper}->to_shopify($self->associate());
+	$obj->associate($self);
+	return $obj;
 }
 
 sub get_count($$@) {
@@ -325,7 +327,9 @@ sub get($$$@) {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	my $row = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->find($id);
-	return $self->{_mapper}->to_shopify($row);
+	my $obj = $self->{_mapper}->to_shopify($row);
+	$obj->associate($self);
+	return $obj;
 }
 
 # Fields that should be filled in by 'shopify'.
@@ -333,6 +337,7 @@ sub post_creation_fields {
 	my ($self, $item) = @_;
 	if (ref($item) =~ m/ApplicationCharge/) {
 		$item->status("pending");
+		$item->confirmation_url("/mock/charge_activation/" . $item->id);
 	}
 }
 
@@ -373,6 +378,7 @@ sub create($$@) {
 	$dbixgroup->insert;
 
 	my $return = $self->{_mapper}->to_shopify($dbixgroup->contents);
+	$return->associate($self);
 	return $return;
 }
 
@@ -381,8 +387,11 @@ sub update {
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($item));
-	$item->update;
-	return $self->{_mapper}->to_shopify($item);
+	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
+	$dbixgroup->update;
+	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents);
+	$obj->associate($self);
+	return $obj;
 }
 
 sub delete {
@@ -408,7 +417,9 @@ sub activate {
 	$object->status("active");
 	$object->update;
 
-	return $self->{_mapper}->to_shopify($object);
+	my $obj = $self->{_mapper}->to_shopify($object);
+	$obj->associate($self);
+	return $obj;
 }
 
 use Digest::MD5 qw(md5_hex);

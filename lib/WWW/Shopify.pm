@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -120,6 +120,9 @@ sub resolve_trailing_url($$$) {
 sub get_all_limit($$@) {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
+
+	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
+
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, $specs->{parent}, $specs->{parent_container}) . ".json", $specs);
 
 	my @return = ();
@@ -137,25 +140,19 @@ sub get_all {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
+	return $self->get_all_limit($package, $specs) if ((defined $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT) || !$package->countable());
 
-	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
+	my $item_count = $self->get_count($package, $specs);
+	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*200;
+	return $self->get_all_limit($package, $specs) if ($item_count <= PULLING_ITEM_LIMIT);
 
-	return $self->get_all_limit($package, $specs) if ($specs->{"limit"} <= PULLING_ITEM_LIMIT);
-	if ($package->countable()) {
-		my $item_count = $self->get_count($package, $specs);
-		die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*200;
-		return $self->get_all_limit($package, $specs) if ($item_count <= PULLING_ITEM_LIMIT);
-		my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
-		my @items = ();
-		for (my $c = 0; $c < $page_count; ++$c) {
-			$specs->{page} = ($c+1);
-			push(@items, $self->get_all_limit($package, $specs));
-		}
-		return @items;
+	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
+	my @items = ();
+	for (my $c = 0; $c < $page_count; ++$c) {
+		$specs->{page} = ($c+1);
+		push(@items, $self->get_all_limit($package, $specs));
 	}
-	else {
-		return $self->get_all_limit($package, $specs);
-	}
+	return @items;
 }
 
 sub get_shop($) {

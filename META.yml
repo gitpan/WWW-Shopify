@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.11
+    version: 0.12
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -209,6 +209,9 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Blog:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Blog.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::BlogMetafield:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/BlogMetafield.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Cart:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Cart.pm
     version: 0
@@ -221,11 +224,17 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionMetafield:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionMetafield.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Customer:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Customer.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerGroup:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerGroup.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerMetafield:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerMetafield.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
@@ -238,6 +247,18 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldOrder:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldOrder.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldPage:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldPage.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldProduct:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldProduct.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldVariant:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldVariant.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order.pm
@@ -274,6 +295,9 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderLineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderLineItem.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Page:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Page.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Product:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product.pm
@@ -368,6 +392,9 @@ provides:
   WWW::Shopify::Model::Order::TaxLine:
     file: lib/WWW/Shopify/Model/Order/TaxLine.pm
     version: 0
+  WWW::Shopify::Model::Page:
+    file: lib/WWW/Shopify/Model/Page.pm
+    version: 0
   WWW::Shopify::Model::Product:
     file: lib/WWW/Shopify/Model/Product.pm
     version: 0
@@ -434,7 +461,7 @@ provides:
 requires:
   Crypt::Eksblowfish: 0.009
   DBIx::Class: 0.08204
-  Data::Dumper: 2.139
+  Data::Dumper: 0
   Data::Random: 0.08
   Date::Calc: 6.3
   DateTime: 0.78
@@ -454,4 +481,4 @@ requires:
   URI::Escape: 3.31
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.11
+version: 0.12

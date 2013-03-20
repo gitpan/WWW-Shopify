@@ -20,8 +20,8 @@ sub is_qualifier { return undef; }
 sub qualifier { return undef; }
 sub to_shopify($$) { return $_[1]; }
 sub from_shopify($$) { return $_[1]; }
-sub generate($) { die; }
-sub validate($) { die; }
+sub generate($) { die $_[0]; }
+sub validate($) { die $_[0]; }
 
 package WWW::Shopify::Field::Hook;
 use parent 'WWW::Shopify::Field';

@@ -151,7 +151,8 @@ sub get_metafields {
 	if (!exists $_[0]->{metafields}) {
 		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0] })];
 	}
-	return $_[0]->{metafields};
+	return $_[0]->{metafields} unless wantarray;
+	return @{$_[0]->{metafields}};
 }
 
 # I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?

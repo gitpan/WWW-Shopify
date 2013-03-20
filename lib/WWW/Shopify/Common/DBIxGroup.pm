@@ -30,13 +30,26 @@ sub add_children {
 }
 sub update { 
 	my ($self) = @_;
-	$_->update for ($self->children);
+	$_->update_or_insert for ($self->children);
 	$self->contents->update;
 }
 sub delete {
 	my ($self) = @_;
 	$_->delete for ($self->children);
 	$self->contents->delete;
+}
+sub update_or_insert {
+	my ($self) = @_;
+	print STDERR "Updating/Inserting " . ref($self->contents) . "\n";
+	if ($self->parent) {
+		my $relationship = "add_to_" . $self->contents->represents->plural;
+		my $columns = {$self->contents->get_columns};
+		$self->parent->contents->$relationship($columns);
+	}
+	else {
+		$self->contents->update_or_insert;
+	}
+	$_->update_or_insert for ($self->children);
 }
 sub insert {
 	my ($self) = @_;

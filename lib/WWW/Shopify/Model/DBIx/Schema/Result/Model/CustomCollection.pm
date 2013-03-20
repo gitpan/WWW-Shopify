@@ -29,7 +29,7 @@ use warnings;
 			'template_suffix', { data_type => 'varchar(255)', is_nullable => 1 },
 			'handle', { data_type => 'varchar(255)', is_nullable => 1 },
 			'updated_at', { data_type => 'datetime', is_nullable => 1 },
-			'id', { data_type => 'varchar(255)', is_nullable => 1 },
+			'id', { data_type => 'int',  },
 			'body_html', { data_type => 'varchar(255)', is_nullable => 1 },
 			'shop_id', { data_type => 'int', is_nullable => 1 });
 		__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
