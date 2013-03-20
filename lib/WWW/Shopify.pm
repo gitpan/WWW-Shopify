@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;

@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.12
+    version: 0.13
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -466,6 +466,7 @@ requires:
   Date::Calc: 6.3
   DateTime: 0.78
   DateTime::Format::MySQL: 0.04
+  DateTime::Format::SQLite: 0.11
   Devel::StackTrace: 1.30
   File::Slurp: 9999.19
   HTTP::Request::Common: 6.04
@@ -481,4 +482,4 @@ requires:
   URI::Escape: 3.31
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.12
+version: 0.13

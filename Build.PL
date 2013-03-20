@@ -12,6 +12,7 @@ my $build = Module::Build->new(
 		'IO::CaptureOutput' => '1.1102',
 		'Data::Dumper' => '0',
 		'DateTime::Format::MySQL' => '0.04',
+		'DateTime::Format::SQLite' => '0.11',
 		'String::Random' => '0.22',
 		'Devel::StackTrace' => '1.30',
 		'Locale::Currency::Format' => '1.30',
