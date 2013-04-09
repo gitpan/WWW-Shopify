@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Order;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"buyer_accepts_marketing" => new WWW::Shopify::Field::Boolean(),
 	"cancel_reason" => new WWW::Shopify::Field::String(),
 	"cancelled_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
@@ -45,15 +46,23 @@ sub stats($) { return {
 	"line_items" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem"),
 	"shipping_lines" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::ShippingLine"),
 	"tax_lines" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::TaxLine"),
-#	"payment_details" => ["WWW::Shopify::Model::Order::PaymentDetails", WWW::Shopify->RELATION_ONE],
-#	"billing_address" => ["WWW::Shopify::Model::Address", WWW::Shopify->RELATION_ONE],
-#	"shipping_address" => ["WWW::Shopify::Model::Address", WWW::Shopify->RELATION_ONE],
+	"payment_details" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Order::PaymentDetails"),
+	"billing_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address"),
+	"shipping_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address"),
 	"fufillments" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::Fulfillment"),
-#	"client_details" => ["WWW::Shopify::Model::Order::ClientDetails", WWW::Shopify->RELATION_ONE],
+	"client_details" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Order::ClientDetails"),
 	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer"),
-	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") };
-}
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield")
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub creatable { return undef; }
+sub updatable { return undef; }
+sub closable { return 1; }
+sub openable { return 1; }
+sub cancellable { return 1; }
+sub update_filled { return qw(updated_at); }
+sub update_fields { return qw(note note_attributes email buyer_accepts_marketing); };
+
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

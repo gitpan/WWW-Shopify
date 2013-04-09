@@ -8,18 +8,15 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Cart;
 use parent 'WWW::Shopify::Model::Item';
 
-sub mods() { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"note" => new WWW::Shopify::Field::String::Words(1, 20),
 	"token" => new WWW::Shopify::Field::String::Hash(),
-	"line_items" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Cart::LineItem', 0, 10)};
-}
-sub stats { return {
+	"line_items" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Cart::LineItem', 0, 10),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')};
-}
-# Minimal variables required to create.
-sub minimal() { return ["title"]; }
+	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
-1
+1;

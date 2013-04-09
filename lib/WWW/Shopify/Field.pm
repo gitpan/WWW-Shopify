@@ -13,15 +13,23 @@ use String::Random qw(random_regex random_string);
 use Data::Random qw(rand_datetime rand_words);
 
 package WWW::Shopify::Field;
-sub new($) { my $package = shift; return bless { arguments => [@_] }, $package; }
+sub new($) { 
+	my $package = shift; 
+	my $calling_package = caller(1);
+	return bless {
+		arguments => [@_],
+		name => undef
+	}, $package;
+}
+sub name { $_[0]->{name} = $_[1] if defined $_[1]; return $_[0]->{name}; }
 sub sql_type($) { die ref($_[0]); }
 sub is_relation { return undef; }
 sub is_qualifier { return undef; }
 sub qualifier { return undef; }
 sub to_shopify($$) { return $_[1]; }
 sub from_shopify($$) { return $_[1]; }
-sub generate($) { die $_[0]; }
-sub validate($) { die $_[0]; }
+sub generate($) { die "Can't generate $_[0]"; }
+sub validate($) { die "Can't validate $_[0]"; }
 
 package WWW::Shopify::Field::Hook;
 use parent 'WWW::Shopify::Field';

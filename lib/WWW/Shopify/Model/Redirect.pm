@@ -8,13 +8,16 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Redirect;
 use parent 'WWW::Shopify::Model::Item';
 
-sub mods() { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"path" => new WWW::Shopify::Field::String(),
-	"target" => new WWW::Shopify::Field::String()};
-}
-sub stats() { return {"id" => new WWW::Shopify::Field::Identifier()}; }
-sub minimal() { return ["path", "target"]; }
+	"target" => new WWW::Shopify::Field::String(),
+	"id" => new WWW::Shopify::Field::Identifier()
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub creation_minimal { return qw(path target); }
+sub creation_filled { return qw(id); }
+
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

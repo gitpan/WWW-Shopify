@@ -8,8 +8,9 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Product::Option;
 use parent "WWW::Shopify::Model::NestedItem";
 
-sub stats() { return {"name" => new WWW::Shopify::Field::String::Words(1)}; }
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {"name" => new WWW::Shopify::Field::String::Words(1)}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::CustomCollection;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::String::HTML(),
 	"handle" => new WWW::Shopify::Field::String(),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
@@ -17,10 +18,16 @@ sub stats($) { return {
 	"sort_order" => new WWW::Shopify::Field::String::Enum(["manual", "automatic"]),
 	"template_suffix" => new WWW::Shopify::Field::String(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
-	"products" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product") }
-}
+	"title" => new WWW::Shopify::Field::String(),
+	"collects" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::CustomCollection::Collect")
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub creation_minimal { return qw(collects); }
+sub creation_filled { return qw(public_url created_at); }
+sub update_filled { return qw(updated_at); }
+
 sub has_metafields { return 1; }
+
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

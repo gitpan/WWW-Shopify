@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Customer;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"accepts_marketing" => new WWW::Shopify::Field::Boolean(),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"email" => new WWW::Shopify::Field::String::Email(),
@@ -26,20 +27,17 @@ sub stats($) { return {
 	"addresses" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Address'),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"send_email_invite" => new WWW::Shopify::Field::Boolean(),
-	
+	"password" => new WWW::Shopify::Field::String::Password(),
+	"password_confirmation" => new WWW::Shopify::Field::String::Password()	
 }; }
-sub mods {
-	return  {
-		"password" => new WWW::Shopify::Field::String::Password(),
-		"password_confirmation" => new WWW::Shopify::Field::String::Password()
-	};
-}
 
-sub minimal { return ["first_name", "last_name", "email"]; }
-sub on_creation { return ("created_at", "updated_at"); }
+sub creation_minimal { return qw(first_name last_name email); }
+sub creation_filled { return qw(created_at); }
+sub update_filled { return qw(updated_at); }
+sub update_fields { return qw(password password_confirmation); }
 
 sub searchable($) { return 1; }
 
-eval(__PACKAGE__->generate_accessors()); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

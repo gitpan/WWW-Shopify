@@ -8,12 +8,13 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Order::NoteAttributes;
 use parent "WWW::Shopify::Model::NestedItem";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"name" => new WWW::Shopify::Field::String::Words(1, 3),
 	"value" => new WWW::Shopify::Field::String::Words(1, 10)};
 }
-sub singular($) { return "note_attribute"; }
+sub singular { return "note_attribute"; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

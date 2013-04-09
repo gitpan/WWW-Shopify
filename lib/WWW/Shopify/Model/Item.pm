@@ -75,9 +75,13 @@ update - Updates the shopify object that's pass in.
 
 =cut
 
+use Exporter 'import';
+our @EXPORT = qw(generate_accessor);
+
 sub new { my $self = (defined $_[1]) ? $_[1] : {}; return bless $self, $_[0]; }
 sub parent { return undef; }
 sub is_item { return 1; }
+sub is_shop { return undef; }
 # Returns the singular form of the object. Usually the name of the file.
 # Is like this, because we want to be able to call this on the package as well as an object in it.
 sub singular {
@@ -103,28 +107,44 @@ sub singular_fully_qualified {
 	return singular_fully_qualified(ref($_[0]));
 }
 sub plural { return $_[0]->singular() . "s"; }
-sub container { return $_[0]->parent; }
 
 # I cannot fucking believe I'm doing this. Everything can be counted.
 # Oh, except themes. We don't count those. For some arbitrary reason.
 sub countable { return 1; }
 sub needs_login { return undef; }
 
-sub stats() { return {}; }
-sub mods() { return {}; }
 # List of fields that should be filled automatically on creation.
-sub on_create { return (); }
-sub is_nested() { return undef; }
-
-sub identifier($) { return "id"; }
+sub is_nested { return undef; }
+sub identifier { return "id"; }
 
 sub creatable { return 1; }
-sub updatable { return 1; }
+sub updatable { return int($_[0]->update_fields) > 0; }
 sub deletable { return 1; }
 sub activatable { return undef; }
 sub searchable { return undef; }
+sub cancellable { return undef; }
+
+# I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?
+sub create_method { return "POST"; }
+sub update_method { return "PUT"; }
+sub delete_method { return "DELETE"; }
+
+sub creation_minimal { return (); }
+sub creation_filled { return qw(id); }
+sub update_fields { return qw(); }
+sub update_filled { return qw(); }
+
+# Oh fucking WOW. WHAT THE FUCK. Variants, of course, delete directly with their id, and modify with it.
+# Metafields delete with their id, but modify through their parent. They also get through their parents.
+# Variants of course, get through their id directly. I'm at a loss for words. Why!? Article are different, yet again.
+sub get_through_parent { return defined $_[0]->parent; }
+sub create_through_parent { return defined $_[0]->parent; }
+sub update_through_parent { return defined $_[0]->parent; } 
+sub delete_through_parent { return defined $_[0]->parent; }
 
 sub associate { $_[0]->{associated_sa} = $_[1] if $_[1]; return $_[0]->{associated_sa}; }
+sub associated_parent { $_[0]->{associated_parent} = $_[1] if $_[1]; return $_[0]->{assocated_parent}; }
+
 sub create { 
 	my $sa = $_[0]->associate;
 	die new WWW::Shopify::Exception("You cannot call create on an unassociated item.") unless $sa;
@@ -145,31 +165,32 @@ sub activate {
 	die new WWW::Shopify::Exception("You cannot call activate on an unassociated item.") unless $sa;
 	return $sa->activate($_[0]);
 }
-sub get_metafields {
+
+sub metafields {
 	my $sa = $_[0]->associate;
 	die new WWW::Shopify::Exception("You cannot call metafields on an unassociated item.") unless $sa;
-	if (!exists $_[0]->{metafields}) {
+	if (!defined $_[0]->{metafields}) {
 		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0] })];
 	}
 	return $_[0]->{metafields} unless wantarray;
 	return @{$_[0]->{metafields}};
 }
 
-# I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?
-sub create_method { return "POST"; }
-sub update_method { return "PUT"; }
-sub delete_method { return "DELETE"; }
+sub add_metafield {
+	my ($self, $metafield) = @_; 
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot add metafields on an unassociated item.") unless $sa;
+	$metafield->associated_parent($self);
+	return $sa->create($metafield);
+}
 
 sub get_all { my $package = shift; my $SA = shift; my $specs = shift; return $SA->getAll($package, $specs); }
 sub get_count { my $package = shift; my $SA = shift; return $SA->typicalGetCount($package, shift); }
-sub fields { my $package = shift; my $returnHash = {}; %$returnHash = (%{$package->mods()}, %{$package->stats()}); return $returnHash; }
+sub field { my ($package, $name) = @_; return $package->fields->{$name}; }
 
 # Should modify these to use the date methods in Field.
 sub from_json($$) {
 	my ($package, $json) = @_;
-
-	my $mods = $package->mods();
-	my $stats = $package->stats();
 	
 	sub decodeForRef { 
 		my ($self, $json, $ref) = @_;
@@ -178,18 +199,13 @@ sub from_json($$) {
 				my $package = $ref->{$_}->relation();
 				if ($ref->{$_}->is_many()) {
 					next unless exists $json->{$package->plural()};
-					$self->{$_} = [];
-					foreach my $object (@{$json->{$package->plural()}}) {
-						my $child = $package->from_json($object);
-						$child->{parent} = $self;
-						push(@{$self->{$_}}, $child);
-					}
+					$self->{$_} = [map { my $o = $package->from_json($_); $o->associate_parent($self); $o } @{$json->{$package->plural()}}];
 				}
 				elsif ($ref->{$_}->is_one()) {
 					$self->{$_} = $json->{$_};
 				}
 				else {
-					die "Relationship specified must be either RELATION_REF_ONE, RELATION_OWN_ONE or RELATION_MANY in $package.";
+					die "Relationship specified must be either many, or one in $package.";
 				}
 			}
 			else {
@@ -223,8 +239,7 @@ sub from_json($$) {
 
 	my $self = $package->new();
 
-	$self->decodeForRef($json, $mods);
-	$self->decodeForRef($json, $stats);
+	$self->decodeForRef($json, $self->fields);
 	return $self;
 }
 
@@ -236,8 +251,11 @@ sub to_json($) {
 		next unless exists $fields->{$key};
 		if ($fields->{$key}->is_relation()) {
 			if ($fields->{$key}->is_many()) {
-				if (defined $self->$key()) {
-					$final->{$key} = [map { $_->to_json() } (@{$self->$key()})];
+				# Since metafields don't come prepackaged.
+				next unless ref($fields->{$key}) =~ m/Metafield/;
+				my $result = $self->$key();
+				if (defined $result) {
+					$final->{$key} = [map { $_->to_json() } (@$result)];
 				}
 				else {
 					$final->{$key} = [];
@@ -271,20 +289,16 @@ sub to_json($) {
 	return $final;
 }
 
-sub generate_accessors($) {
-	my $eval = "";
-	for (keys(%{$_[0]->stats()})) {
-		$eval .= "sub $_ {return \$_[0]->{$_};} ";
-	}
-	for (keys(%{$_[0]->mods()})) {
-		$eval .= "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_};}";
-	}
-	return $eval;
+sub generate_accessors {
+	return join("\n", 
+		(map { "__PACKAGE__->fields->{$_}->name('$_');" } keys(%{$_[0]->fields})),
+		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_};}" } grep { $_ ne "metafields" } keys(%{$_[0]->fields}))
+	); 
 }
 
 =head1 SEE ALSO
 
-L<WWW::Shopify::Model::Product>, L<WWW::Shopify::Model::Webhook>, L<WWW::Shopify::Model::Variant>
+L<WWW::Shopify::Model::Product>, L<WWW::Shopify::Model::Webhook>, L<WWW::Shopify::Model::Product::Variant>
 
 =head1 AUTHOR
 

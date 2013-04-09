@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Order::LineItem;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"fulfillment_service" => new WWW::Shopify::Field::String("(automatic|manual)"),
 	"fulfillment_status" => new WWW::Shopify::Field::String(),
 	"grams" => new WWW::Shopify::Field::Int(1, 2000),
@@ -27,8 +28,12 @@ sub stats($) { return {
 	"variant_inventory_management" => new WWW::Shopify::Field::String("(shopify|manual)")};
 }
 
+sub creatable { return undef; }
+sub updatable { return undef; }
+sub deletable { return undef; }
+
 sub singular() { return 'line_item'; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

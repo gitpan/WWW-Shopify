@@ -8,18 +8,23 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Product::Image;
 use parent "WWW::Shopify::Model::NestedItem";
 
-sub mods() { return {
-	"position" => new WWW::Shopify::Field::Int(1, 4),
-	"src" => new WWW::Shopify::Field::String::URL::Image()};
-}
-sub stats() { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"id" => new WWW::Shopify::Field::Identifier(),
+	"position" => new WWW::Shopify::Field::Int(1, 4),
+	"src" => new WWW::Shopify::Field::String::URL::Image(),
 	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product'),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')};
-}
-sub minimal() { return []; } 
+	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub creation_minimal { return qw(position src); }
+sub creation_filled { return qw(id created_at ); }
+# Odd, even without an update method, it still has an updated at.
+sub updated_filled { return qw(updated_at); } 
+
+sub updatable { return undef; }
+
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

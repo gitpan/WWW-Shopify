@@ -12,7 +12,14 @@ sub is_many { return undef; }
 sub is_one { return undef; }
 sub is_own { return undef; }
 sub is_reference { return undef; } 
+sub is_parent { return undef; }
 sub sql_type { return WWW::Shopify::Field::Identifier->sql_type(); }
+
+package WWW::Shopify::Field::Relation::Parent;
+use parent 'WWW::Shopify::Field::Relation';
+sub is_parent { return 1; }
+sub is_reference { return 1; }
+sub is_one { return 1; }
 
 package WWW::Shopify::Field::Relation::Many;
 use parent 'WWW::Shopify::Field::Relation';

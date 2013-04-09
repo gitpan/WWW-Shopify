@@ -8,11 +8,15 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Order::DiscountCode;
 use parent "WWW::Shopify::Model::NestedItem";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"code" => new WWW::Shopify::Field::String("[A-Z][0-9]{4,10}"),
 	"amount" => new WWW::Shopify::Field::Money()};
 }
+sub creatable { return undef; }
+sub updatable { return undef; }
+sub deletable { return undef; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

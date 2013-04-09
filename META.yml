@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.13
+    version: 0.95
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -75,6 +75,9 @@ provides:
     file: lib/WWW/Shopify/Field/Relation.pm
     version: 0
   WWW::Shopify::Field::Relation::OwnOne:
+    file: lib/WWW/Shopify/Field/Relation.pm
+    version: 0
+  WWW::Shopify::Field::Relation::Parent:
     file: lib/WWW/Shopify/Field/Relation.pm
     version: 0
   WWW::Shopify::Field::Relation::ReferenceOne:
@@ -182,6 +185,9 @@ provides:
   WWW::Shopify::Model::CustomCollection:
     file: lib/WWW/Shopify/Model/CustomCollection.pm
     version: 0
+  WWW::Shopify::Model::CustomCollection::Collect:
+    file: lib/WWW/Shopify/Model/CustomCollection/Collect.pm
+    version: 0
   WWW::Shopify::Model::Customer:
     file: lib/WWW/Shopify/Model/Customer.pm
     version: 0
@@ -194,8 +200,14 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Address:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Address.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCheckout:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCheckout.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCustomer:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCustomer.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressOrder:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressOrder.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ApplicationCharge.pm
@@ -221,8 +233,14 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CheckoutCustomer:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CheckoutCustomer.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Collect:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection/Collect.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionMetafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionMetafield.pm
@@ -236,14 +254,17 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerMetafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerMetafield.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerOrder:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerOrder.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
     version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::DiscountProduct:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/DiscountProduct.pm
+    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::LineItemProperty:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LineItemProperty.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm
@@ -256,6 +277,9 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldProduct:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldProduct.pm
+    version: 0
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldShop:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldShop.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldVariant:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldVariant.pm
@@ -482,4 +506,4 @@ requires:
   URI::Escape: 3.31
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.13
+version: 0.95

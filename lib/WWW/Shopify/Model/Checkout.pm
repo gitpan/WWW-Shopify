@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Checkout;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"buyer_accepts_marketing" => new WWW::Shopify::Field::Boolean(),
 	"cart_token" => new WWW::Shopify::Field::String::Hash(),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
@@ -25,6 +26,6 @@ sub creatable($) { return undef; }
 sub updatable($) { return undef; }
 sub deletable($) { return undef; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

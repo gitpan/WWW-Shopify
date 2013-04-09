@@ -4,9 +4,10 @@ use strict;
 use warnings;
 
 package WWW::Shopify::Model::Product::Variant;
-use parent 'WWW::Shopify::Model::NestedItem';
+use parent 'WWW::Shopify::Model::Item';
 
-sub mods { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"fufillment_service" => new WWW::Shopify::Field::String("(manual|automatic)"),
 	"grams" => new WWW::Shopify::Field::Int(1, 20000),
 	"inventory_management" => new WWW::Shopify::Field::String("(manual|shopify)"),
@@ -22,17 +23,24 @@ sub mods { return {
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"compare_at_price" => new WWW::Shopify::Field::Money(),
 	"inventory_quantity" => new WWW::Shopify::Field::Int(1, 20),
-	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield") 
-};
-}
-sub stats() { return {
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product'),
+	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product'),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')};
-}
-sub minimal() { return ["option1", "price"]; }
+	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+}; }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+sub parent { return 'WWW::Shopify::Model::Product'; }
+
+sub creation_minimal { return qw(option1 price); }
+sub creation_filled { return qw(id created_at product_id); }
+# Odd, even without an update method, it still has an updated at.
+sub update_filled { return qw(updated_at); }
+
+sub get_through_parent { return undef; }
+sub update_through_parent { return undef; } 
+sub delete_through_parent { return undef; }
+
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

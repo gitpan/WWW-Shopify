@@ -8,7 +8,8 @@ use WWW::Shopify;
 package WWW::Shopify::Model::ApplicationCharge;
 use parent "WWW::Shopify::Model::Item";
 
-sub stats($) { return {
+my $fields; sub fields { return $fields; } 
+BEGIN { $fields = {
 	"name" => new WWW::Shopify::Field::String::Words(1,3),
 	"price" => new WWW::Shopify::Field::Money(),
 	"return_url" => new WWW::Shopify::Field::String::URL(),
@@ -20,14 +21,15 @@ sub stats($) { return {
 	"status" => new WWW::Shopify::Field::String::Enum(["pending", "accepted", "declined"]),
 	"test" => new WWW::Shopify::Field::Boolean(),
 	"updated_at" => new WWW::Shopify::Field::Date(),
-	"confirmation_url" => new WWW::Shopify::Field::String::URL()};
-}
+	"confirmation_url" => new WWW::Shopify::Field::String::URL()
+}; }
 sub countable() { return undef; }
 sub activatable($) { return 1; }
-sub minimal() { return ["name", "price", "return_url"]; }
 
-sub on_create { return ("created_at", "updated_at", "confirmation_url"); }
+sub creation_minimal { return qw(name price return_url); }
+sub creation_filled { return qw(id created_at confirmation_url); }
+sub update_filled { return qw(updated_at); }
 
-eval(WWW::Shopify::Model::Item::generate_accessors(__PACKAGE__)); die $@ if $@;
+eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

@@ -19,10 +19,10 @@ To give an idea of how you're supposed to use this object, look at the following
 
 	my $SA = new WWW::Shopify::Public($ShopURL, $APIKey, $AccessToken);
 	my $DBIX = new WWW::Shopify::Common::DBIx();
-	my @Products = $SA->getAll('WWW::Shopify::Product');
-	for (@Products) {
-		my $Product = $DBIX->from_shopify($_);
-		$Product->insert;
+	my @products = $SA->get_all('WWW::Shopify::Product');
+	for (@products) {
+		my $product = $DBIX->from_shopify($_);
+		$product->insert;
 	}
 
 This doesn't check for duplicates or anything else, but it's easy enough to check for that; see the DBIx documentation.
@@ -37,198 +37,180 @@ use Data::Dumper;
 
 package WWW::Shopify::Common::DBIx;
 
-use constant {
-	IDENTIFIER_TYPE => "int",
-	PACKAGE_PREFIX => 'WWW::Shopify::Model::DBIx::Schema::Result'
-};
-
+use constant { PACKAGE_PREFIX => 'WWW::Shopify::Model::DBIx::Schema::Result' };
 sub new {
-	my $package = shift;
-	bless {intermediateClasses => {}}, $package;
+	my $package = shift; 
+	return bless { namespace => [@_], classes => {} }, $package;
 };
+sub class {
+	my ($self, $class) = @_;
+	return $self->{classes}->{$class};
+}
+sub generate_dbix_all {
+	my ($self) = @_;
+	$self->generate_dbix($_) for (@{$self->{namespace}});
+}
+sub strip_head { die unless $_[0] =~ m/^WWW::Shopify::/; return $'; }
+sub transform_package { return PACKAGE_PREFIX . "::" . strip_head($_[0]); }
 
-# Determines whether or not the field is pointing to something that has a belong relation.
-# If it is, we don't need a column for it.
-sub is_belonging_field($$) {
-	return $_[1]->is_relation() && (($_[1]->relation()->parent() && $_[1]->relation()->parent() eq $_[0]) || $_[1]->relation() =~ "Metafield");
+sub table_prefix { return "shopify_"; }
+sub joining_table_name { return join("", map { $_->plural } sort(@_)); }
+sub joining_class_name { return PACKAGE_PREFIX . "::Model::" . join("", map { $_ =~ m/\:\:(\w+)$/; $1; } sort(@_)); }
+
+sub generate_dbix_join {
+	my ($self, $join1, $join2) = @_;
+	my $name = joining_class_name($join1, $join2);
+	$self->{classes}->{$name} = "
+#!/usr/bin/perl
+use strict;
+use warnings;
+# This class is generated from DBIx.pm. Do not modify.
+
+package $name;
+use base qw/DBIx::Class::Core/;
+
+__PACKAGE__->table('" . table_prefix() . joining_table_name($join1, $join2) . "');
+__PACKAGE__->add_columns(
+	'" . $join1->singular . "_id', { data_type => 'INT', is_nullable => 0 },
+	'" . $join2->singular . "_id', { data_type => 'INT', is_nullable => 0 }
+);
+__PACKAGE__->belongs_to(" . $join1->singular . " => '" . transform_package($join1) . "', '" . $join1->singular . "_id');
+__PACKAGE__->belongs_to(" . $join2->singular . " => '" . transform_package($join2) . "', '" . $join2->singular . "_id');
+
+1;";
 }
 
-sub strip_head($) {
-	die unless $_[0] =~ m/^WWW::Shopify::/;
-	return $';
-}
-sub strip_full($) {
-	die unless $_[0] =~ m/::(\w+)$/;
-	return $1;
-}
-sub transform_package($) {
-	return PACKAGE_PREFIX . "::" . strip_head($_[0]);
-}
-sub strip_id($) {
-	die unless $_[0] =~ m/_id$/;
-	return $`;
-}
-
-sub is_invalid {
-	return $_[0] eq "key";
-}
-sub transform_invalid($) {
-	return "invalid_" . $_[0] if is_invalid($_[0]);
-	return $_[0];
-}
-
+use Module::Find;
+BEGIN {	foreach my $package (findallmod WWW::Shopify::Model) { $package =~ s/::/\//g; eval { require $package . '.pm' }; print STDERR $@ if $@; } }
 # Essentially an internal method.
-# Generates a DBIx schema from the spcified package.
-sub generateDBIx {
+# Generates a DBIx schema from the specified package.
+use List::Util qw(first);
+sub generate_dbix {
 	my ($self, $package) = @_;
 
-	my $fields = $package->fields();
-	my $columns = "";
+	sub is_belongs_to { return $_[0]->is_relation && $_[0]->is_one; }
+	sub is_has_many { return !is_belongs_to(@_) && $_[0]->is_relation && ($_[0]->is_own || $_[0]->is_many) && $_[0]->relation->parent && $_[0]->relation->parent eq $_[1]; }
+	sub is_many_many { return !is_belongs_to(@_) && !is_has_many(@_) && $_[0]->is_relation && ($_[0]->is_many || $_[0]->is_own); }
+
+	my $fields = $package->fields;
+	my @ids = $package->identifier;
+	my $has_date = (defined first { $fields->{$_}->sql_type eq "DATETIME" } keys(%$fields));
+	my $parent_variable = undef;
+	my $table_name = $package->plural;
+	$table_name = $package->parent->plural . "_" . $table_name if $package->parent;
+	# All simple columns.
 	my @columns = ();
-	my @relationships = ();
-	my @invalidLines = ();
-	# Loop through all the fields (stats, mods) of a package.
-	for (keys(%$fields)) {
-		# Make sure that only the fields that aren't identifiers are nullable.
-		my $attributes = ref($fields->{$_}) ne "WWW::Shopify::Field::Identifier" ? "is_nullable => 1" : "";
-		# Add to our columns the proper type and attributes of the field.
-		push(@columns, "'" . transform_invalid($_) . "', { data_type => '" . $fields->{$_}->sql_type() . "', $attributes }") unless is_belonging_field($package, $fields->{$_});
-		push(@invalidLines, $_) if (is_invalid($_));
-		# Add a column for our relationship to a particular shop, unless this class is WWW::Shopify::*::Shop, of course.
-		# If our column is not a scalar (meaining we have a reference to another class), add it to the relationships array.
-		push(@relationships, $_) if $fields->{$_}->is_relation();
+	foreach my $field_name (grep { !$fields->{$_}->is_relation } keys(%$fields)) {
+		my $field = $fields->{$field_name};
+		my %attributes = ();
+		$attributes{'data_type'} = $field->sql_type;
+		$attributes{'is_nullable'} = 1;
+		push(@columns, "\"$field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
+		
 	}
-	push(@columns, "'shop_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type() . "', is_nullable => 1 }") unless $package =~ m/^WWW::Shopify.*Shop$/ && !defined $package->parent();
-
-	my @relations = ();
-	my $parentLine = "";
-	my $parentVariable = "";
-	# Check all our relationships.
-	for (@relationships) {
-		my $relation = $fields->{$_};
-		if ($relation->is_many()) {
-			# If the specified relationship is to our parent.
-			if (defined $relation->relation()->parent() && $relation->relation()->parent() eq $package) {
-				# Check to see if we have a field named after our parent, if we do, specify it, if not, use the generic parent_id.
-				if (defined $relation->relation()->fields()->{$package->singular() . "_id"}) {
-					push(@relations, "__PACKAGE__->has_many($_ => '" . transform_package($relation->relation()) . "', '" . $package->singular() . "_id');");
-				}
-				else {
-					push(@relations, "__PACKAGE__->has_many($_ => '" . transform_package($relation->relation()) . "', 'parent_id');");				
-				}
-			}
-			else {
-				# If we have a many-to-many relationship, generate the following intermediate class (and associated table).
-				my @double = sort($relation->relation(), $package);
-				my $intermediateName = strip_full($double[0]) . strip_full($double[1]);
-				my $intermediatePackage = PACKAGE_PREFIX . "::Model::" . $intermediateName; 
-				my $tableName = lc("shopify_$intermediateName");
-				push(@relations, "__PACKAGE__->has_many(" . $package->plural() . $relation->relation()->plural() . " => '" . $intermediatePackage . "', '" . $package->singular() . "_id');");
-				push(@relations, "__PACKAGE__->many_to_many(" . $relation->relation()->plural() . " => '" . $package->plural() . $relation->relation()->plural() . "', '" . $relation->relation()->singular() . "');");
-				$self->{intermediateClasses}->{$intermediatePackage} = "
-			package $intermediatePackage;
-			use base qw/DBIx::Class::Core/;
-
-			__PACKAGE__->table('$tableName');
-			__PACKAGE__->add_columns(
-				'" . $package->singular() . "_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type() . "', is_nullable => 0 },
-				'" . $relation->relation()->singular() . "_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type() . "', is_nullable => 0 });
-			__PACKAGE__->belongs_to(" . $package->singular() . " => '" . transform_package($package) . "', '" . $package->singular() . "_id');\
-			__PACKAGE__->belongs_to(" . $relation->relation()->singular() . " => '" . transform_package($relation->relation()) . "', '" . $relation->relation()->singular() . "_id');";
-			}
+	# If we're a nested item, and we don't have something called either parent_id or <parent->singular>_id, create one, 'cause we're expecting it.
+	if ($package->parent) {
+		if (!$fields->{parent_id} && !$fields->{$package->parent->singular . "_id"}) {
+			$parent_variable = $package->parent->singular . "_id";
+			push(@columns, "\"$parent_variable\", { data_type => 'INT' }");
 		}
-		elsif ($relation->is_one()) {
-			# Check again to see if this is related to our parent.
-			if (defined $fields->{$relation->relation()->singular() . "_id"} && defined $package->parent() && $relation->relation() eq $package->parent()) {
-				$parentVariable = "sub parent_variable(\$) { return '" . $relation->relation()->singular() . "_id'; }";
-				$parentLine = "__PACKAGE__->belongs_to(" . lc(strip_full($relation->relation())) . " => '" . transform_package($relation->relation()) . "', '" . $relation->relation()->singular() . "_id');";
-			}
-			elsif ($relation->is_own()) {
-				my $stripped = $_;
-				$stripped = $1 if ($_ =~ m/^(.+)_id$/);
-				my $otherfields = $relation->relation()->fields();
-				if ($relation->relation()->is_nested() && $relation->relation()->container() eq $package) {
-					push(@relations, "__PACKAGE__->has_one($_ => '" . transform_package($relation->relation()) . "', 'parent_id');")
-				}
-				else {
-					push(@relations, "__PACKAGE__->belongs_to($stripped => '" . transform_package($relation->relation()) . "', '$_');");
-				}
-			}
-			elsif ($relation->is_reference()) {
-				if ($relation->relation()->is_nested()) {
-					if ($relation->relation()->parent() eq $package) {
-						my $otherfields = $relation->relation()->fields();
-						if (exists $otherfields->{$relation->relation()->parent()->singular() . '_id'}) {
-							push(@relations, "__PACKAGE__->has_one($_ => '" . transform_package($relation->relation()) . "', '" . $relation->relation()->parent()->singular() . "_id');");
-						}
-						else {
-							push(@relations, "__PACKAGE__->has_one($_ => '" . transform_package($relation->relation()) . "', 'parent_id');")
-						}
-					}
-					else {
-						push(@relations, "__PACKAGE__->belongs_to(" . strip_id($_) . " => '" . transform_package($relation->relation()) . "', '$_');")
-					}
-				}
-				else {
-					push(@relations, "__PACKAGE__->belongs_to(" . strip_id($_) . " => '" . transform_package($relation->relation()) . "', '$_');") unless $relation->relation()->is_nested();
-				}
-			}
+		elsif ($fields->{parent_id}) {
+			$parent_variable = 'parent_id';
 		}
 		else {
-			die "Invalid Specification.";
+			$parent_variable = $package->parent->singular . '_id';
 		}
 	}
-	# Lets us set our primary key.
-	my $idLine = "";
-	if (defined $fields->{$package->identifier()}) {
-		$idLine = "__PACKAGE__->set_primary_key('" . transform_invalid($package->identifier()) . "');";
+	# If we don't have an ID give us one, so that all DB stuff can have primary keys.
+	if (!$fields->{$ids[0]}) {
+		push(@columns, "\"" . $ids[0] . "\", { data_type => 'INT' }");		
 	}
-	else {
-		push(@columns, "'id', { data_type => 'int', is_auto_increment => 1 }");
-		$idLine = "__PACKAGE__->set_primary_key('id');";
+	# All relationship columns that are belong to.
+	# ReferenceOne / Non-Nested / Interior : Belongs To
+	# ReferenceOne / Non-Nested / Exterior : Belongs To
+	# Parent : Belongs To
+	# OwnOne / Non-Nested / Interior : Belongs To
+	# OwnOne / Nested / Exterior : Belong To
+	my @relationships = ();
+	foreach my $field_name (grep { is_belongs_to($fields->{$_}, $package) } keys(%$fields)) {
+		my $field = $fields->{$field_name};
+		die $field_name unless $field->relation;
+		my %attributes = ();
+		my $accessor_name;
+		if ($field_name =~ m/_id$/) {
+			$accessor_name = $`;
+		}
+		else {
+			$accessor_name = $field_name;
+			$field_name = $field_name . "_id";
+		}
+		$attributes{'data_type'} = $field->sql_type;
+		# Geenrally make non-parent fields nullable.
+		$attributes{'is_nullable'} = 1 unless $field->is_parent;
+		push(@columns, "\"$field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
+		push(@relationships, "__PACKAGE__->belongs_to($accessor_name => '" . transform_package($field->relation) . "', '$field_name');");
 	}
-	if ($parentLine eq "" && defined $package->parent()) {
-		# If we haven't already build ourselves a belongs_to line (i.e., if it's not acutally part of the shopify spec), let's do it now, generically.
-		$parentVariable = "sub parent_variable(\$) { return 'parent_id'; }";
-		$parentLine = "__PACKAGE__->belongs_to(" . lc(strip_full($package->parent())) . " => '" . transform_package($package->parent()) . "', 'parent_id');";
-		push(@columns, "'parent_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type() . "', is_nullable => 0 }") if defined $package->parent();
+	# OwnOne / Nested / Interior : Has Many
+	foreach my $field_name (grep { is_has_many($fields->{$_}, $package) } keys(%$fields)) {
+		my $field = $fields->{$field_name};
+		push(@relationships, "__PACKAGE__->has_many($field_name => '" . transform_package($field->relation) . "', '" . $package->singular . "_id');");
 	}
-	my $shopLine = "";
-	$shopLine = "__PACKAGE__->belongs_to(shop => '" . transform_package("WWW::Shopify::Model::Shop") . "', 'shop_id');" unless $package =~ m/^WWW::Shopify.*Shop$/ && !defined $package->parent();
+	# OwnOne / Non-Nested / Exterior : Many-Many
+	# Many / Nested : Many-Many
+	# Many / Non-Nested : Many-Many
+	foreach my $field_name (grep { is_many_many($fields->{$_}, $package) } keys(%$fields)) {
+		my $field = $fields->{$field_name};
+		my $joining_name = joining_class_name($package, $field->relation);
+		my $accessor_name = $field_name . "_hasmany";
+		$self->generate_dbix_join($package, $field->relation);
+		push(@relationships, "__PACKAGE__->has_many($accessor_name => '" . $joining_name . "', '" . $package->singular . "_id');");
+		push(@relationships, "__PACKAGE__->many_to_many($field_name => '$accessor_name', '" . $field->relation->singular . "');");
+	}
 
-	my $invalidLine = join("\n\t\t", map { "sub $_ { \$_[0]->" . transform_invalid($_) . "(\$_[1]) if defined \$_[1]; return \$_[0]->" . transform_invalid($_) . "; }" } @invalidLines);
+	my @shop_relations = ();
+	if ($package->is_shop) {
+		# Get a list somewhere of all the top-level stuff.
+		@shop_relations = map { "__PACKAGE__->has_many(" . $_->plural . " => '" . transform_package($_)  . "', 'shop_id');" }
+			grep { !$_->is_nested && !$_->is_shop && $_ !~ m/metafield/i } @{$self->{namespace}};
+	}
+	elsif (!$package->is_nested || !$package->parent) {
+		push(@columns, "\"shop_id\", { data_type => \"INT\" }");
+		push(@shop_relations, "__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');");
+	}
 
-	my $tableName = $package->plural();
-	$tableName = $package->parent()->singular() . $tableName if $package->parent();
-	$tableName = lc("shopify_$tableName");
+	$self->{classes}->{transform_package($package)} = "
+#!/usr/bin/perl
+use strict;
+use warnings;
+# This class is generated from DBIx.pm. Do not modify.
+package " . transform_package($package) . ";
+use base qw/DBIx::Class::Core/;
 
-	return "
-		package " . transform_package($package) . ";
-		use base qw/DBIx::Class::Core/;
-		
-		__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
-		__PACKAGE__->table('$tableName');	
-		__PACKAGE__->add_columns(" . join(",\n\t\t\t", @columns) . ");
-		$shopLine
-		$idLine
-		$parentLine
-		" . join("\n\t\t", @relations) . "
-		sub represents(\$) { return '$package'; }
-		$parentVariable
-		$invalidLine
-	";
+" . ($has_date ? "__PACKAGE__->load_components(qw/InflateColumn::DateTime/);" : "") . "
+__PACKAGE__->table('" . table_prefix() . $table_name . "');
+__PACKAGE__->add_columns(
+	" . join(",\n\t", @columns) . "
+);
+__PACKAGE__->set_primary_key(" . join(", ", map { "'$_'" } @ids) . ");
+
+" . join("\n", @shop_relations)  . "
+
+" . join("\n", @relationships) . "
+sub represents { return '" . $package . "'; }
+sub parent_variable { return " . ($parent_variable ? "'$parent_variable'" : "undef") . "; }
+
+1;";
 }
 
 use WWW::Shopify::Common::DBIxGroup;
 # Takes in a schema and a shopify object and maps it to a DBIx existence.
-sub from_shopify($$$@) {
+sub from_shopify {
 	my $internal_from = sub {
 		my ($self, $schema, $type, $data) = @_;
 		# If we have a class relationship.
 		if ($type->is_relation()) {
 			if ($type->is_many()) {
 				return [] unless $data;
-				use Data::Dumper;
 				my $array = [map { $self->from_shopify($schema, $_); } @$data];
 				return $array;
 			}
@@ -256,6 +238,7 @@ sub from_shopify($$$@) {
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
 
 	foreach my $key (keys(%$fields)) {
+		next if $key =~ m/metafields/;
 		my $data = $shopifyObject->$key();
 		if ($data) {
 			my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data);
@@ -270,7 +253,7 @@ sub from_shopify($$$@) {
 	return $group;
 }
 
-sub to_shopify($$$@) {
+sub to_shopify {
 	my $internal_to = sub {
 		my ($self, $type, $data) = @_;
 		# If we have a class relationship.
