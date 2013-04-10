@@ -19,7 +19,7 @@ __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"activated_on", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"billing_on", { data_type => 'DATETIME', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

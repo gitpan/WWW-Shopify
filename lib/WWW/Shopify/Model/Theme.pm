@@ -11,7 +11,7 @@ use parent 'WWW::Shopify::Model::Item';
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
 	"name" => new WWW::Shopify::Field::String::Words(1),
-	"role" => new WWW::Shopify::Field::String::("(main|mobile|unpublished)"),
+	"role" => new WWW::Shopify::Field::String::Enum(["main", "mobile", "unpublished"]),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')

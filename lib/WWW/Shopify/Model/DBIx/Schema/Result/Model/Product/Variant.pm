@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
 	"position", { data_type => 'INT', is_nullable => '1' },
 	"compare_at_price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"inventory_policy", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"inventory_management", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"grams", { data_type => 'INT', is_nullable => '1' },

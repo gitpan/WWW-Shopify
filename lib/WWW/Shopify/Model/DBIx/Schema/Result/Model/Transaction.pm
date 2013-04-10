@@ -15,7 +15,7 @@ __PACKAGE__->add_columns(
 	"amount", { data_type => 'DECIMAL', is_nullable => '1' },
 	"kind", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"order_id", { data_type => 'INT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

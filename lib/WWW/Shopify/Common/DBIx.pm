@@ -88,10 +88,6 @@ use List::Util qw(first);
 sub generate_dbix {
 	my ($self, $package) = @_;
 
-	sub is_belongs_to { return $_[0]->is_relation && $_[0]->is_one; }
-	sub is_has_many { return !is_belongs_to(@_) && $_[0]->is_relation && ($_[0]->is_own || $_[0]->is_many) && $_[0]->relation->parent && $_[0]->relation->parent eq $_[1]; }
-	sub is_many_many { return !is_belongs_to(@_) && !is_has_many(@_) && $_[0]->is_relation && ($_[0]->is_many || $_[0]->is_own); }
-
 	my $fields = $package->fields;
 	my @ids = $package->identifier;
 	my $has_date = (defined first { $fields->{$_}->sql_type eq "DATETIME" } keys(%$fields));
@@ -104,7 +100,7 @@ sub generate_dbix {
 		my $field = $fields->{$field_name};
 		my %attributes = ();
 		$attributes{'data_type'} = $field->sql_type;
-		$attributes{'is_nullable'} = 1;
+		$attributes{'is_nullable'} = ($package->identifier ne $field_name && (!$package->is_nested || !$package->parent || transform_package($package)->parent_variable ne $field_name)) ? 1 : 0;
 		push(@columns, "\"$field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
 		
 	}
@@ -132,7 +128,7 @@ sub generate_dbix {
 	# OwnOne / Non-Nested / Interior : Belongs To
 	# OwnOne / Nested / Exterior : Belong To
 	my @relationships = ();
-	foreach my $field_name (grep { is_belongs_to($fields->{$_}, $package) } keys(%$fields)) {
+	foreach my $field_name (grep { $fields->{$_}->is_db_belongs_to } keys(%$fields)) {
 		my $field = $fields->{$field_name};
 		die $field_name unless $field->relation;
 		my %attributes = ();
@@ -150,15 +146,21 @@ sub generate_dbix {
 		push(@columns, "\"$field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
 		push(@relationships, "__PACKAGE__->belongs_to($accessor_name => '" . transform_package($field->relation) . "', '$field_name');");
 	}
-	# OwnOne / Nested / Interior : Has Many
-	foreach my $field_name (grep { is_has_many($fields->{$_}, $package) } keys(%$fields)) {
+	# Many / Nested / Interior : Has Many
+	foreach my $field_name (grep { $fields->{$_}->is_db_has_many } keys(%$fields)) {
 		my $field = $fields->{$field_name};
 		push(@relationships, "__PACKAGE__->has_many($field_name => '" . transform_package($field->relation) . "', '" . $package->singular . "_id');");
+	}
+	# OwnOne / Nested / Interior : Has One
+	foreach my $field_name (grep { $fields->{$_}->is_db_has_one } keys(%$fields)) {
+		my $field = $fields->{$field_name};
+		my $parent_variable = transform_package($field->relation)->parent_variable;
+		push(@relationships, "__PACKAGE__->has_one($field_name => '" . transform_package($field->relation) . "', '$parent_variable');");
 	}
 	# OwnOne / Non-Nested / Exterior : Many-Many
 	# Many / Nested : Many-Many
 	# Many / Non-Nested : Many-Many
-	foreach my $field_name (grep { is_many_many($fields->{$_}, $package) } keys(%$fields)) {
+	foreach my $field_name (grep { $fields->{$_}->is_db_many_many } keys(%$fields)) {
 		my $field = $fields->{$field_name};
 		my $joining_name = joining_class_name($package, $field->relation);
 		my $accessor_name = $field_name . "_hasmany";
@@ -237,6 +239,13 @@ sub from_shopify {
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
 
+	if ($shopifyObject->{parent}) {
+		my $parent_variable = $dbObject->parent_variable;
+		die new WWW::Shopify::Exception("Can't convert " . ref($shopifyObject) . ", has a parent variable set, yet has no parent_variable in it's DBIx class.")
+			unless $parent_variable;
+		$dbObject->$parent_variable($shopifyObject->{parent});
+	}
+
 	foreach my $key (keys(%$fields)) {
 		next if $key =~ m/metafields/;
 		my $data = $shopifyObject->$key();
@@ -258,7 +267,7 @@ sub to_shopify {
 		my ($self, $type, $data) = @_;
 		# If we have a class relationship.
 		if ($type->is_relation()) {
-			if ($type->is_many()) {
+			if ($type->is_db_has_many || $type->is_db_many_many) {
 				return [] unless $data;
 				my $array = [map { $self->to_shopify($_); } $data->all()];
 				return $array;
@@ -267,7 +276,7 @@ sub to_shopify {
 				return {} unless $data;
 				return $self->to_shopify($data);
 			}
-			elsif ($type->is_reference() && $type->is_one()) {
+			elsif ($type->is_reference()) {
 				return undef unless $data;
 				return $type->to_shopify($data);
 			}

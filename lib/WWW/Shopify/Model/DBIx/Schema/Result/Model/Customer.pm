@@ -18,7 +18,7 @@ __PACKAGE__->add_columns(
 	"password", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"password_confirmation", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"accepts_marketing", { data_type => 'BOOL', is_nullable => '1' },
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"tags", { data_type => 'VARCHAR(255)', is_nullable => '1' },

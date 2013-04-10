@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
 	"email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"billing_address_id", { data_type => 'INT', is_nullable => '1' },
 	"customer_id", { data_type => 'INT', is_nullable => '1' },

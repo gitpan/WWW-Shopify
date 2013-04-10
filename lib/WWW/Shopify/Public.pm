@@ -57,13 +57,15 @@ sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->
 sub get_url {
 	my $self = shift;
 	my ($decoded, $response) = $self->SUPER::get_url(@_);
-	$self->api_calls($1) if ($response->header('x-shopify-shop-api-call-limit') =~ m/^(\d+)/);
+	my $limit = $response->header('x-shopify-shop-api-call-limit');
+	$self->api_calls($1) if ($limit && $limit =~ m/^(\d+)/);
 	return ($decoded, $response);
 }
 sub use_url {
 	my $self = shift;
 	my ($decoded, $response) = $self->SUPER::use_url(@_);
-	$self->api_calls($1) if ($response->header('x-shopify-shop-api-call-limit') =~ m/^(\d+)/);
+	my $limit = $response->header('x-shopify-shop-api-call-limit');
+	$self->api_calls($1) if ($limit && $limit =~ m/^(\d+)/);
 	return ($decoded, $response);
 }
 

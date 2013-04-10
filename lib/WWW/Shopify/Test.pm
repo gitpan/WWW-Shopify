@@ -162,6 +162,7 @@ Note, this can take a while, depending on the speed of your computer/virtual mac
 
 =cut
 
+use List::Util qw(shuffle);
 sub generate($$) {
 	my ($self, $generatables, $parameters) = @_;
 
@@ -196,17 +197,19 @@ sub generate($$) {
 		for (my $c = 0; $c < $amount; ++$c) {
 			my $creation = {};
 			my $id = undef;
+			my %many_many = ();
 			foreach my $field (keys(%$fields)) {
 				if ($fields->{$field}->is_relation()) {
+					next if $class =~ m/Model::.*Shop$/;
 					my $package = $fields->{$field}->relation();
-					# We only need to do the RELATION_ONE relaitons, because MANY is taken care of by parent ids when THAT class is generated.
+
 					if ($fields->{$field}->is_own() || $fields->{$field}->is_reference()) {
-						# We need to generate the ids for the particular pacakge we're linking to, so recall this function with the new class.
 						if (!exists $generatedIds->{$package} || int(@{$generatedIds->{$package}}) == 0) {
 							$generatedIds->{$package} = [];
 							$self->generate_class($package, $generatedIds, $parameters, $shops);
 						}
-						if ($fields->{$field}->is_own()) {
+						# We need to generate the ids for the particular pacakge we're linking to, so recall this function with the new class.
+						if ($fields->{$field}->is_own && $fields->{$field}->is_db_belongs_to) {
 							my $foreignid = $generatedIds->{$package}->[rand(@{$generatedIds->{$package}})];
 							die new WWW::Shopify::Exception("Can't use blank foreign ID. Generate package $package?") unless defined $foreignid;
 							# We want to append _id here to make sure that the fielda ctually exists.
@@ -226,7 +229,9 @@ sub generate($$) {
 							$creation->{$field} = $foreignid;
 						}
 					}
-					
+					elsif ($fields->{$field}->is_db_many_many) {
+						$many_many{$field} = 1;
+					}
 				}
 				else {
 					my $generated = $fields->{$field}->generate();
@@ -260,9 +265,26 @@ sub generate($$) {
 				die "Need to generate shops before $class." unless int(@$shops) > 0;
 				$creation->{shop_id} = $shops->[int(rand(int(@$shops)))]->id();
 			}
+			die "Cannot have an item with no shop_id." unless $creation->{shop_id} || $class =~ m/Model::.*Shop$/ || $class->is_nested;
 			$shopMap->{$class}->{$id} = $creation->{shop_id} if defined $creation->{shop_id};
 			die "Unable to properly parse $class." unless $class =~ m/(Model::.*)$/;
 			my $dbo = $self->{_db}->resultset($1)->create($creation);
+			foreach my $field (keys(%many_many)) {
+				my $package = $fields->{$field}->relation();
+				if (!exists $generatedIds->{$package} || int(@{$generatedIds->{$package}}) == 0) {
+					$generatedIds->{$package} = [];
+					$self->generate_class($package, $generatedIds, $parameters, $shops);
+				}
+				my $accessor = "add_to_$field" . "_hasmany";
+				my @shuffled = shuffle(@{$generatedIds->{$package}});
+				my @ids = @shuffled[0..rand(3)];
+				foreach my $id (@ids) {
+					$dbo->$accessor({
+						$class->singular . "_id" => $dbo->id,
+						$fields->{$field}->relation->singular . "_id" => $id
+					});
+				}
+			}
 			push(@$shops, $dbo) if ($class =~ m/^WWW::Shopify::.*Shop$/); 
 		}
 	}

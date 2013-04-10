@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.95';
+our $VERSION = '0.96';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -314,6 +314,35 @@ sub validate_item {
 	die new WWW::Shopify::Exception($_[1] . " is not an item!") if ($@);
 	die new WWW::Shopify::Exception(ref($_[1]) . " requires you to login with an admin account.") if $_[1]->needs_login && !$_[0]->logged_in_admin;
 }
+
+
+=head2 upload_files
+
+Requires log in. Uploads an array of files/images into the shop's non-theme file/image management system by automating a form submission.
+
+	$sa->login_admin("email", "password");
+	$sa->upload_files("image1.jpg", "image2.jpg");
+
+Gets around the issue that this is not actually exposed to the API.
+
+=cut
+
+sub upload_files {
+	my ($self, @images) = @_;
+	die new WWW::Shopify::Exception("Uploading files/images requires you to login with an admin account.") unless $self->logged_in_admin;
+	foreach my $path (@images) {
+		die new WWW::Shopify::Exception("Unable to determine extension type.") unless $path =~ m/\.(\w{2,4})$/;
+		my $req = POST "https://" . $self->shop_url . "/admin/files.json",
+			Content_Type => "form-data",
+			Accept => "application/json",
+			Content => [authenticity_token => $self->{authenticity_token}, "file[file]" => [$path]];
+		my $res = $self->ua->request($req);
+		die new WWW::Shopify::Exception("Error uploading $path.") unless $res->is_success;
+	}
+	return int(@images);
+}
+
+=cut
 
 =head2 calc_webhook_signature
 

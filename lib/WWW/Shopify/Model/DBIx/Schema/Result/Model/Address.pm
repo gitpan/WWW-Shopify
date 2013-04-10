@@ -13,7 +13,7 @@ __PACKAGE__->add_columns(
 	"last_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"city", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"latitude", { data_type => 'FLOAT', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"province_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"province", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"company", { data_type => 'VARCHAR(255)', is_nullable => '1' },

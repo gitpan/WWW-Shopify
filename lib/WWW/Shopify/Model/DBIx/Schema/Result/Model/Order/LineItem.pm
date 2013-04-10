@@ -11,7 +11,7 @@ __PACKAGE__->table('shopify_line_items');
 __PACKAGE__->add_columns(
 	"sku", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"fulfillment_service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"grams", { data_type => 'INT', is_nullable => '1' },
 	"quantity", { data_type => 'INT', is_nullable => '1' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },

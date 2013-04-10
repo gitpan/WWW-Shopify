@@ -12,7 +12,7 @@ __PACKAGE__->add_columns(
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"src", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"event", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

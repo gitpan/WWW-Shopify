@@ -10,7 +10,7 @@ use base qw/DBIx::Class::Core/;
 __PACKAGE__->table('shopify_carts');
 __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }

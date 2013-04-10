@@ -18,7 +18,7 @@ __PACKAGE__->add_columns(
 	"minimum_order_amount", { data_type => 'DECIMAL', is_nullable => '1' },
 	"times_used", { data_type => 'INT', is_nullable => '1' },
 	"discount_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"usage_limit", { data_type => 'INT', is_nullable => '1' },
 	"applies_to_id", { data_type => 'INT', is_nullable => '1' },

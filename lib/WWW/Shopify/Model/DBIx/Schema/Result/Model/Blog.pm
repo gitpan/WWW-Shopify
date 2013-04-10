@@ -17,7 +17,7 @@ __PACKAGE__->add_columns(
 	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"commentable", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

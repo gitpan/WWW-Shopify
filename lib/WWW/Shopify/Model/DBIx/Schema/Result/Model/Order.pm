@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
 	"taxes_included", { data_type => 'BOOL', is_nullable => '1' },
 	"email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"total_price_usd", { data_type => 'DECIMAL', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"total_discounts", { data_type => 'DECIMAL', is_nullable => '1' },
 	"order_number", { data_type => 'INT', is_nullable => '1' },
 	"financial_status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
@@ -41,9 +41,7 @@ __PACKAGE__->add_columns(
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"browser_ip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"billing_address_id", { data_type => 'INT', is_nullable => '1' },
-	"payment_details_id", { data_type => 'INT', is_nullable => '1' },
 	"shipping_address_id", { data_type => 'INT', is_nullable => '1' },
-	"client_details_id", { data_type => 'INT', is_nullable => '1' },
 	"customer_id", { data_type => 'INT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );
@@ -52,15 +50,15 @@ __PACKAGE__->set_primary_key('id');
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 
 __PACKAGE__->belongs_to(billing_address => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Address', 'billing_address_id');
-__PACKAGE__->belongs_to(payment_details => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::PaymentDetails', 'payment_details_id');
 __PACKAGE__->belongs_to(shipping_address => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Address', 'shipping_address_id');
-__PACKAGE__->belongs_to(client_details => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ClientDetails', 'client_details_id');
 __PACKAGE__->belongs_to(customer => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Customer', 'customer_id');
 __PACKAGE__->has_many(fufillments => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment', 'order_id');
 __PACKAGE__->has_many(note_attributes => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::NoteAttributes', 'order_id');
 __PACKAGE__->has_many(discount_codes => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::DiscountCode', 'order_id');
 __PACKAGE__->has_many(shipping_lines => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingLine', 'order_id');
 __PACKAGE__->has_many(tax_lines => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::TaxLine', 'order_id');
+__PACKAGE__->has_one(payment_details => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::PaymentDetails', 'order_id');
+__PACKAGE__->has_one(client_details => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ClientDetails', 'order_id');
 __PACKAGE__->has_many(line_items_hasmany => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderLineItem', 'order_id');
 __PACKAGE__->many_to_many(line_items => 'line_items_hasmany', 'line_item');
 __PACKAGE__->has_many(metafields_hasmany => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldOrder', 'order_id');

@@ -15,10 +15,11 @@ use Data::Random qw(rand_datetime rand_words);
 package WWW::Shopify::Field;
 sub new($) { 
 	my $package = shift; 
-	my $calling_package = caller(1);
+	my $calling_package = caller(0);
 	return bless {
 		arguments => [@_],
-		name => undef
+		name => undef,
+		owner => $calling_package
 	}, $package;
 }
 sub name { $_[0]->{name} = $_[1] if defined $_[1]; return $_[0]->{name}; }
@@ -30,6 +31,12 @@ sub to_shopify($$) { return $_[1]; }
 sub from_shopify($$) { return $_[1]; }
 sub generate($) { die "Can't generate $_[0]"; }
 sub validate($) { die "Can't validate $_[0]"; }
+sub owner { $_[0]->{owner} = $_[1] if defined $_[1]; return $_[0]->{owner}; }
+
+sub is_db_belongs_to { return undef; }
+sub is_db_has_many { return undef; }
+sub is_db_many_many { return undef; }
+sub is_db_has_one { return undef; }
 
 package WWW::Shopify::Field::Hook;
 use parent 'WWW::Shopify::Field';

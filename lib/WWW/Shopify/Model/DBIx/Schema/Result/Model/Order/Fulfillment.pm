@@ -14,17 +14,16 @@ __PACKAGE__->add_columns(
 	"tracking_number", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"tracking_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"order_id", { data_type => 'INT', is_nullable => '1' },
-	"receipt_id", { data_type => 'INT', is_nullable => '1' }
+	"order_id", { data_type => 'INT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
 
 
 
 __PACKAGE__->belongs_to(order => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'order_id');
-__PACKAGE__->belongs_to(receipt => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::Receipt', 'receipt_id');
+__PACKAGE__->has_one(receipt => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::Receipt', 'fulfillment_id');
 __PACKAGE__->has_many(line_items_hasmany => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem', 'fulfillment_id');
 __PACKAGE__->many_to_many(line_items => 'line_items_hasmany', 'line_item');
 sub represents { return 'WWW::Shopify::Model::Order::Fulfillment'; }

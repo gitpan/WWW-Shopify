@@ -16,7 +16,7 @@ __PACKAGE__->add_columns(
 	"value_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '1' },
+	"id", { data_type => 'INT', is_nullable => '0' },
 	"owner_resource", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"owner_id", { data_type => 'INT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
