@@ -10,12 +10,18 @@ sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent};
 
 sub get_url($$@) {
 	my ($self, $url, $parameters) = @_;
-	print STDERR "GET $url\n" if $ENV{'SHOPIFY_LOG'};
 	my $uri = URI->new($url);
-	for (grep { $parameters->{$_} && ref($parameters->{$_}) eq "DateTime" } keys(%$parameters)) {
-		$parameters->{$_} = $parameters->{$_}->strftime('%Y-%m-%d %H:%M:%S%z')
+	my %filtered = ();
+	for (keys(%$parameters)) {
+		if ($parameters->{$_} && ref($parameters->{$_}) eq "DateTime") {
+			$filtered{$_} = $parameters->{$_}->strftime('%Y-%m-%d %H:%M:%S%z')
+		}
+		elsif ($_ ne "parent") {
+			$filtered{$_} = $parameters->{$_};
+		}
 	}
-	$uri->query_form($parameters);
+	$uri->query_form(\%filtered);
+	print STDERR "GET " . $uri->as_string . "\n" if $ENV{'SHOPIFY_LOG'};
 	my $request = HTTP::Request->new("GET", $uri);
 	$request->header("Accept" => "application/json");
 	my $response = $self->parent->ua->request($request);

@@ -45,7 +45,7 @@ sub generate($) {
 package WWW::Shopify::Field::String::URL::Image;
 use parent 'WWW::Shopify::Field::String';
 sub generate($) {
-	return 'http://localhost:3000/static/images/' . int(rand(1000)) . ".png";
+	return '/mock/images/' . ::random_regex('[a-z_0-9]{1,8}') . ".png";
 }
 
 package WWW::Shopify::Field::String::Email;

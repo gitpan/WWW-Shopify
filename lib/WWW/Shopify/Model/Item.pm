@@ -7,6 +7,7 @@ use Data::Dumper;
 
 package WWW::Shopify::Model::Item;
 use DateTime;
+use WWW::Shopify::Query;
 
 =head1 NAME
 
@@ -117,33 +118,50 @@ sub needs_login { return undef; }
 sub is_nested { return undef; }
 sub identifier { return "id"; }
 
+sub gettable { return 1; }
 sub creatable { return 1; }
-sub updatable { return int($_[0]->update_fields) > 0; }
+sub updatable { my @fields = $_[0]->update_fields; return int(@fields) > 0; }
 sub deletable { return 1; }
 sub activatable { return undef; }
 sub searchable { return undef; }
 sub cancellable { return undef; }
+sub disablable { return undef; }
+sub enableable { return undef; }
 
 # I CANNOT FUCKING BELIEVE I AM DOING THIS; WHAT THE FUCK SHOPIFY. WHY!? WHY MAKE IT DIFFERENT ARBITRARILY!?
 sub create_method { return "POST"; }
 sub update_method { return "PUT"; }
 sub delete_method { return "DELETE"; }
 
+sub queries { return {}; }
+sub unique_fields { return qw(); }
+
+sub get_fields { return keys(%{$_[0]->fields}); }
 sub creation_minimal { return (); }
 sub creation_filled { return qw(id); }
 sub update_fields { return qw(); }
 sub update_filled { return qw(); }
 
+sub throws_webhooks { return undef; }
+sub throws_create_webhooks { return $_[0]->throws_webhooks; }
+sub throws_update_webhooks { return $_[0]->throws_webhooks; }
+sub throws_delete_webhooks { return $_[0]->throws_webhooks; }
+
+sub has_shop_field { return (!$_[0]->is_nested || !$_[0]->parent) && !$_[0]->is_shop }
+
 # Oh fucking WOW. WHAT THE FUCK. Variants, of course, delete directly with their id, and modify with it.
 # Metafields delete with their id, but modify through their parent. They also get through their parents.
 # Variants of course, get through their id directly. I'm at a loss for words. Why!? Article are different, yet again.
+sub get_all_through_parent { return defined $_[0]->parent; }
 sub get_through_parent { return defined $_[0]->parent; }
 sub create_through_parent { return defined $_[0]->parent; }
 sub update_through_parent { return defined $_[0]->parent; } 
 sub delete_through_parent { return defined $_[0]->parent; }
+sub disable_through_parent { return defined $_[0]->parent; }
+sub enable_through_parent { return defined $_[0]->parent; }
 
 sub associate { $_[0]->{associated_sa} = $_[1] if $_[1]; return $_[0]->{associated_sa}; }
-sub associated_parent { $_[0]->{associated_parent} = $_[1] if $_[1]; return $_[0]->{assocated_parent}; }
+sub associated_parent { $_[0]->{associated_parent} = $_[1] if $_[1]; return $_[0]->{associated_parent}; }
 
 sub create { 
 	my $sa = $_[0]->associate;
@@ -165,15 +183,30 @@ sub activate {
 	die new WWW::Shopify::Exception("You cannot call activate on an unassociated item.") unless $sa;
 	return $sa->activate($_[0]);
 }
+sub disable {
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call disable on an unassociated item.") unless $sa;
+	return $sa->disable($_[0]);
+}
+sub enable {
+	my $sa = $_[0]->associate;
+	die new WWW::Shopify::Exception("You cannot call disable on an unassociated item.") unless $sa;
+	return $sa->enable($_[0]);
+}
 
 sub metafields {
 	my $sa = $_[0]->associate;
-	die new WWW::Shopify::Exception("You cannot call metafields on an unassociated item.") unless $sa;
 	if (!defined $_[0]->{metafields}) {
-		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0]->id, parent_container => $_[0] })];
+		die new WWW::Shopify::Exception("You cannot call metafields on an unassociated item.") unless $sa;
+		$_[0]->{metafields} = [$sa->get_all('Metafield', { parent => $_[0] })];
 	}
 	return $_[0]->{metafields} unless wantarray;
 	return @{$_[0]->{metafields}};
+}
+
+sub refresh_metafields {
+	delete $_[0]->{metafields} if exists $_[0]->{metafields};
+	return $_[0]->metafields;
 }
 
 sub add_metafield {
@@ -199,7 +232,7 @@ sub from_json($$) {
 				my $package = $ref->{$_}->relation();
 				if ($ref->{$_}->is_many()) {
 					next unless exists $json->{$package->plural()};
-					$self->{$_} = [map { my $o = $package->from_json($_); $o->associate_parent($self); $o } @{$json->{$package->plural()}}];
+					$self->{$_} = [map { my $o = $package->from_json($_); $o->associated_parent($self); $o } @{$json->{$package->plural()}}];
 				}
 				elsif ($ref->{$_}->is_one()) {
 					$self->{$_} = $json->{$_};
@@ -251,11 +284,11 @@ sub to_json($) {
 		next unless exists $fields->{$key};
 		if ($fields->{$key}->is_relation()) {
 			if ($fields->{$key}->is_many()) {
-				# Since metafields don't come prepackaged.
-				next unless ref($fields->{$key}) =~ m/Metafield/;
-				my $result = $self->$key();
-				if (defined $result) {
-					$final->{$key} = [map { $_->to_json() } (@$result)];
+				# Since metafields don't come prepackaged, we don't get them. Unless we've already got them.
+				next if $key eq "metafields" && !$_[0]->{metafields};
+				my @results = $self->$key();
+				if (int(@results)) {
+					$final->{$key} = [map { $_->to_json() } @results];
 				}
 				else {
 					$final->{$key} = [];
@@ -291,8 +324,10 @@ sub to_json($) {
 
 sub generate_accessors {
 	return join("\n", 
+		(map { "__PACKAGE__->queries->{$_}->name('$_');" } keys(%{$_[0]->queries})),
 		(map { "__PACKAGE__->fields->{$_}->name('$_');" } keys(%{$_[0]->fields})),
-		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_};}" } grep { $_ ne "metafields" } keys(%{$_[0]->fields}))
+		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \@{\$_[0]->{$_}} if wantarray; return \$_[0]->{$_}; }" } grep { $_ ne "metafields" && $_[0]->field($_)->is_relation && $_[0]->field($_)->is_many } keys(%{$_[0]->fields})),
+		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_}; }" } grep { $_ ne "metafields" && (!$_[0]->field($_)->is_relation || !$_[0]->field($_)->is_many) } keys(%{$_[0]->fields}))
 	); 
 }
 

@@ -9,6 +9,7 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_themes_assets');
 __PACKAGE__->add_columns(
+	"theme_id", { data_type => 'INT' },
 	"attachment", { data_type => 'TEXT', is_nullable => '1' },
 	"value", { data_type => 'TEXT', is_nullable => '1' },
 	"public_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
@@ -17,10 +18,11 @@ __PACKAGE__->add_columns(
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"content_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"theme_id", { data_type => 'INT' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('key');
+
+
 
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 

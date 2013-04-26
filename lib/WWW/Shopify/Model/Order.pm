@@ -54,12 +54,24 @@ BEGIN { $fields = {
 	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer"),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield")
 }; }
+my $queries; sub queries { return $queries; }
+BEGIN { $queries = {
+	created_at_min => new WWW::Shopify::Query::LowerBound('created_at'),
+	created_at_max => new WWW::Shopify::Query::UpperBound('created_at'),
+	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
+	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
+	status => new WWW::Shopify::Query::Enum('status', ['open', 'closed', 'cancelled', 'any']),
+	financial_status => new WWW::Shopify::Query::Match('financial_status'),
+	fulfillment_status => new WWW::Shopify::Query::Match('fulfillment_status'),
+	since_id => new WWW::Shopify::Query::LowerBound('id')
+}; }
 
 sub creatable { return undef; }
 sub updatable { return undef; }
 sub closable { return 1; }
 sub openable { return 1; }
 sub cancellable { return 1; }
+
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(note note_attributes email buyer_accepts_marketing); };
 

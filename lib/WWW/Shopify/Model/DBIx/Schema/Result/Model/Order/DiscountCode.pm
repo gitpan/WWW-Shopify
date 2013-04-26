@@ -9,12 +9,14 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_orders_discount_codes');
 __PACKAGE__->add_columns(
+	"order_id", { data_type => 'INT' },
 	"amount", { data_type => 'DECIMAL', is_nullable => '1' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"order_id", { data_type => 'INT' },
 	"id", { data_type => 'INT' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 

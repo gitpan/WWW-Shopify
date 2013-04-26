@@ -23,6 +23,7 @@ sub creation_minimal { return qw(name query); }
 sub creation_filled { return qw(created_at id); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(name query); }
+sub throws_webhooks { return 1; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

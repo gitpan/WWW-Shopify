@@ -16,9 +16,11 @@ __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"id", { data_type => 'INT', is_nullable => '0' },
 	"tracking_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"order_id", { data_type => 'INT', is_nullable => '1' }
+	"order_id", { data_type => 'INT' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 

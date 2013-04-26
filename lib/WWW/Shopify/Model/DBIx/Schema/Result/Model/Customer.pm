@@ -30,6 +30,8 @@ __PACKAGE__->add_columns(
 );
 __PACKAGE__->set_primary_key('id');
 
+__PACKAGE__->add_unique_constraint(constraint_name => [ "email" ]);
+
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 
 __PACKAGE__->belongs_to(last_order => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'last_order_id');

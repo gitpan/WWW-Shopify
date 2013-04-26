@@ -16,7 +16,7 @@ print STDERR "Setup db at $dbname.\n";
 my $sa = new WWW::Shopify::Test($db);
 
 $db->deploy({ add_drop_table => 1 });
-$sa->generate(['WWW::Shopify::Model::Shop', 'WWW::Shopify::Model::Product']);
+$sa->generate('WWW::Shopify::Model::Shop' => 1, 'WWW::Shopify::Model::Product' => 5);
 
 $sa->associate_randomly;
 

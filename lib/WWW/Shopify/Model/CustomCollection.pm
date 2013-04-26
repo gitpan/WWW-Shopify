@@ -25,6 +25,7 @@ BEGIN { $fields = {
 sub creation_minimal { return qw(collects); }
 sub creation_filled { return qw(public_url created_at); }
 sub update_filled { return qw(updated_at); }
+sub throws_webhooks { return 1; }
 
 sub has_metafields { return 1; }
 

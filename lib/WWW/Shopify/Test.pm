@@ -56,11 +56,14 @@ sub new($$) {
 	my $self = bless {
 		_db => $dbschema,
 		_associatedShop => undef,
-		_mapper => new WWW::Shopify::Common::DBIx()
+		_mapper => new WWW::Shopify::Common::DBIx(),
+		_callback => undef
 	}, $package;
 	$self->associate($shop) if $shop;
 	return $self;
 }
+
+sub callback { $_[0]->{_callback} = $_[1] if defined $_[1]; return $_[0]->{_callback}; }
 
 =head2 ASSOCIATION METHODS
 
@@ -162,134 +165,135 @@ Note, this can take a while, depending on the speed of your computer/virtual mac
 
 =cut
 
+sub get_class {
+	my ($self, $parent, $package, $ids) = @_;
+	
+}
+
 use List::Util qw(shuffle);
-sub generate($$) {
-	my ($self, $generatables, $parameters) = @_;
+sub generate_class {
+	my ($self, $package, $ids, $parent, $restrictions) = @_;
+	$ids = {} unless defined $ids;
 
-	my $generatedIds = {};
-	my $shopMap = {};
-	for (@$generatables) { $generatedIds->{$_} = []; }
+	print STDERR "Generating $package...\n";
+	my $fields = $package->fields;
+	my $object = $self->{_db}->resultset(transform_name($package))->new({});
+	# Simple fields.
+	foreach my $field (grep { !$_->is_relation } values(%$fields)) {
+		my $name = $field->name;
+		$object->$name($field->generate());
+	}
+	$ids->{$package} = [] unless defined $ids->{$package};
 
-	my $shops = [];
+	my $identifier = $package->identifier;
+	if ($identifier eq "id" && $restrictions) {
+		my $tentative;
+		my %present = map { $_ => 1 } @{$ids->{$package}};
+		do {
+			$tentative = int(rand($restrictions->[1] - $restrictions->[0])) + $restrictions->[0];
+		} while (exists $present{$tentative});
+		$object->$identifier($tentative);
+	}
+	my $id = $object->$identifier;
+	push(@{$ids->{$package}}, $id);
+	# Set parent ID.
+	my $parent_variable = $object->parent_variable;
+	$object->$parent_variable($parent->id) if $parent_variable && ref($parent) !~ m/Shop$/;
 
-	foreach my $class (@$generatables) {
-		$self->generate_class($class, $generatedIds, $parameters, $shops, $shopMap);
+	# If we're not a shop and we don't have a parent, we have a shop_id field.
+	if ($package->has_shop_field) {
+		die new WWW::Shopify::Exception("Everything not a shop requires a parent.") unless $parent;
+		$object->shop_id((ref($parent) !~ m/Shop$/) ? $parent->shop_id : $parent->id);
 	}
 
-	sub generate_class {
-		my ($self, $class, $generatedIds, $parameters, $shops, $shopMap) = @_;
-		print "Generating $class...\n";
-		# If we've already generated some, don't generate more; this way we avoid dependency stuff.
-		return if int(@{$generatedIds->{$class}}) > 0;
-
-		my $fields = $class->fields;
-		sub square { return $_[0]*$_[0]; }
-		my $amount = 5 * square(int(split(/::/, $class))-3);
-		my @parentIds = ();
-		@parentIds = @{$generatedIds->{$class->parent()}} if (defined $class->parent());
-		if (defined $parameters->{$class}) {
-			$amount = $parameters->{$class};
+	# Simpler relationships.
+	foreach my $field (grep { $_->is_relation && !$_->is_parent } values(%$fields)) {
+		my $relation = $field->relation;
+		if ($field->is_db_belongs_to && $field->db_rand_count > 0) {
+			my $belongs_to;
+			$self->generate_class($relation, $ids, $parent, $restrictions) unless ($ids->{$package});
+			$belongs_to = $ids->{$package}->[rand(int(@{$ids->{$package}}))];
+			my $field_name = $field->name;
+			$field_name .= "_id" unless $field_name =~ m/_id$/;
+			$object->$field_name($belongs_to);
 		}
-		elsif ($class =~ m/Model::.*Shop$/) {
-			# Why not?
-			$amount = 1;
+		elsif ($field->is_db_has_one && $field->db_rand_count > 0) {
+			$self->generate_class($relation, $ids, $object, $restrictions);
 		}
-		for (my $c = 0; $c < $amount; ++$c) {
-			my $creation = {};
-			my $id = undef;
-			my %many_many = ();
-			foreach my $field (keys(%$fields)) {
-				if ($fields->{$field}->is_relation()) {
-					next if $class =~ m/Model::.*Shop$/;
-					my $package = $fields->{$field}->relation();
-
-					if ($fields->{$field}->is_own() || $fields->{$field}->is_reference()) {
-						if (!exists $generatedIds->{$package} || int(@{$generatedIds->{$package}}) == 0) {
-							$generatedIds->{$package} = [];
-							$self->generate_class($package, $generatedIds, $parameters, $shops);
-						}
-						# We need to generate the ids for the particular pacakge we're linking to, so recall this function with the new class.
-						if ($fields->{$field}->is_own && $fields->{$field}->is_db_belongs_to) {
-							my $foreignid = $generatedIds->{$package}->[rand(@{$generatedIds->{$package}})];
-							die new WWW::Shopify::Exception("Can't use blank foreign ID. Generate package $package?") unless defined $foreignid;
-							# We want to append _id here to make sure that the fielda ctually exists.
-							if ($field =~ m/_id$/) {
-								$creation->{$field} = $foreignid;
-							}
-							else {
-								$creation->{$field . "_id"} = $foreignid;
-							}
-						}
-						elsif ($fields->{$field}->is_reference()) {
-							my $foreignid = $generatedIds->{$package}->[rand(@{$generatedIds->{$package}})];
-							# We ensure that each container object that has children gets at least one child. For now.
-							if ($class->parent() && $fields->{$field}->relation() eq $class->parent() && int(@parentIds) > 0) {
-								$foreignid = pop(@parentIds);
-							}
-							$creation->{$field} = $foreignid;
-						}
-					}
-					elsif ($fields->{$field}->is_db_many_many) {
-						$many_many{$field} = 1;
-					}
-				}
-				else {
-					my $generated = $fields->{$field}->generate();
-					$creation->{$field} = $generated;
-				}
-				if ($field eq $class->identifier()) {
-					$id = $creation->{$field};
-					push(@{$generatedIds->{$class}}, $id);
-				}
+		elsif ($field->is_db_has_many) {
+			my $many_count = $field->db_rand_count;
+			for (my $c = 0; $c < $many_count; ++$c) {
+				$self->generate_class($relation, $ids, $object, $restrictions);
 			}
-			# For those objects taht don't have ID as officially part of their spec.
-			if (!defined $id) {
-				$id = int(@{$generatedIds->{$class}});
-				$creation->{id} = $id;
-				push(@{$generatedIds->{$class}}, $id);
-			}
-			my $parent = $class->parent();
-			if (defined $parent) {
-				my $parent_variable = WWW::Shopify::Common::DBIx::transform_package($class)->parent_variable();
-				die "$parent -> $class: $parent_variable" unless defined $parent_variable;
-				# This occurs when we have an auto-generated "parent_id" variable (as it's not part of the fields)
-				if (!defined $creation->{$parent_variable}) {
-					my $foreignid = $generatedIds->{$parent}->[rand(@{$generatedIds->{$parent}})];
-					# We ensure that each container object that has children gets at least one child. For now.
-					$foreignid = pop(@parentIds) if (int(@parentIds) > 0);
-					$creation->{$parent_variable} = $foreignid;
-				}
-				$creation->{shop_id} = $shopMap->{$parent}->{$creation->{$parent_variable}} unless $class->is_nested;
-			}
-			elsif ($class !~ m/^WWW::Shopify::.*Shop$/) {
-				die "Need to generate shops before $class." unless int(@$shops) > 0;
-				$creation->{shop_id} = $shops->[int(rand(int(@$shops)))]->id();
-			}
-			die "Cannot have an item with no shop_id." unless $creation->{shop_id} || $class =~ m/Model::.*Shop$/ || $class->is_nested;
-			$shopMap->{$class}->{$id} = $creation->{shop_id} if defined $creation->{shop_id};
-			die "Unable to properly parse $class." unless $class =~ m/(Model::.*)$/;
-			my $dbo = $self->{_db}->resultset($1)->create($creation);
-			foreach my $field (keys(%many_many)) {
-				my $package = $fields->{$field}->relation();
-				if (!exists $generatedIds->{$package} || int(@{$generatedIds->{$package}}) == 0) {
-					$generatedIds->{$package} = [];
-					$self->generate_class($package, $generatedIds, $parameters, $shops);
-				}
-				my $accessor = "add_to_$field" . "_hasmany";
-				my @shuffled = shuffle(@{$generatedIds->{$package}});
-				my @ids = @shuffled[0..rand(3)];
-				foreach my $id (@ids) {
-					$dbo->$accessor({
-						$class->singular . "_id" => $dbo->id,
-						$fields->{$field}->relation->singular . "_id" => $id
-					});
-				}
-			}
-			push(@$shops, $dbo) if ($class =~ m/^WWW::Shopify::.*Shop$/); 
 		}
 	}
+	$object = $object->insert;
+	# Many-Many
+	foreach my $field (grep { $_->is_relation && $_->is_db_many_many } values(%$fields)) {
+		my $relation = $field->relation;
+		next if $relation =~ m/Metafield/i;
+		my $accessor = "add_to_" . $field->name . "_hasmany";
+		if (defined $ids->{$relation}) {
+			my $many_count = $field->db_rand_count;
+			for (my $c = 0; $c < $many_count; ++$c) {
+				$self->generate_class($relation, $ids, $parent, $restrictions);
+			}
+		}
+		my @shuffled = shuffle(@{$ids->{$relation}});
 
-	return $self;
+		$object->$accessor({
+			$package->singular . "_id" => $id,
+			$relation->singular . "_id" => $_
+		}) for (grep { defined $_ } @shuffled[0..rand(5)]);
+	}
+	return $object;
+}
+
+use Sys::CPU;
+use threads;
+my $internal_range = 1000000;
+use List::Util qw(min);
+use List::MoreUtils qw(part);
+sub generate {
+	my ($self, %items) = @_;
+	# 0 is auto-pick. Each is on a per-item basis.
+	# Take at least 5 shops.
+	my $shop_count = $items{'WWW::Shopify::Model::Shop'};
+	$shop_count = 5 unless defined $shop_count;
+	my $cpu_count = min(Sys::CPU::cpu_count(), $shop_count);
+	$cpu_count = min($ENV{'CPU'}, $cpu_count) if $ENV{'CPU'};
+	$cpu_count = 1 unless $ENV{'CPU'};
+	print STDERR "Beginning generation of $shop_count shops on $cpu_count threads...\n";
+	my $i = 0;
+	my @partitions = part { $i++ % $cpu_count } 1..$shop_count;
+	sub generate_thread {
+		my ($self, $partitions, $items) = @_;
+		foreach my $initial_range (@$partitions) {
+			my $min_range = $initial_range * $internal_range;
+			my $max_range = ($initial_range+1) * $internal_range;
+
+			print STDERR "====== GENERATING SHOP =======\n";
+			my %ids = ();
+			my $shop = $self->generate_class('WWW::Shopify::Model::Shop', \%ids);
+			%ids = ();
+			my %counts = map { $_ => $items->{$_} } grep { $_ !~ m/Shop$/ } keys(%$items);
+
+			while (int(keys(%counts)) > 0) {
+				foreach my $item (keys(%counts)) {
+					$self->generate_class($item, \%ids, $shop, [$min_range, $max_range]);
+					delete $counts{$item} if (--$counts{$item} == 0);
+				}
+			}
+			print STDERR "====== SHOP FINISHED =======\n";
+		}
+	}
+	if ($cpu_count > 1) {
+		my @threads = map { threads->create('generate_thread', $self, $partitions[$_], \%items) } (1..$cpu_count);
+		$_->join() for (@threads);
+	}
+	else {
+		generate_thread($self, $partitions[0], \%items);
+	}
 }
 
 sub transform_name($) {
@@ -297,18 +301,81 @@ sub transform_name($) {
 	return $1;
 }
 
-sub get_all_limit($$@) {
+use WWW::Shopify::Query;
+use List::Util qw(first);
+sub generate_conditions {
 	my ($self, $package, $specs) = @_;
-	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	$package = $self->translate_model($package);
-	$self->validate_item($package);
-
-	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->all();
-	splice(@return, WWW::Shopify->PULLING_ITEM_LIMIT) if (int(@return) > WWW::Shopify->PULLING_ITEM_LIMIT);
-	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $obj } @return;
+	my %conditions = ();
+	my $queries = $package->queries;
+	foreach my $query (values(%$queries)) {
+		next unless exists $specs->{$query->name};
+		$conditions{$query->field_name} = {} unless exists $conditions{$query->field_name};
+		my $value = $specs->{$query->name};
+		$value = $self->{_db}->storage->datetime_parser->format_datetime($value) if ref($value) eq "DateTime";
+		if (ref($query) =~ m/LowerBound$/) {
+			$conditions{$query->field_name}->{'>='} = $value;
+		}
+		elsif (ref($query) =~ m/UpperBound$/) {
+			$conditions{$query->field_name}->{'<='} = $value;
+		}
+		elsif (ref($query) =~ m/Enum$/) {
+			$conditions{$query->field_name} = $value;
+			die new WWW::Shopify::Exception("Can't specify $value for enum " . $query->name . ", must be one of the following: " .  join(", ", $query->enums)) unless
+				first { $_ eq $value } $query->enums;
+			delete $conditions{$query->field_name} if $value eq "any";
+		}
+		elsif (ref($query) =~ m/Match$/) {
+			$conditions{$query->field_name} = $value;
+		}
+		elsif (ref($query) =~ m/Custom$/) {
+			
+		}
+	}
+	return %conditions;
 }
 
-sub get_all($$@) {
+sub filter_gettable {
+	my ($self, $obj) = @_;
+	my %fields = map { $_ => 1 } $obj->get_fields;
+	my @keys = keys(%{$obj->fields});
+	foreach my $key (@keys) {
+		if (!$fields{$key}) {
+			delete $obj->{$key};
+		}
+		elsif ($obj->{$key}) {
+			if (ref($obj->{$key}) =~ m/WWW::Shopify::Model/) {
+				$self->filter_gettable($obj->{$key});
+			}
+			elsif (ref($obj->{$key}) eq "ARRAY") {
+				for (grep { $_ && ref($_) =~ m/WWW::Shopify::Model/ } @{$obj->{$key}}) {
+					$self->filter_gettable($_);
+				}
+			}
+			elsif (ref($obj->{$key}) eq "HASH") {
+				for (grep { $_ && ref($_) =~ m/WWW::Shopify::Model/ } values(%{$obj->{$key}})) {
+					$self->filter_gettable($_);
+				}
+			}
+		}
+	}
+	return $obj;
+}
+
+sub get_all_limit {
+	my ($self, $package, $specs) = @_;
+	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	die new WWW::Shopify::Exception("Limit should always exist in here.") unless $specs->{limit};
+	$package = $self->translate_model($package);
+	$self->validate_item($package);	
+	
+	my %conditions = $self->generate_conditions($package, $specs);
+
+	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), %conditions })->all();
+	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
+	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
+}
+
+sub get_all {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$package = $self->translate_model($package);
@@ -335,7 +402,10 @@ sub search {
 	my @criteria = split(/\s+/, $specs->{query});
 	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
 	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
-	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $obj } @return;
+	@return = map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
+	return @return if wantarray;
+	return $return[0] if int(@return) > 0;
+	return undef;
 }
 
 sub get_shop($) {
@@ -343,7 +413,7 @@ sub get_shop($) {
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	my $obj = $self->{_mapper}->to_shopify($self->associate());
 	$obj->associate($self);
-	return $obj;
+	return $self->filter_gettable($obj);
 }
 
 sub get_count($$@) {
@@ -360,9 +430,10 @@ sub get($$$@) {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	my $row = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->find($id);
+	return undef unless $row;
 	my $obj = $self->{_mapper}->to_shopify($row);
 	$obj->associate($self) if $obj;
-	return $obj;
+	return $self->filter_gettable($obj);
 }
 
 # Fields that should be filled in by 'shopify'.
@@ -372,17 +443,18 @@ sub post_creation_fields {
 		$item->status("pending");
 		$item->confirmation_url("/mock/charge_activation/" . $item->id);
 	}
+	elsif (ref($item) =~ m/Discount/) {
+		$item->status("enabled");
+	}
 }
 
-sub create($$@) {
+sub create {
 	my ($self, $item, $options) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 
 	$self->validate_item(ref($item));
 	my $package = ref($item);
-	for ($item->creation_minimal) {
-		die "Missing minimal creation member $_." unless defined $item->{$_};
-	}
+	die "Missing minimal creation member $_." if first { !defined $item->{$_} } $item->creation_minimal;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
@@ -415,28 +487,29 @@ sub create($$@) {
 	}
 	fill_creation($self, $dbixgroup->nested);
 
-	if ($item->{parent} && $options && $options->{parent_container} && ref($item) =~ m/Metafield/) {
-		my $dbname = $options->{parent_container};
-		$dbname =~ s/WWW::Shopify:://;
-		my $parent = $self->{_db}->resultset($dbname)->find($item->{parent});
-		my $object = $dbixgroup->contents;
-		my $accessor = "add_to_" . $item->plural;
-		my $json = $item->to_json;
-		my @keys = keys(%$json);
-		for (@keys) {
-			if ($_ eq "key") {
-				$json->{"invalid_key"} = $json->{$_};
-				delete $json->{$_};
-			}
+	my $return;
+	eval {
+		if ($item->associated_parent && ref($item) =~ m/Metafield/) {
+			my $dbname = ref($item->associated_parent);
+			$dbname =~ s/WWW::Shopify:://;
+			my $accessor = "add_to_" . $item->plural;
+	
+			my $parent = $self->{_db}->resultset($dbname)->find($item->associated_parent->id);
+			die "Requires parent in database." unless $parent;
+			my $json = $item->to_json;
+			$json->{shop_id} = $self->associate->id;
+			$parent->$accessor($json);
 		}
-		$parent->$accessor($json);
+		else {
+			$dbixgroup->insert;
+		}
+		$return = $self->{_mapper}->to_shopify($dbixgroup->contents);
+		$return->associate($self);
+	};
+	if ($@) {
+		die new WWW::Shopify::Exception(new HTTP::Response(422, "$@"))
 	}
-	else {
-		$dbixgroup->insert;
-	}
-
-	my $return = $self->{_mapper}->to_shopify($dbixgroup->contents);
-	$return->associate($self);
+	$self->callback->webhook($self->associate, $item, "create") if $self->callback && $item->throws_create_webhooks;
 	return $return;
 }
 
@@ -449,6 +522,7 @@ sub update {
 	$dbixgroup->update;
 	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents);
 	$obj->associate($self);
+	$self->callback->webhook($self->associate, $item, "update") if $self->callback && $item->throws_update_webhooks;
 	return $obj;
 }
 
@@ -461,6 +535,7 @@ sub delete {
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	die new WWW::Shopify::Exception($item->singular . " with id " . $item->id . " does not exist.") unless $dbixgroup->contents->in_storage;
+
 	if (ref($item) =~ m/ApplicationCharge/) {
 		$dbixgroup->contents->status('cancelled');
 		$dbixgroup->contents->update;
@@ -468,6 +543,7 @@ sub delete {
 	else {	
 		$dbixgroup->delete;
 	}
+	$self->callback->webhook($self->associate, $item, "delete") if $self->callback && $item->throws_delete_webhooks;
 
 	return 1;
 }
@@ -475,12 +551,44 @@ sub delete {
 # This function is solely for charges.
 sub activate {
 	my ($self, $class) = @_;
-	die new WWW::Shopify::Exception("Only charges can be activated.") unless defined $class && ref($class) =~ m/WWW::Shopify(.*?)ApplicationCharge/;
+	die new WWW::Shopify::Exception("Only charges can be activated.") unless defined $class && $class->activatable;
 	$self->validate_item(ref($class));
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
 	die new WWW::Shopify::Exception("Unable to find charge with id: " . $object->id()) unless defined $object;
 	$object->status("active");
+	$object->update;
+
+	my $obj = $self->{_mapper}->to_shopify($object);
+	$obj->associate($self);
+	return $obj;
+}
+
+sub disable {
+	my ($self, $class) = @_;
+	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $class && $class->disablable;
+	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
+	$self->validate_item(ref($class));
+
+	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });
+	die new WWW::Shopify::Exception("Unable to find discount code with id: " . $object->id) unless defined $object;
+	$object->status("disabled");
+	$object->update;
+
+	my $obj = $self->{_mapper}->to_shopify($object);
+	$obj->associate($self);
+	return $obj;
+}
+
+sub enable {
+	my ($self, $class) = @_;
+	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $class && $class->enableable;
+	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
+	$self->validate_item(ref($class));
+
+	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });
+	die new WWW::Shopify::Exception("Unable to find discount code with id: " . $object->id) unless defined $object;
+	$object->status("enabled");
 	$object->update;
 
 	my $obj = $self->{_mapper}->to_shopify($object);

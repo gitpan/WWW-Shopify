@@ -13,7 +13,7 @@ BEGIN { $fields = {
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"position" => new WWW::Shopify::Field::Int(1, 4),
 	"src" => new WWW::Shopify::Field::String::URL::Image(),
-	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product'),
+	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product'),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
 }; }

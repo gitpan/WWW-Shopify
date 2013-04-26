@@ -9,12 +9,14 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_custom_collections_collects');
 __PACKAGE__->add_columns(
-	"position", { data_type => 'INT', is_nullable => '1' },
 	"custom_collection_id", { data_type => 'INT' },
+	"position", { data_type => 'INT', is_nullable => '1' },
 	"id", { data_type => 'INT' },
 	"product_id", { data_type => 'INT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 

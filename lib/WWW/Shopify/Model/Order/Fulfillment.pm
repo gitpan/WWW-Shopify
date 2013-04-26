@@ -12,9 +12,9 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"order_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Order'),
-	"service" => new WWW::Shopify::Field::String::Enum("manual", "automatic"),
-	"status" => new WWW::Shopify::Field::String("success", "failure"),
+	"order_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Order'),
+	"service" => new WWW::Shopify::Field::String::Enum(["manual", "automatic"]),
+	"status" => new WWW::Shopify::Field::String::Enum(["success", "failure"]),
 	"tracking_company" => new WWW::Shopify::Field::String(),
 	"tracking_number" => new WWW::Shopify::Field::String("[A-Z0-9]{5,10}"),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),

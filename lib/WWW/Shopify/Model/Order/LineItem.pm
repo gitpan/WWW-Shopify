@@ -6,7 +6,7 @@ use warnings;
 use WWW::Shopify;
 
 package WWW::Shopify::Model::Order::LineItem;
-use parent "WWW::Shopify::Model::Item";
+use parent "WWW::Shopify::Model::NestedItem";
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {

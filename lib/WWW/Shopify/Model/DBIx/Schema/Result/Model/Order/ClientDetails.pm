@@ -9,14 +9,16 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_orders_properties');
 __PACKAGE__->add_columns(
+	"order_id", { data_type => 'INT' },
 	"browser_ip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"session_hash", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"user_agent", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"accept_language", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"order_id", { data_type => 'INT' },
 	"id", { data_type => 'INT' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 

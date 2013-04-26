@@ -10,18 +10,23 @@ use parent "WWW::Shopify::Model::Item";
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
-		"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-		"id" => new WWW::Shopify::Field::Identifier(),
-		"owner_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Shop'),
-		"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-		"owner_resource" => new WWW::Shopify::Field::String::Enum(["shop"]),
-		"description" => new WWW::Shopify::Field::String(),
-		"key" => new WWW::Shopify::Field::String(),
-		"namespace" => new WWW::Shopify::Field::String(),
-		"value_type" => new WWW::Shopify::Field::String::Enum(["integer", "float", "string"]),
-		"value" => new WWW::Shopify::Field::String()
-	};
-}
+	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"id" => new WWW::Shopify::Field::Identifier(),
+	"owner_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Shop'),
+	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"owner_resource" => new WWW::Shopify::Field::String::Enum(["shop"]),
+	"description" => new WWW::Shopify::Field::String(),
+	"key" => new WWW::Shopify::Field::String(),
+	"namespace" => new WWW::Shopify::Field::String(),
+	"value_type" => new WWW::Shopify::Field::String::Enum(["integer", "float", "string"]),
+	"value" => new WWW::Shopify::Field::String()
+}; }
+
+sub get_all_through_parent { return 1; }
+sub get_through_parent { return 1; }
+sub create_through_parent { return 1; }
+sub update_through_parent { return 1; } 
+sub delete_through_parent { return undef; }
 
 sub creation_minimal { return qw(key namespace value_type value); }
 sub creation_filled { return qw(created_at id owner_resource); }

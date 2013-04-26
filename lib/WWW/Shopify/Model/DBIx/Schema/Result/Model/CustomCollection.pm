@@ -14,12 +14,14 @@ __PACKAGE__->add_columns(
 	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"body_html", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'INT', is_nullable => '0' },
+	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 

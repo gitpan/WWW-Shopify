@@ -66,13 +66,14 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.96';
+our $VERSION = '0.98';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
 use Data::Dumper;
 use Module::Find;
 use WWW::Shopify::URLHandler;
+use WWW::Shopify::Query;
 
 # Make sure we include all our models so that when people call the model, we actually know what they're talking about.
 BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); }
@@ -110,22 +111,21 @@ sub put_url { return $_[0]->url_handler()->put_url($_[0]->encode_url($_[1]), $_[
 sub delete_url { return $_[0]->url_handler()->delete_url($_[0]->encode_url($_[1]), $_[2]); }
 
 sub resolve_trailing_url {
-	my ($self, $package, $action, $parent_id, $parent_container) = @_;
+	my ($self, $package, $action, $parent) = @_;
 	my $method = lc($action) . "_through_parent";
 	if ($package->$method) {
-		my $container = ($parent_container ? $parent_container : $package->parent);
-		die new WWW::Shopify::Exception("Cannot get, no parent specified.") unless $parent_id && $container;
-		return "/admin/" . $container->plural() . "/" . $parent_id . "/" . $package->plural();
+		die new WWW::Shopify::Exception("Cannot get, no parent specified.") unless $parent;
+		return "/admin/" . $parent->plural . "/" . $parent->id . "/" . $package->plural;
 	}
-	return "/admin/" . $package->plural();
+	return "/admin/" . $package->plural;
 }
 
 sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
 	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}, $specs->{parent_container}) . ".json", $specs);
-	return map { my $object = $package->from_json($_); $object->associate($self); $object; } @{$decoded->{$package->plural}};
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json", $specs);
+	return map { my $object = $package->from_json($_); $object->associate($self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
 }
 
 use POSIX qw/ceil/;
@@ -157,7 +157,7 @@ sub get_count {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	die "Cannot count $package." unless $package->countable();
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}, $specs->{parent_container}) . "/count.json", $specs);
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/count.json", $specs);
 	return $decoded->{'count'};
 }
 
@@ -168,13 +168,14 @@ sub get {
 	# We have a special case for asssets, for some arbitrary reason.
 	my ($decoded, $response);
 	if ($package !~ m/Asset/) {
-		($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}, $specs->{parent_container}) . "/$id.json");
+		($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/$id.json");
 	} else {
 		die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
-		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent} . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}});
+		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
 	}
 	my $class = $package->from_json($decoded->{$package->singular()});
 	$class->associate($self);
+	$class->associated_parent($specs->{parent});
 	return $class;
 }
 
@@ -185,16 +186,18 @@ sub search {
 	die new WWW::Shopify::Exception("Must have a query to search.") unless $specs && $specs->{query};
 	$self->validate_item($package);
 
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}, $specs->{parent_container}) . "/search.json", $specs);
+	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/search.json", $specs);
 
 	my @return = ();
 	foreach my $element (@{$decoded->{$package->plural()}}) {
 		my $class = $package->from_json($element);
-		$class->{parent_id} = $specs->{parent} if ($package->container());
+		$class->associated_parent($specs->{parent}) if $specs->{parent};
 		$class->associate($self);
 		push(@return, $class);
 	}
-	return @return;
+	return @return if wantarray;
+	return $return[0] if int(@return) > 0;
+	return undef;
 }
 
 use List::Util qw(first);
@@ -209,16 +212,17 @@ sub create {
 	$specs = $item->to_json();
 	if ($item->needs_login) {
 		my @fields = map { my $a; $item->singular . "[$_]" => $specs->{$_} } keys(%$specs);
-		my $url = $self->encode_url($self->resolve_trailing_url($item, "create", $item->{parent}, $specs->{parent_container})) . ".json";
+		my $url = $self->encode_url($self->resolve_trailing_url($item, "create", $item->associated_parent)) . ".json";
 		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, @fields], Accept => 'application/json');
 	 	my $json = JSON::decode_json($response->decoded_content);
 		return ref($item)->from_json($json->{$item->singular});
 	}
 	my $method = lc($item->create_method) . "_url";
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->{parent}, ($options) ? $options->{parent_container} : undef) . ".json", {$item->singular() => $specs});
-	my $element = $decoded->{$item->singular()};
+	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->associated_parent) . ".json", {$item->singular() => $specs});
+	my $element = $decoded->{$item->singular};
 	my $object = ref($item)->from_json($element);
 	$object->associate($self);
+	$object->associated_parent($item->associated_parent);
 	return $object;
 }
 
@@ -230,11 +234,12 @@ sub update {
 	$vars = { $class->singular => {map { $_ => $vars->{$_} } grep { exists $mods{$_} } keys(%$vars)} };
 	my $method = lc($class->update_method) . "_url";
 
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->{parent}) . "/" . $class->id . ".json", $vars);
+	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
 
 	my $element = $decoded->{$class->singular()};
 	my $object = ref($class)->from_json($element);
 	$object->associate($self);
+	$object->associated_parent($class->associated_parent);
 	return $object;
 }
 
@@ -243,31 +248,57 @@ sub delete {
 	$self->validate_item(ref($class));
 
 	if ($class->needs_login) {
-		my $url = $self->encode_url($self->resolve_trailing_url($class, "delete", $class->parent)) . "/" . $class->id();
+		my $url = $self->encode_url($self->resolve_trailing_url($class, "delete", $class->associated_parent)) . "/" . $class->id();
 		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, "_method" => "delete"], Accept => 'application/json');
 		return $response;
 	}
 	else {
 		my $method = lc($class->delete_method) . "_url";
 		if (ref($class) =~ m/Asset/) {
-			my $url = $self->resolve_trailing_url(ref($class), "delete", $class->{parent}) . ".json";
-			$self->$method($url, {'asset[key]' => $class->key, theme_id => $class->{parent} });
+			my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json";
+			$self->$method($url, {'asset[key]' => $class->key, theme_id => $class->associated_parent->id });
 		}
 		else {
-			$self->$method($self->resolve_trailing_url($class, "delete", $class->{parent}) . "/" . $class->id . ".json");
+			$self->$method($self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
 		}
 	}
-
 	return 1;
 }
 
-# This function is solely for charges.
+# This function is solely for discount codes.
 sub activate {
 	my ($self, $object) = @_;
 	die new WWW::Shopify::Exception("You can only activate charges.") unless defined $object && $object->activatable;
 	my ($decoded, $response) = $self->post_url("/admin/" . $object->plural . "/" . $object->id . "/activate.json", {$object->singular() => $object->to_json});
 	my $element = $decoded->{$object->singular()};
-	return ref($object)->from_json($element);
+	$object = ref($object)->from_json($element);
+	$object->associate($self);
+	return $object;
+}
+
+sub disable {
+	my ($self, $object) = @_;
+	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $object && $object->disablable;
+	die new WWW::Shopify::Exception(ref($object) . " requires you to login with an admin account.") if $object->needs_login && !$self->logged_in_admin;
+	my $id = $object->id;
+	my $url = $self->encode_url($self->resolve_trailing_url($object, "disable", $object->associated_parent)) . "/$id/disable.json";
+	my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}], Accept => 'application/json');
+ 	my $json = JSON::decode_json($response->decoded_content);
+	$object = ref($object)->from_json($json->{$object->singular});
+	$object->associate($self);
+	return $object;
+}
+sub enable {
+	my ($self, $object) = @_;
+	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $object && $object->disablable;
+	die new WWW::Shopify::Exception(ref($object) . " requires you to login with an admin account.") if $object->needs_login && !$self->logged_in_admin;
+	my $id = $object->id;
+	my $url = $self->encode_url($self->resolve_trailing_url($object, "enable", $object->associated_parent)) . "/$id/enable.json";
+	my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}], Accept => 'application/json');
+ 	my $json = JSON::decode_json($response->decoded_content);
+	$object = ref($object)->from_json($json->{$object->singular});
+	$object->associate($self);
+	return $object;
 }
 
 use HTTP::Request::Common;
@@ -312,7 +343,7 @@ sub is_valid { eval { $_[0]->get_shop; }; return undef if ($@); return 1; }
 sub validate_item {
 	eval {	die unless $_[1]; $_[1]->is_item; };
 	die new WWW::Shopify::Exception($_[1] . " is not an item!") if ($@);
-	die new WWW::Shopify::Exception(ref($_[1]) . " requires you to login with an admin account.") if $_[1]->needs_login && !$_[0]->logged_in_admin;
+	die new WWW::Shopify::Exception($_[1] . " requires you to login with an admin account.") if $_[1]->needs_login && !$_[0]->logged_in_admin;
 }
 
 
@@ -418,7 +449,10 @@ This is SLIGHTLY different from the above two. For, as far as I can tell, no rea
 
 sub calc_proxy_signature {
 	my ($shared_secret, $params) = @_;
-	return hmac_sha256_hex(join("", sort(map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params)))), $shared_secret);
+	return hmac_sha256_hex(join("", sort(map { 
+		my $p = $params->{$_};
+		"$_=" . (ref($p) eq "ARRAY" ? join("$_=", @$p) : $p);
+	} (grep { $_ ne "signature" } keys(%$params)))), $shared_secret);
 }
 
 sub verify_proxy { 

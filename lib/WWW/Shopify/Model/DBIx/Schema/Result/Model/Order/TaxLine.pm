@@ -9,13 +9,15 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_orders_tax_lines');
 __PACKAGE__->add_columns(
+	"order_id", { data_type => 'INT' },
 	"rate", { data_type => 'FLOAT', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"price", { data_type => 'DECIMAL', is_nullable => '1' },
-	"order_id", { data_type => 'INT' },
 	"id", { data_type => 'INT' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 

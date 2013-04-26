@@ -7,8 +7,9 @@ package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem;
 use base qw/DBIx::Class::Core/;
 
 
-__PACKAGE__->table('shopify_line_items');
+__PACKAGE__->table('shopify_orders_line_items');
 __PACKAGE__->add_columns(
+	"order_id", { data_type => 'INT' },
 	"sku", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"fulfillment_service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'INT', is_nullable => '0' },
@@ -23,17 +24,18 @@ __PACKAGE__->add_columns(
 	"requires_shipping", { data_type => 'BOOL', is_nullable => '1' },
 	"vendor", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"product_id", { data_type => 'INT', is_nullable => '1' },
-	"variant_id", { data_type => 'INT', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"variant_id", { data_type => 'INT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
 
-__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
+
+
+
 
 __PACKAGE__->belongs_to(product => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'product_id');
 __PACKAGE__->belongs_to(variant => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant', 'variant_id');
 __PACKAGE__->has_many(properties => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem::Property', 'line_item_id');
 sub represents { return 'WWW::Shopify::Model::Order::LineItem'; }
-sub parent_variable { return undef; }
+sub parent_variable { return 'order_id'; }
 
 1;

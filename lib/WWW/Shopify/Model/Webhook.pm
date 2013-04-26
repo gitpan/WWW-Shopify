@@ -48,6 +48,12 @@ BEGIN { $fields = {
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
 }; }
 
+my $queries; sub queries { return $queries; }
+BEGIN { $queries = {
+	topic => new WWW::Shopify::Query::Match('topic')
+}; }
+
+
 sub creation_minimal { return qw(address topic format); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }

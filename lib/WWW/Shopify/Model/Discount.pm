@@ -29,6 +29,8 @@ sub creation_minimal { return qw(discount_type code value); }
 sub creation_filled { return qw(status); }
 sub update_filled { return qw(); }
 sub update_fields { return qw(password password_confirmation); }
+sub disablable { return 1; }
+sub enableable { return 1; }
 
 sub needs_login { return 1; }
 

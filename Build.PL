@@ -27,7 +27,9 @@ my $build = Module::Build->new(
 		'LWP::Protocol::https' => '6.03',
 		'HTTP::Request::Common' => '6.04',
 		'Date::Calc' => '6.3',
-		'URI::Escape' => '3.31'
+		'URI::Escape' => '3.31',
+		'Sys::CPU' => 0,
+		'threads' => 0,
 	},
 	meta_merge => {
 		resources => {

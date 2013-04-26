@@ -9,6 +9,7 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_carts_line_items');
 __PACKAGE__->add_columns(
+	"cart_id", { data_type => 'INT' },
 	"line_price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"sku", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"grams", { data_type => 'INT', is_nullable => '1' },
@@ -17,10 +18,11 @@ __PACKAGE__->add_columns(
 	"price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"vendor", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"cart_id", { data_type => 'INT' },
 	"variant_id", { data_type => 'INT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
+
+
 
 
 
