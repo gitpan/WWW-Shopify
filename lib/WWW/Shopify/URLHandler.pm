@@ -35,7 +35,7 @@ sub get_url($$@) {
 }
 
 sub use_url($$$$) {
-	my ($self, $method, $url, $hash) = @_;
+	my ($self, $method, $url, $hash, $login) = @_;
 	my $request = HTTP::Request->new($method, $url);
 	print STDERR "$method $url\n" if $ENV{'SHOPIFY_LOG'};
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");

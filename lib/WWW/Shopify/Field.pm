@@ -12,6 +12,15 @@ package main;
 use String::Random qw(random_regex random_string);
 use Data::Random qw(rand_datetime rand_words);
 
+=head2 WWW::Shopify::Model::Field
+
+The main object representing a field on a Shopify object. Contains mainly a name, and a type. Can also contain more data when the need arises to represent something more specifically.
+
+There are a lot of these, so I'm not going to list them; most of the distinctions are made so that databases with reasonable data can be generated.
+
+=cut
+
+
 package WWW::Shopify::Field;
 sub new($) { 
 	my $package = shift; 
@@ -115,6 +124,7 @@ sub to_shopify {
 }
 sub from_shopify {
 	my $dt; 
+	return undef unless $_[1];
 	if ($_[1] =~ m/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)([+-]\d+):(\d+)/) {
 		$dt = DateTime->new(
 			year      => $1,

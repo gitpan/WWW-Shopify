@@ -95,7 +95,7 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('" . $self->table_prefix . $self->joining_table_name($join1, $join2) . "');
 __PACKAGE__->add_columns(
-	'id', { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 },
+	'id', { data_type => 'INT', is_nullable => '0', is_auto_increment => 1 },
 	'" . $join1->singular . "_id', { data_type => 'INT', is_nullable => 0 },
 	'" . $join2->singular . "_id', { data_type => 'INT', is_nullable => 0 }
 );

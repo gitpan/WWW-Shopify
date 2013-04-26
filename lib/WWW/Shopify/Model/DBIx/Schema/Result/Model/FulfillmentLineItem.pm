@@ -9,7 +9,7 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_fulfillmentsline_items');
 __PACKAGE__->add_columns(
-	'id', { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 },
+	'id', { data_type => 'INT', is_nullable => '0', is_auto_increment => 1 },
 	'fulfillment_id', { data_type => 'INT', is_nullable => 0 },
 	'line_item_id', { data_type => 'INT', is_nullable => 0 }
 );

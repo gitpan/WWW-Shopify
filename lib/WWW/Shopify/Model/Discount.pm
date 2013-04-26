@@ -22,15 +22,16 @@ BEGIN { $fields = {
 	"discount_type" => new WWW::Shopify::Field::String::Enum(["fixed_amount", "disabled"]),
 	"applies_to_resource" => new WWW::Shopify::Field::String::Enum(["order", "product", "collection", "customer_group"]),
 	"times_used" => new WWW::Shopify::Field::Int(),
-	"applies_to_id" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Product")
+	"applies_to_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product"),
+	"applies_to" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Product")
 }; }
 
 sub creation_minimal { return qw(discount_type code value); }
 sub creation_filled { return qw(status); }
 sub update_filled { return qw(); }
 sub update_fields { return qw(password password_confirmation); }
-sub disablable { return 1; }
-sub enableable { return 1; }
+
+sub actions { return qw(disable enable); }
 
 sub needs_login { return 1; }
 

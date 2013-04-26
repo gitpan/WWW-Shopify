@@ -23,8 +23,10 @@ BEGIN { $fields = {
 	"updated_at" => new WWW::Shopify::Field::Date(),
 	"confirmation_url" => new WWW::Shopify::Field::String::URL()
 }; }
-sub countable() { return undef; }
-sub activatable($) { return 1; }
+sub countable { return undef; }
+
+
+sub actions { return qw(activate); }
 
 sub creation_minimal { return qw(name price return_url); }
 sub creation_filled { return qw(id created_at confirmation_url); }

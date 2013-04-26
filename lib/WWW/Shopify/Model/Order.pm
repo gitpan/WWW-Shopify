@@ -68,9 +68,8 @@ BEGIN { $queries = {
 
 sub creatable { return undef; }
 sub updatable { return undef; }
-sub closable { return 1; }
-sub openable { return 1; }
-sub cancellable { return 1; }
+
+sub actions { return qw(open close cancel); }
 
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(note note_attributes email buyer_accepts_marketing); };

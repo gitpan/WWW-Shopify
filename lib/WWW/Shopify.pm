@@ -66,7 +66,7 @@ use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.98';
+our $VERSION = '0.99';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -82,11 +82,11 @@ package WWW::Shopify;
 
 =head1 METHODS
 
-=head2 api_key
+=head2 api_key([$api_key])
 
 Gets/sets the applciation api key to use for this particular app.
 
-=head2 shop_url
+=head2 shop_url([$shop_url])
 
 Gets/sets the shop url that we're going to be making calls to.
 
@@ -105,10 +105,10 @@ use constant {
 	PULLING_ITEM_LIMIT => 250
 };
 
-sub get_url { return $_[0]->url_handler()->get_url($_[0]->encode_url($_[1]), $_[2]); }
-sub post_url { return $_[0]->url_handler()->post_url($_[0]->encode_url($_[1]), $_[2]); }
-sub put_url { return $_[0]->url_handler()->put_url($_[0]->encode_url($_[1]), $_[2]); }
-sub delete_url { return $_[0]->url_handler()->delete_url($_[0]->encode_url($_[1]), $_[2]); }
+sub get_url { return $_[0]->url_handler()->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub post_url { return $_[0]->url_handler()->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub put_url { return $_[0]->url_handler()->put_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub delete_url { return $_[0]->url_handler()->delete_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 
 sub resolve_trailing_url {
 	my ($self, $package, $action, $parent) = @_;
@@ -128,6 +128,14 @@ sub get_all_limit {
 	return map { my $object = $package->from_json($_); $object->associate($self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
 }
 
+=head2 get_all($self, $package, $filters)
+
+Gets up to 249 * CALL_LIMIT objects (currently 124750) from Shopify at once. Goes in a loop until it's got everything. Performs a count first to see where it's at.
+
+If you don't want this behaviour, use the limit filter.
+
+=cut
+
 use POSIX qw/ceil/;
 sub get_all {
 	my ($self, $package, $specs) = @_;
@@ -136,12 +144,20 @@ sub get_all {
 	return $self->get_all_limit($package, $specs) if ((defined $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT) || !$package->countable());
 
 	my $item_count = $self->get_count($package, $specs);
-	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*200;
+	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*499;
 	return $self->get_all_limit($package, $specs) if ($item_count <= PULLING_ITEM_LIMIT);
 
 	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
 	return map { $specs->{page} = $_; $self->get_all_limit($package, $specs) } 1..$page_count;
 }
+
+=head2 get_shop($self)
+
+Returns the actual shop object.
+
+	my $shop = $sa->get_shop;
+
+=cut
 
 sub get_shop {
 	my ($self) = @_;
@@ -152,6 +168,16 @@ sub get_shop {
 	return $object;
 }
 
+=head2 get_count($self, $package, $filters)
+
+Gets the item count from the shopify store. So if we wanted to count all our orders, we'd do:
+
+	my $order = $sa->get('Order', 142345, { status => "any" });
+
+It's as easy as that. Keep in mind not all items are countable (who the hell knows why); a glaring exception is assets. Either check the shopify docs, or grep for the sub "countable".
+
+=cut
+
 sub get_count {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
@@ -160,6 +186,16 @@ sub get_count {
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/count.json", $specs);
 	return $decoded->{'count'};
 }
+
+=head2 get($self, $package, $id)
+
+Gets the item from the shopify store. Returns it in local (classed up) form. In order to get an order for example:
+
+	my $order = $sa->get('Order', 142345);
+
+It's as easy as that.
+
+=cut
 
 sub get {
 	my ($self, $package, $id, $specs) = @_;
@@ -178,6 +214,16 @@ sub get {
 	$class->associated_parent($specs->{parent});
 	return $class;
 }
+
+=head2 search($self, $package, $item, { query => $query })
+
+Searches for the item from the shopify store. Not all items are searchable, check the API docs, or grep this module's source code and look for the "searchable" sub.
+
+A popular thing to search for is customers by email, you can do so like the following:
+
+	my $customer = $sa->search("Customer", { query => "email:me@example.com" });
+
+=cut
 
 sub search {
 	my ($self, $package, $specs) = @_;
@@ -200,6 +246,12 @@ sub search {
 	return undef;
 }
 
+=head2 create($self, $item)
+
+Creates the item on the shopify store. Not all items are creatable, check the API docs, or grep this module's source code and look for the "creatable" sub.
+
+=cut
+
 use List::Util qw(first);
 use HTTP::Request::Common;
 sub create {
@@ -210,21 +262,20 @@ sub create {
 	die new WWW::Shopify::Exception("Missing minimal creation member: $missing in " . ref($item)) if $missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$specs = $item->to_json();
-	if ($item->needs_login) {
-		my @fields = map { my $a; $item->singular . "[$_]" => $specs->{$_} } keys(%$specs);
-		my $url = $self->encode_url($self->resolve_trailing_url($item, "create", $item->associated_parent)) . ".json";
-		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, @fields], Accept => 'application/json');
-	 	my $json = JSON::decode_json($response->decoded_content);
-		return ref($item)->from_json($json->{$item->singular});
-	}
 	my $method = lc($item->create_method) . "_url";
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->associated_parent) . ".json", {$item->singular() => $specs});
+	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->associated_parent) . ".json", {$item->singular() => $specs}, $item->needs_login);
 	my $element = $decoded->{$item->singular};
 	my $object = ref($item)->from_json($element);
 	$object->associate($self);
 	$object->associated_parent($item->associated_parent);
 	return $object;
 }
+
+=head2 update($self, $item)
+
+Updates the item from the shopify store. Not all items are updatable, check the API docs, or grep this module's source code and look for the "updatable" sub.
+
+=cut
 
 sub update {
 	my ($self, $class) = @_;
@@ -243,63 +294,60 @@ sub update {
 	return $object;
 }
 
+=head2 delete($self, $item)
+
+Deletes the item from the shopify store. Not all items are deletable, check the API docs, or grep this module's source code and look for the "deletable" sub.
+
+=cut
+
 sub delete {
 	my ($self, $class) = @_;
 	$self->validate_item(ref($class));
-
-	if ($class->needs_login) {
-		my $url = $self->encode_url($self->resolve_trailing_url($class, "delete", $class->associated_parent)) . "/" . $class->id();
-		my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}, "_method" => "delete"], Accept => 'application/json');
-		return $response;
+	my $method = lc($class->delete_method) . "_url";
+	if (ref($class) =~ m/Asset/) {
+		my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json";
+		$self->$method($url, {'asset[key]' => $class->key, theme_id => $class->associated_parent->id });
 	}
 	else {
-		my $method = lc($class->delete_method) . "_url";
-		if (ref($class) =~ m/Asset/) {
-			my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json";
-			$self->$method($url, {'asset[key]' => $class->key, theme_id => $class->associated_parent->id });
-		}
-		else {
-			$self->$method($self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
-		}
+		$self->$method($self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
 	}
 	return 1;
 }
 
-# This function is solely for discount codes.
-sub activate {
-	my ($self, $object) = @_;
-	die new WWW::Shopify::Exception("You can only activate charges.") unless defined $object && $object->activatable;
-	my ($decoded, $response) = $self->post_url("/admin/" . $object->plural . "/" . $object->id . "/activate.json", {$object->singular() => $object->to_json});
+# For simple things like activating, enabling, disabling, that are a simple post to a custom URL.
+use List::Util qw(first);
+sub custom_action {
+	my ($self, $object, $action) = @_;
+	die new WWW::Shopify::Exception("You can't $action " . $object->plural . ".") unless defined $object && first { $_ eq $action } $object->actions;
+	my $id = $object->id;
+	my $url = $self->resolve_trailing_url($object, $action, $object->associated_parent) . "/$id/$action.json";
+	my ($decoded, $response) = $self->post_url($url, {$object->singular() => $object->to_json});
 	my $element = $decoded->{$object->singular()};
 	$object = ref($object)->from_json($element);
 	$object->associate($self);
 	return $object;
 }
 
-sub disable {
-	my ($self, $object) = @_;
-	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $object && $object->disablable;
-	die new WWW::Shopify::Exception(ref($object) . " requires you to login with an admin account.") if $object->needs_login && !$self->logged_in_admin;
-	my $id = $object->id;
-	my $url = $self->encode_url($self->resolve_trailing_url($object, "disable", $object->associated_parent)) . "/$id/disable.json";
-	my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}], Accept => 'application/json');
- 	my $json = JSON::decode_json($response->decoded_content);
-	$object = ref($object)->from_json($json->{$object->singular});
-	$object->associate($self);
-	return $object;
-}
-sub enable {
-	my ($self, $object) = @_;
-	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $object && $object->disablable;
-	die new WWW::Shopify::Exception(ref($object) . " requires you to login with an admin account.") if $object->needs_login && !$self->logged_in_admin;
-	my $id = $object->id;
-	my $url = $self->encode_url($self->resolve_trailing_url($object, "enable", $object->associated_parent)) . "/$id/enable.json";
-	my $response = $self->ua->request(POST $url, [authenticity_token => $self->{authenticity_token}], Accept => 'application/json');
- 	my $json = JSON::decode_json($response->decoded_content);
-	$object = ref($object)->from_json($json->{$object->singular});
-	$object->associate($self);
-	return $object;
-}
+=head2 activate($self, $charge), disable($self, $discount), enable($self, $discount), open($self, $order), close($self, $order), cancel($self, $order)
+
+Special actions that do what they say.
+
+=cut
+
+sub activate { return $_[0]->custom_action($_[1], "activate"); }
+sub disable { return $_[0]->custom_action($_[1], "disable"); }
+sub enable { return $_[0]->custom_action($_[1], "enable"); }
+sub open { return $_[0]->custom_action($_[1], "open"); }
+sub close { return $_[0]->custom_action($_[1], "close"); }
+sub cancel { return $_[0]->custom_action($_[1], "cancel"); }
+
+=head2 login_admin($self, $email, $password)
+
+Logs you in to the shop as an admin, allowing you to create and manipulate discount codes, as well as upload files into user-space (not theme space).
+
+Doens't get around the API call limit, unfortunately.
+
+=cut
 
 use HTTP::Request::Common;
 sub login_admin {
@@ -323,8 +371,18 @@ sub login_admin {
 	die new WWW::Shopify::Exception("Unable to login: $1.") if $res->decoded_content =~ m/class="status system-error">(.*?)<\/div>/;
 	$self->{last_login_check} = time;
 	$self->{authenticity_token} = $authenticity_token;
+	$res = $self->ua->request(GET "https://" . $self->shop_url . "/admin");
+	die new WWW::Shopify::Exception() unless $res->decoded_content =~ m/meta content="(.*?)" name="csrf-token"/;
+	$self->{authenticity_token} = $1;
+	$ua->default_header('X-CSRF-Token' => $self->{authenticity_token});
 	return 1;
 }
+
+=head2 logged_in_admin($self)
+
+Determines whether or not you're logged in to the Shopify store as an admin.
+
+=cut
 
 sub logged_in_admin {
 	my ($self) = @_;
@@ -347,7 +405,7 @@ sub validate_item {
 }
 
 
-=head2 upload_files
+=head2 upload_files($self, @image_paths)
 
 Requires log in. Uploads an array of files/images into the shop's non-theme file/image management system by automating a form submission.
 
@@ -375,13 +433,19 @@ sub upload_files {
 
 =cut
 
-=head2 calc_webhook_signature
+=head1 EXPORTED FUNCTIONS
+
+The functions below are exported as part of the package.
+
+=cut
+
+=head2 calc_webhook_signature($shared_secret, $request_body)
 
 Calculates the webhook_signature based off the shared secret and request body passed in.
 
 =cut
 
-=head2 verify_webhook
+=head2 verify_webhook($shared_Secret, $request_body)
 
 Shopify webhook authentication. ALMOST the same as login authentication, but, of course, because this is shopify they've got a different system. 'Cause you know, one's not good enough.
 
@@ -408,13 +472,13 @@ sub verify_webhook {
 	return $x_shopify_hmac_sha256 eq calc_webhook_signature($shared_secret, $request_body);
 }
 
-=head2 calc_login_signature
+=head2 calc_login_signature($shared_secret, $%params)
 
 Calculates the login signature based on the shared secret and parmaeter hash passed in.
 
 =cut
 
-=head2 verify_login
+=head2 verify_login($shared_secret $%params)
 
 Shopify app dashboard verification (when someone clicks Login on the app dashboard).
 
@@ -435,13 +499,13 @@ sub verify_login {
 	return calc_login_signature($shared_secret, $params) eq $params->{signature};
 }
 
-=head2 calc_proxy_signature
+=head2 calc_proxy_signature($shared_secret $%params)
 
 Based on shared secret/hash of parameters passed in, calculates the proxy signature.
 
 =cut
 
-=head2 verify_proxy
+=head2 verify_proxy($shared_secret %$params)
 
 This is SLIGHTLY different from the above two. For, as far as I can tell, no reason.
 

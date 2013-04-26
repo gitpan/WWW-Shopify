@@ -9,7 +9,7 @@ use base qw/DBIx::Class::Core/;
 
 __PACKAGE__->table('shopify_custom_collectionsmetafields');
 __PACKAGE__->add_columns(
-	'id', { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 },
+	'id', { data_type => 'INT', is_nullable => '0', is_auto_increment => 1 },
 	'custom_collection_id', { data_type => 'INT', is_nullable => 0 },
 	'metafield_id', { data_type => 'INT', is_nullable => 0 }
 );

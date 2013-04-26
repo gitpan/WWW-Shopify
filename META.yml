@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.98
+    version: 0.99
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -200,14 +200,8 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Address:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Address.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCheckout:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCheckout.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressCustomer:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCustomer.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::AddressOrder:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressOrder.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ApplicationCharge.pm
@@ -230,23 +224,14 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Cart::LineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Cart/LineItem.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::CartLineItem:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CartLineItem.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::CheckoutCustomer:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CheckoutCustomer.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Collect:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection/Collect.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionCollect:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionCollect.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionMetafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionMetafield.pm
@@ -260,20 +245,11 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerMetafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerMetafield.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomerOrder:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerOrder.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::DiscountProduct:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/DiscountProduct.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::LineItemProperty:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LineItemProperty.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm
@@ -329,24 +305,6 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::TaxLine:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/TaxLine.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderDiscountCode:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderDiscountCode.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderFulfillment:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderFulfillment.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderLineItem:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderLineItem.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderNoteAttributes:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderNoteAttributes.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderShippingLine:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderShippingLine.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::OrderTaxLine:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/OrderTaxLine.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Page:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Page.pm
     version: 0
@@ -362,17 +320,8 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product/Variant.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductImage:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ProductImage.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductOption:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ProductOption.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductSearchEngine:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ProductSearchEngine.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductVariant:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ProductVariant.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::RecurringApplicationCharge:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RecurringApplicationCharge.pm
@@ -395,12 +344,6 @@ provides:
   WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollection::Rule:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollection/Rule.pm
     version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollectionImage:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollectionImage.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollectionRule:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollectionRule.pm
-    version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Theme:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Theme.pm
     version: 0
@@ -409,9 +352,6 @@ provides:
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction/Receipt.pm
-    version: 0
-  WWW::Shopify::Model::DBIx::Schema::Result::Model::TransactionReceipt:
-    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/TransactionReceipt.pm
     version: 0
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Webhook.pm
@@ -574,4 +514,4 @@ requires:
   threads: 0
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.98
+version: 0.99

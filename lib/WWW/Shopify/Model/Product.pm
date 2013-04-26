@@ -11,24 +11,6 @@ use WWW::Shopify::Model::Product::Variant;
 package WWW::Shopify::Model::Product;
 use parent "WWW::Shopify::Model::Item";
 
-=head1 NAME
-
-Product - Shopify Product
-
-=cut
-
-=head1 DESCRIPTION
-
-Represents information about a product on shopify.
-
-=cut
-
-=head1 USAGE
-
-For information about how to use items, please see L<WWW::Shopify::Model::Item>.
-
-=cut
-
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
@@ -70,20 +52,5 @@ sub update_fields { return qw(metafields handle product_type title template_suff
 sub throws_webhooks { return 1; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
-
-=head1 SEE ALSO
-
-L<WWW::Shopify::Model::Item> L<http://api.shopify.com/product.html>
-
-=head1 AUTHOR
-
-Adam Harrison
-
-=head1 LICENSE
-
-See LICENSE in the main directory.
-
-=cut
-
 
 1
