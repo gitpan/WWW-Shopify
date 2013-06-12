@@ -72,6 +72,7 @@ A query that takes a sub that details how to handle the query.
 
 package WWW::Shopify::Query::Custom;
 use parent 'WWW::Shopify::Query';
-sub new { return bless { }, $_[0]; }
+sub new { return bless { 'field_name' => $_[1], 'sub' => $_[2] }, $_[0]; }
+sub routine { return $_[0]->{'sub'}; }
 
 1;

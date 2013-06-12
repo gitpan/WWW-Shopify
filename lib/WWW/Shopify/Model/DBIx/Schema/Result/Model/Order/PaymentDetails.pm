@@ -6,10 +6,11 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::PaymentDetails;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_payment_details');
 __PACKAGE__->add_columns(
-	"order_id", { data_type => 'INT' },
+	"order_id", { data_type => 'bigint' },
 	"credit_card_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"credit_card_numer", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"avs_result_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },

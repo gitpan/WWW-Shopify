@@ -19,7 +19,7 @@ To give an idea of how you're supposed to use this object, look at the following
 
 	my $SA = new WWW::Shopify::Public($ShopURL, $APIKey, $AccessToken);
 	my $DBIX = new WWW::Shopify::Common::DBIx();
-	my @products = $SA->get_all('WWW::Shopify::Product');
+	my @products = $SA->get_all('Product');
 	for (@products) {
 		my $product = $DBIX->from_shopify($_);
 		$product->insert;
@@ -33,7 +33,6 @@ use strict;
 use warnings;
 
 use WWW::Shopify;
-use Data::Dumper;
 
 package WWW::Shopify::Common::DBIx;
 
@@ -53,6 +52,26 @@ sub package_prefix { $_[0]->{package_prefix} = $_[1] if defined $_[1]; return $_
 sub table_prefix { $_[0]->{table_prefix} = $_[1] if defined $_[1]; return $_[0]->{table_prefix}; } 
 use List::Util qw(first);
 sub in_namespace { return defined first { $_ eq $_[1] } @{$_[0]->{namespace}} }
+
+use Module::Find;
+
+
+my %arbitrary_sql = (
+	"WWW::Shopify::Model::Product" => sub {
+		my ($self) = @_;
+		return "__PACKAGE__->has_many('collects', '" . $self->package_prefix . "::Model::CustomCollection::Collect', 'product_id');\n";
+	}
+);
+
+sub arbitrary_sql {
+	my ($self, $package) = @_;
+	return "" unless exists $arbitrary_sql{$package};
+	$arbitrary_sql{$package}->($self);
+}
+
+sub all_classes {
+	return grep { $_ !~ m/DBIx/ } findallmod WWW::Shopify::Model;
+}
 
 sub class {
 	my ($self, $class) = @_;
@@ -111,6 +130,24 @@ BEGIN {	foreach my $package (findallmod WWW::Shopify::Model) { $package =~ s/::/
 # Essentially an internal method.
 # Generates a DBIx schema from the specified package.
 use List::Util qw(first);
+
+sub get_parent_column_name {
+	my ($self, $package) = @_;
+
+	my $fields = $package->fields;
+	my $parent_variable;
+	if (my $field = first { $_->is_relation && $_->is_parent } values(%$fields)) {
+		return $field->name;
+	}
+	elsif ($fields->{parent_id}) {
+		return 'parent_id';
+	}
+	else {
+		return ($package->parent->singular . '_id', !exists $fields->{$package->parent->singular . "_id"});
+	}
+	return undef;
+}
+
 sub generate_dbix {
 	my ($self, $package) = @_;
 
@@ -122,18 +159,11 @@ sub generate_dbix {
 	$table_name = $package->parent->plural . "_" . $table_name if $package->parent;
 
 	my @columns = ();
-	# If we're a nested item, and we don't have something called either parent_id or <parent->singular>_id, create one, 'cause we're expecting it.
+	# If we're a nested item, and we don't have something called either parent_id or <parent->singular>_id, or somethign marked a relation parent, create one, 'cause we're expecting it.
 	if ($package->parent) {
-		if (!$fields->{parent_id} && !$fields->{$package->parent->singular . "_id"}) {
-			$parent_variable = $package->parent->singular . "_id";
-			push(@columns, "\"$parent_variable\", { data_type => 'INT' }");
-		}
-		elsif ($fields->{parent_id}) {
-			$parent_variable = 'parent_id';
-		}
-		else {
-			$parent_variable = $package->parent->singular . '_id';
-		}
+		my $needs_adding;
+		($parent_variable, $needs_adding) = $self->get_parent_column_name($package);
+		push(@columns, "\"$parent_variable\", { data_type => '" . WWW::Shopify::Field::Identifier->sql_type . "' }") if $needs_adding;
 	}
 	# All simple columns.
 	foreach my $field_name (grep { !$fields->{$_}->is_relation } keys(%$fields)) {
@@ -180,7 +210,8 @@ sub generate_dbix {
 	# Many / Nested / Interior : Has Many
 	foreach my $field_name (grep { $fields->{$_}->is_db_has_many } @field_relations) {
 		my $field = $fields->{$field_name};
-		push(@relationships, "__PACKAGE__->has_many($field_name => '" . $self->transform_package($field->relation) . "', '" . $package->singular . "_id');");
+		my ($parent_var) = $self->get_parent_column_name($field->relation);
+		push(@relationships, "__PACKAGE__->has_many($field_name => '" . $self->transform_package($field->relation) . "', '" . $parent_var . "');");
 	}
 	# OwnOne / Nested / Interior : Has One
 	foreach my $field_name (grep { $fields->{$_}->is_db_has_one } @field_relations) {
@@ -221,6 +252,7 @@ use warnings;
 package " . $self->transform_package($package) . ";
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 " . ($has_date ? "__PACKAGE__->load_components(qw/InflateColumn::DateTime/);" : "") . "
 __PACKAGE__->table('" . $self->table_prefix . $table_name . "');
 __PACKAGE__->add_columns(
@@ -235,7 +267,7 @@ __PACKAGE__->set_primary_key(" . join(", ", map { "'$_'" } @ids) . ");
 " . join("\n", @relationships) . "
 sub represents { return '" . $package . "'; }
 sub parent_variable { return " . ($parent_variable ? "'$parent_variable'" : "undef") . "; }
-
+" . $self->arbitrary_sql($package) . "
 1;";
 }
 
@@ -324,7 +356,7 @@ sub to_shopify {
 				return $type->to_shopify($data);
 			}
 		}
-		return $type->to_shopify($data);
+		return $data;
 	};
 
 	my ($self, $dbObject) = @_;

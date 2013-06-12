@@ -5,10 +5,9 @@ BEGIN {
 	use_ok('WWW::Shopify');
 	use_ok('WWW::Shopify::Test');
 	use_ok('WWW::Shopify::Model::DBIx::Schema');
-	use_ok('File::Temp');
 }
 
-my $dbname = tmpnam();
+my $dbname = "shopify_test.db";
 my $db = WWW::Shopify::Model::DBIx::Schema->connect('dbi:SQLite:dbname=' . $dbname, { RaiseError => 1, AutoCommit => 1 });
 ok($db);
 print STDERR "Setup db at $dbname.\n";

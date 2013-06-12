@@ -19,17 +19,15 @@ BEGIN { $fields = {
 	"status" => new WWW::Shopify::Field::String::Enum(["enabled", "disabled"]),
 	"usage_limit" => new WWW::Shopify::Field::Int(),
 	"value" => new WWW::Shopify::Field::Money(),
-	"discount_type" => new WWW::Shopify::Field::String::Enum(["fixed_amount", "disabled"]),
+	"discount_type" => new WWW::Shopify::Field::String::Enum(["fixed_amount", "percentage"]),
 	"applies_to_resource" => new WWW::Shopify::Field::String::Enum(["order", "product", "collection", "customer_group"]),
 	"times_used" => new WWW::Shopify::Field::Int(),
-	"applies_to_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product"),
-	"applies_to" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Product")
+	"applies_to_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product")
 }; }
 
 sub creation_minimal { return qw(discount_type code value); }
 sub creation_filled { return qw(status); }
 sub update_filled { return qw(); }
-sub update_fields { return qw(password password_confirmation); }
 
 sub actions { return qw(disable enable); }
 

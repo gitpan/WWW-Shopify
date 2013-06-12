@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Discount;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_discounts');
 __PACKAGE__->add_columns(
@@ -18,10 +19,10 @@ __PACKAGE__->add_columns(
 	"minimum_order_amount", { data_type => 'DECIMAL', is_nullable => '1' },
 	"times_used", { data_type => 'INT', is_nullable => '1' },
 	"discount_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"usage_limit", { data_type => 'INT', is_nullable => '1' },
-	"applies_to_id", { data_type => 'INT', is_nullable => '1' },
+	"applies_to_id", { data_type => 'BIGINT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');

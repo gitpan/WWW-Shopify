@@ -28,7 +28,7 @@ for (keys(%{$dbix->{classes}})) {
 	my $path = $';
 	$path =~ s/::/\//g;
 	$path .= ".pm";
-	my $out_path = "Model/$path";
+	my $out_path = "lib/WWW/Shopify/Model/$path";
 	print STDERR "Generating $out_path... ";
 	mkdir dirname($out_path) unless -d dirname($out_path);
 	open(my $OUTFILE, ">$out_path") or die $!;

@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_application_charges');
 __PACKAGE__->add_columns(
@@ -19,7 +20,7 @@ __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"activated_on", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"billing_on", { data_type => 'DATETIME', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

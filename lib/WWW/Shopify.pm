@@ -61,16 +61,13 @@ Very easy.
 use strict;
 use warnings;
 use LWP::UserAgent;
-use JSON;
-use URI::Escape;
 
 package WWW::Shopify;
 
-our $VERSION = '0.99';
+our $VERSION = '0.991';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
-use Data::Dumper;
 use Module::Find;
 use WWW::Shopify::URLHandler;
 use WWW::Shopify::Query;
@@ -82,9 +79,52 @@ package WWW::Shopify;
 
 =head1 METHODS
 
-=head2 api_key([$api_key])
+=head2 new($shop_url, [$email, $pass])
 
-Gets/sets the applciation api key to use for this particular app.
+Creates a new shop, without using the actual API, uses automated form submission to log in.
+
+=cut
+
+sub new { 
+	my ($package, $shop_url, $email, $password) = @_;
+	die new WWW::Shopify::Exception("Can't create a shop without a shop url.") unless $shop_url;
+	my $ua = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
+	$ua->cookie_jar({ });
+	$ua->timeout(10);	
+	$ua->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
+	my $self = bless { _shop_url => $shop_url, _ua => $ua, _url_handler => undef, _api_calls => 0 }, $package;
+	$self->url_handler(new WWW::Shopify::URLHandler($self));
+	$self->login_admin($email, $password) if defined $email && defined $password;
+	return $self;
+}
+
+
+sub api_calls { $_[0]->{_api_calls} = $_[1] if defined $_[1]; return $_[0]->{_api_calls}; }
+sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->{_url_handler}; }
+
+=head2 encode_url($url)
+
+Basic url encoding, works the same for public apps or logged-in apps.
+
+=cut
+
+sub encode_url { return "https://" . $_[0]->shop_url . $_[1]; }
+
+
+=head2 ua([$new_ua])
+
+Gets/sets the user agent we're using to access shopify's api. By default we use LWP::UserAgent, with a timeout of 5 seconds.
+
+PLEASE NOTE: At the very least, with LWP::UserAgent, at least, on my system, I had to force the SSL layer of the agent to use SSLv3, using the line
+
+	LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
+
+Otherwise, Shopify does some very weird stuff, and some very weird errors are spit out. Just FYI.
+
+=cut
+
+sub ua { $_[0]->{_ua} = $_[1] if defined $_[1]; return $_[0]->{_ua}; }
+
 
 =head2 shop_url([$shop_url])
 
@@ -93,7 +133,6 @@ Gets/sets the shop url that we're going to be making calls to.
 =cut
 
 # Modifiable Attributes
-sub api_key { $_[0]->{_api_key} = $_[1] if defined $_[1]; return $_[0]->{_api_key}; }
 sub shop_url { $_[0]->{_shop_url} = $_[1] if defined $_[1]; return $_[0]->{_shop_url}; }
 
 sub translate_model($) {
@@ -105,10 +144,10 @@ use constant {
 	PULLING_ITEM_LIMIT => 250
 };
 
-sub get_url { return $_[0]->url_handler()->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub post_url { return $_[0]->url_handler()->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub put_url { return $_[0]->url_handler()->put_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub delete_url { return $_[0]->url_handler()->delete_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub post_url { return $_[0]->url_handler->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub put_url { return $_[0]->url_handler->put_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub delete_url { return $_[0]->url_handler->delete_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 
 sub resolve_trailing_url {
 	my ($self, $package, $action, $parent) = @_;
@@ -305,8 +344,8 @@ sub delete {
 	$self->validate_item(ref($class));
 	my $method = lc($class->delete_method) . "_url";
 	if (ref($class) =~ m/Asset/) {
-		my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json";
-		$self->$method($url, {'asset[key]' => $class->key, theme_id => $class->associated_parent->id });
+		my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json?asset[key]=" . $class->key;
+		$self->$method($url);
 	}
 	else {
 		$self->$method($self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
@@ -397,6 +436,40 @@ sub logged_in_admin {
 
 sub is_valid { eval { $_[0]->get_shop; }; return undef if ($@); return 1; }
 
+
+
+=head2 create_private_app()
+
+Automates a form submission to generate a private app. Returns a WWW::Shopify::Private with the appropriate credentials. Must be logged in.
+
+=cut
+
+use WWW::Shopify::Private;
+use List::Util qw(first);
+sub create_private_app {
+	my ($self) = @_;
+	my $app = $self->create(new WWW::Shopify::Model::APIClient({}));
+	my @permissions = $self->get_all("APIPermission");
+	my $permission = first { $_->api_client->api_key eq $app->api_key } @permissions;
+	return new WWW::Shopify::Private($self->shop_url, $app->api_key, $permission->access_token);
+}
+
+
+=head2 delete_private_app($private_api)
+
+Removes a private app. Must be logged in.
+
+=cut
+
+sub delete_private_app {
+	my ($self, $api) = @_;
+	my @apps = $self->get_all("APIPermission");
+	my $app = first { $_->api_client && $_->api_client->api_key eq $api->api_key } @apps;
+	die new WWW::Shopify::Exception("Can't find app with api key " . $api->api_key) unless $app;
+	return $self->delete(new WWW::Shopify::Model::APIClient({ id => $app->api_client->id }));
+}
+
+
 # Internal methods.
 sub validate_item {
 	eval {	die unless $_[1]; $_[1]->is_item; };
@@ -478,7 +551,7 @@ Calculates the login signature based on the shared secret and parmaeter hash pas
 
 =cut
 
-=head2 verify_login($shared_secret $%params)
+=head2 verify_login($shared_secret, $%params)
 
 Shopify app dashboard verification (when someone clicks Login on the app dashboard).
 
@@ -499,13 +572,13 @@ sub verify_login {
 	return calc_login_signature($shared_secret, $params) eq $params->{signature};
 }
 
-=head2 calc_proxy_signature($shared_secret $%params)
+=head2 calc_proxy_signature($shared_secret, $%params)
 
 Based on shared secret/hash of parameters passed in, calculates the proxy signature.
 
 =cut
 
-=head2 verify_proxy($shared_secret %$params)
+=head2 verify_proxy($shared_secret, %$params)
 
 This is SLIGHTLY different from the above two. For, as far as I can tell, no reason.
 

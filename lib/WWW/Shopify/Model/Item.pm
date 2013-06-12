@@ -3,8 +3,6 @@
 use strict;
 use warnings;
 
-use Data::Dumper;
-
 package WWW::Shopify::Model::Item;
 use DateTime;
 use WWW::Shopify::Query;
@@ -126,6 +124,7 @@ Determines whether or not this package can perform these main actions. 1 for yes
 
 sub countable { return 1; }
 sub gettable { return 1; }
+sub singlable { return $_[0]->gettable; }
 sub creatable { return 1; }
 sub updatable { my @fields = $_[0]->update_fields; return int(@fields) > 0; }
 sub deletable { return 1; }
@@ -138,6 +137,15 @@ Returns an array of special actions that this package can perform (for orders, t
 =cut
 
 sub actions { return qw(); }
+use List::Util qw(first);
+sub can_action { return defined first { $_ eq $_[1] } $_[0]->actions; }
+sub can_open { return $_[0]->can_action("open"); }
+sub can_activate { return $_[0]->can_action("activate"); }
+sub can_deactivate { return $_[0]->can_action("deactivate"); }
+sub can_enable { return $_[0]->can_action("enable"); }
+sub can_disable { return $_[0]->can_action("disable"); }
+sub can_close { return $_[0]->can_action("close"); }
+sub can_cancel { return $_[0]->can_action("cancel"); }
 
 =head2 create_method($package), update_method($package), delete_method($package)
 
@@ -249,6 +257,13 @@ sub get_through_parent { return defined $_[0]->parent; }
 sub create_through_parent { return defined $_[0]->parent; }
 sub update_through_parent { return defined $_[0]->parent; } 
 sub delete_through_parent { return defined $_[0]->parent; }
+sub activate_through_parent { return defined $_[0]->parent; }
+sub deactivate_through_parent { return defined $_[0]->parent; }
+sub open_through_parent { return defined $_[0]->parent; }
+sub close_through_parent { return defined $_[0]->parent; }
+sub cancel_through_parent { return defined $_[0]->parent; }
+sub enable_through_parent { return defined $_[0]->parent; }
+sub disable_through_parent { return defined $_[0]->parent; }
 
 =head2 field($package, $name), fields($package)
 
@@ -417,7 +432,7 @@ sub generate_accessors {
 	return join("\n", 
 		(map { "__PACKAGE__->queries->{$_}->name('$_');" } keys(%{$_[0]->queries})),
 		(map { "__PACKAGE__->fields->{$_}->name('$_');" } keys(%{$_[0]->fields})),
-		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \@{\$_[0]->{$_}} if wantarray; return \$_[0]->{$_}; }" } grep { $_ ne "metafields" && $_[0]->field($_)->is_relation && $_[0]->field($_)->is_many } keys(%{$_[0]->fields})),
+		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return undef unless defined \$_[0]->{$_}; return \@{\$_[0]->{$_}} if wantarray; return \$_[0]->{$_}; }" } grep { $_ ne "metafields" && $_[0]->field($_)->is_relation && $_[0]->field($_)->is_many } keys(%{$_[0]->fields})),
 		(map { "sub $_ { \$_[0]->{$_} = \$_[1] if defined \$_[1]; return \$_[0]->{$_}; }" } grep { $_ ne "metafields" && (!$_[0]->field($_)->is_relation || !$_[0]->field($_)->is_many) } keys(%{$_[0]->fields})),
 		(map { "sub $_ { my \$sa = \$_[0]->associate; die \"Can't call a special action on an unassociated item.\" unless \$sa; return \$sa->$_(\$_[0]); }" } $_[0]->actions)
 	); 

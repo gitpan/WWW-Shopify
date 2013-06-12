@@ -24,8 +24,6 @@ BEGIN { $fields = {
 	"confirmation_url" => new WWW::Shopify::Field::String::URL()
 }; }
 sub countable { return undef; }
-
-
 sub actions { return qw(activate); }
 
 sub creation_minimal { return qw(name price return_url); }

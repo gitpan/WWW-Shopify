@@ -18,7 +18,7 @@ BEGIN { $fields = {
 	"sort_order" => new WWW::Shopify::Field::String::Enum(["manual", "automatic"]),
 	"template_suffix" => new WWW::Shopify::Field::String(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
-	"title" => new WWW::Shopify::Field::String(),
+	"title" => new WWW::Shopify::Field::String::Words(1, 2),
 	"collects" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::CustomCollection::Collect")
 }; }
 

@@ -15,7 +15,7 @@ sub singular { return "smart_collection"; }
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
-	"handle" => new WWW::Shopify::Field::String("[a-z]{2,8}\-[a-z]{2,8}"),
+	"handle" => new WWW::Shopify::Field::String("[a-z]{2,8}-[a-z]{2,8}"),
 	"sort_order" => new WWW::Shopify::Field::String("(manual|automatic)"),
 	"template_suffix" => new WWW::Shopify::Field::String(),
 	"title" => new WWW::Shopify::Field::String::Words(1, 2),

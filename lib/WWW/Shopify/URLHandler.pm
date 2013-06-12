@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 package WWW::Shopify::URLHandler;
+use JSON;
 
 sub new($) { return bless {_parent => $_[1]}, $_[0]; }
 sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent}; }
@@ -30,12 +31,15 @@ sub get_url($$@) {
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception($response);
 	}
-	my $decoded = JSON::decode_json($response->decoded_content);
+	my $limit = $response->header('x-shopify-shop-api-call-limit');
+	$self->parent->api_calls($limit) if $limit;
+	my $content = $response->decoded_content;
+	my $decoded = JSON::decode_json($content);
 	return ($decoded, $response);
 }
 
 sub use_url($$$$) {
-	my ($self, $method, $url, $hash, $login) = @_;
+	my ($self, $method, $url, $hash) = @_;
 	my $request = HTTP::Request->new($method, $url);
 	print STDERR "$method $url\n" if $ENV{'SHOPIFY_LOG'};
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");
@@ -46,6 +50,8 @@ sub use_url($$$$) {
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception($response);
 	}
+	my $limit = $response->header('x-shopify-shop-api-call-limit');
+	$self->parent->api_calls($limit) if $limit;
 	my $decoded = (length($response->decoded_content) >= 2) ? JSON::decode_json($response->decoded_content) : undef;
 	return ($decoded, $response);
 }

@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -29,20 +29,15 @@
          "requires" : {
             "Crypt::Eksblowfish" : "0.009",
             "DBIx::Class" : "0.08204",
-            "Data::Dumper" : "0",
             "Data::Random" : "0.08",
-            "Date::Calc" : "6.3",
             "DateTime" : "0.78",
             "DateTime::Format::MySQL" : "0.04",
             "DateTime::Format::SQLite" : "0.11",
             "Devel::StackTrace" : "1.30",
-            "File::Slurp" : "9999.19",
             "HTTP::Request::Common" : "6.04",
-            "IO::CaptureOutput" : "1.1102",
             "JSON" : "2.53",
             "LWP::Protocol::https" : "6.03",
             "LWP::UserAgent" : "6.04",
-            "Locale::Currency::Format" : "1.30",
             "MIME::Base64" : "3.13",
             "SQL::Translator" : "0.11016",
             "String::Numeric" : "0.9",
@@ -56,7 +51,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.99"
+         "version" : "0.991"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -214,6 +209,18 @@
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
+      "WWW::Shopify::Field::String::Postal" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Province" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Regex" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Field::String::URL" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
@@ -240,6 +247,14 @@
       },
       "WWW::Shopify::Field::Timezone" : {
          "file" : "lib/WWW/Shopify/Field.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::APIClient" : {
+         "file" : "lib/WWW/Shopify/Model/APIClient.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::APIPermission" : {
+         "file" : "lib/WWW/Shopify/Model/APIPermission.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::Address" : {
@@ -292,6 +307,14 @@
       },
       "WWW::Shopify::Model::DBIx::Schema" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::APIClient" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/APIClient.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::APIPermission" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/APIPermission.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Address" : {
@@ -366,6 +389,14 @@
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm",
          "version" : 0
       },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LinkList.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList::Link" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LinkList/Link.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm",
          "version" : 0
@@ -392,6 +423,10 @@
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::BillingAddress" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/BillingAddress.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ClientDetails" : {
@@ -428,6 +463,10 @@
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Risk" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Risk.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingAddress" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ShippingAddress.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingLine" : {
@@ -514,6 +553,14 @@
          "file" : "lib/WWW/Shopify/Model/Item.pm",
          "version" : 0
       },
+      "WWW::Shopify::Model::LinkList" : {
+         "file" : "lib/WWW/Shopify/Model/LinkList.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::LinkList::Link" : {
+         "file" : "lib/WWW/Shopify/Model/LinkList/Link.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Model::Metafield" : {
          "file" : "lib/WWW/Shopify/Model/Metafield.pm",
          "version" : 0
@@ -524,6 +571,10 @@
       },
       "WWW::Shopify::Model::Order" : {
          "file" : "lib/WWW/Shopify/Model/Order.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Order::BillingAddress" : {
+         "file" : "lib/WWW/Shopify/Model/Order/BillingAddress.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::Order::ClientDetails" : {
@@ -560,6 +611,10 @@
       },
       "WWW::Shopify::Model::Order::Risk" : {
          "file" : "lib/WWW/Shopify/Model/Order/Risk.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Order::ShippingAddress" : {
+         "file" : "lib/WWW/Shopify/Model/Order/ShippingAddress.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::Order::ShippingLine" : {
@@ -638,6 +693,10 @@
          "file" : "lib/WWW/Shopify/Model/Webhook.pm",
          "version" : 0
       },
+      "WWW::Shopify::Nest" : {
+         "file" : "lib/WWW/Shopify/Nest.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Private" : {
          "file" : "lib/WWW/Shopify/Private.pm",
          "version" : 0
@@ -689,5 +748,5 @@
          "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
       }
    },
-   "version" : "0.99"
+   "version" : "0.991"
 }

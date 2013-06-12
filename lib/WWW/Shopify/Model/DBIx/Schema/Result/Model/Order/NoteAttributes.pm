@@ -6,10 +6,11 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::NoteAttributes;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_note_attributes');
 __PACKAGE__->add_columns(
-	"order_id", { data_type => 'INT' },
+	"order_id", { data_type => 'bigint' },
 	"value", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'INT' }

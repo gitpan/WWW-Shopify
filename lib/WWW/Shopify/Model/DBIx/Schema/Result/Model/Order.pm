@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders');
 __PACKAGE__->add_columns(
@@ -14,7 +15,7 @@ __PACKAGE__->add_columns(
 	"taxes_included", { data_type => 'BOOL', is_nullable => '1' },
 	"email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"total_price_usd", { data_type => 'DECIMAL', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"total_discounts", { data_type => 'DECIMAL', is_nullable => '1' },
 	"order_number", { data_type => 'INT', is_nullable => '1' },
 	"financial_status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
@@ -40,9 +41,9 @@ __PACKAGE__->add_columns(
 	"referring_site", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"browser_ip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"billing_address_id", { data_type => 'INT', is_nullable => '1' },
-	"shipping_address_id", { data_type => 'INT', is_nullable => '1' },
-	"customer_id", { data_type => 'INT', is_nullable => '1' },
+	"billing_address_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"shipping_address_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"customer_id", { data_type => 'BIGINT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');

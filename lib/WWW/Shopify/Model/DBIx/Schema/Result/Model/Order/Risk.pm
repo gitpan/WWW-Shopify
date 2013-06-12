@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Risk;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_risks');
 __PACKAGE__->add_columns(

@@ -34,6 +34,7 @@ sub creation_minimal { return qw(address topic format); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(address topic format); }
+sub valid_topics { return @{$_[0]->fields->{topic}->{arguments}}; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

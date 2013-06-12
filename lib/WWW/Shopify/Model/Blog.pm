@@ -24,7 +24,7 @@ BEGIN { $fields = {
 }; }
 
 sub creation_minimal { return qw(title); }
-sub creation_filled { return qw(id crated_at); }
+sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 
 sub has_metafields { return 1; }

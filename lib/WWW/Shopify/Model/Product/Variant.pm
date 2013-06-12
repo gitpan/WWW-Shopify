@@ -23,6 +23,7 @@ BEGIN { $fields = {
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"compare_at_price" => new WWW::Shopify::Field::Money(),
 	"inventory_quantity" => new WWW::Shopify::Field::Int(1, 20),
+	"barcode" => new WWW::Shopify::Field::String(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product'),

@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_fulfillments');
 __PACKAGE__->add_columns(
@@ -14,9 +15,9 @@ __PACKAGE__->add_columns(
 	"tracking_number", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"tracking_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"order_id", { data_type => 'INT' }
+	"order_id", { data_type => 'BIGINT' }
 );
 __PACKAGE__->set_primary_key('id');
 

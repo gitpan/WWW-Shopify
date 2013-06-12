@@ -6,22 +6,29 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Collect;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_custom_collections_collects');
 __PACKAGE__->add_columns(
-	"custom_collection_id", { data_type => 'INT' },
 	"position", { data_type => 'INT', is_nullable => '1' },
-	"id", { data_type => 'INT' },
-	"product_id", { data_type => 'INT', is_nullable => '1' }
+	"sort_value", { data_type => 'INT', is_nullable => '1' },
+	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"featured", { data_type => 'BOOL', is_nullable => '1' },
+	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"product_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"collection_id", { data_type => 'BIGINT' },
+	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');
 
 
 
-
+__PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 
 __PACKAGE__->belongs_to(product => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Product', 'product_id');
+__PACKAGE__->belongs_to(collection => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection', 'collection_id');
 sub represents { return 'WWW::Shopify::Model::CustomCollection::Collect'; }
-sub parent_variable { return 'custom_collection_id'; }
+sub parent_variable { return 'collection_id'; }
 
 1;

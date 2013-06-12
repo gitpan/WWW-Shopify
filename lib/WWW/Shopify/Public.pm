@@ -22,7 +22,7 @@ use parent 'WWW::Shopify';
 
 =head1 METHODS
 
-=head2 new(url, api_key, access_token)
+=head2 new($url, $api_key, $access_token)
 
 Creates a new WWW::Shopify::Public object, which allows you to make calls via the shopify public app interface.
 
@@ -30,54 +30,26 @@ You can see an overview of the authentication workflow for a public app here: L<
 
 =cut
 
-sub new($$$$) { 
-	my ($class, $shop_url, $api_key, $access_token) = @_;
+sub new { 
+	my $class = shift;
+	my ($shop_url, $api_key, $access_token) = @_;
 	die new WWW::Shopify::Exception("Can't create a shop without an api key.") unless $api_key;
-	die new WWW::Shopify::Exception("Can't create a shop without a shop url.") unless $shop_url;
-	my $UA = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
-	$UA->timeout(5);
-	my $self = bless {
-		_shop_url => $shop_url,
-		_api_key => $api_key,
-		_access_token => $access_token,
-		_ua => $UA,
-		_url_handler => undef,
-		_api_calls => 0
-	}, $class;
-	$self->url_handler(new WWW::Shopify::URLHandler($self));
-	$UA->cookie_jar({ file => "/tmp/.cookies.txt" });
-	$UA->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
-	$UA->default_header("X-Shopify-Access-Token" => $access_token);
+	my $self = $class->SUPER::new($shop_url);
+	$self->api_key($api_key);
+	$self->access_token($access_token);
+	$self->ua->default_header("X-Shopify-Access-Token" => $access_token);
 	return $self;
 }
 
-sub api_calls { $_[0]->{_api_calls} = $_[1] if defined $_[1]; return $_[0]->{_api_calls}; }
-sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->{_url_handler}; }
+=head2 api_key([$api_key])
 
-sub get_url {
-	my $self = shift;
-	my ($decoded, $response) = $self->SUPER::get_url(@_);
-	my $limit = $response->header('x-shopify-shop-api-call-limit');
-	$self->api_calls($1) if ($limit && $limit =~ m/^(\d+)/);
-	return ($decoded, $response);
-}
-sub use_url {
-	my $self = shift;
-	my ($decoded, $response) = $self->SUPER::use_url(@_);
-	my $limit = $response->header('x-shopify-shop-api-call-limit');
-	$self->api_calls($1) if ($limit && $limit =~ m/^(\d+)/);
-	return ($decoded, $response);
-}
-
-=head2 encode_url(url)
-
-Modifies the requested url by prepending the api key and the password, as well as the shop's url, before sending the request off to the user agent.
+Gets/sets the app's access token.
 
 =cut
 
-sub encode_url { return "https://" . $_[0]->shop_url . $_[1]; }
+sub api_key { $_[0]->{_api_key} = $_[1] if defined $_[1]; return $_[0]->{_api_key}; }
 
-=head2 access_token([access_token])
+=head2 access_token([$access_token])
 
 Gets/sets the app's access token.
 
@@ -87,21 +59,7 @@ sub access_token { $_[0]->{_access_token} = $_[1] if defined $_[1]; return $_[0]
 
 sub is_valid { my $self = shift; $self->SUPER::is_valid(@_); return $self->{_access_token}; }
 
-=head2 ua([new_ua])
-
-Gets/sets the user agent we're using to access shopify's api. By default we use LWP::UserAgent, with a timeout of 5 seconds.
-
-PLEASE NOTE: At the very least, with LWP::UserAgent, at least, on my system, I had to force the SSL layer of the agent to use SSLv3, using the line
-
-	LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
-
-Otherwise, Shopify does some very weird stuff, and some very weird errors are spit out. Just FYI.
-
-=cut
-
-sub ua { $_[0]->{_ua} = $_[1] if defined $_[1]; return $_[0]->{_ua}; }
-
-=head2 authorize_url([scope], redirect)
+=head2 authorize_url(@$scope, $redirect)
 
 When the shop doesn't have an access_token, this is what you should be redirecting your client to. Inputs should be your scope, as an array, and the url you want to redirect to.
 
@@ -119,7 +77,7 @@ sub authorize_url {
 	return "https://$hostname/admin/oauth/authorize?" . join("&", map { "$_=" . uri_escape($parameters{$_}) } keys(%parameters));
 }
 
-=head2 exchange_token(shared_secret, code)
+=head2 exchange_token($shared_secret, $code)
 
 When you have a temporary code, which you should get from authorize_url's redirect and you want to exchange it for a token, you call this.
 

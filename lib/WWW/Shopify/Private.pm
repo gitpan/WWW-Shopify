@@ -18,7 +18,6 @@ use warnings;
 
 package WWW::Shopify::Private;
 use parent 'WWW::Shopify';
-use File::Temp qw/ tempfile /;
 
 =head1 METHODS
 
@@ -28,25 +27,18 @@ Creates a new WWW::Shopify::Private object, which allows you to make calls via t
 
 =cut
 
-sub new($$$$) { 
-	my ($class, $shop_url, $api_key, $password) = @_;
-	my $UA = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
-	$UA->timeout(10);
-	$UA->cookie_jar({ });
-	my $self = bless {
-		_shop_url => $shop_url,
-		_api_key => $api_key,
-		_password => $password,
-		_ua => $UA,
-		_url_handler => undef,
-	}, $class;
-	$self->url_handler(new WWW::Shopify::URLHandler($self));
+sub new { 
+	my $package = shift;
+	my ($shop_url, $api_key, $password) = @_;
+	my $self = $package->SUPER::new($shop_url);
+	$self->api_key($api_key);
+	$self->password($password);
 	return $self;
 }
 
 sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->{_url_handler}; }
 
-=head2 encode_url(url)
+=head2 encode_url($url)
 
 Modifies the requested url by prepending the api key and the password, as well as the shop's url, before sending the request off to the user agent.
 
@@ -58,27 +50,23 @@ sub encode_url {
 	return "https://" . $self->api_key . ":" . $_[0]->password . "@" . $self->shop_url . $url;
 }
 
-=head2 password([new_password])
+
+=head2 api_key([$api_key])
+
+Gets/sets the app's access token.
+
+=cut
+
+sub api_key { $_[0]->{_api_key} = $_[1] if defined $_[1]; return $_[0]->{_api_key}; }
+
+
+=head2 password([$new_password])
 
 Gets/sets the app's private password.
 
 =cut
 
 sub password { $_[0]->{_password} = $_[1] if defined $_[1]; return $_[0]->{_password}; }
-
-=head2 ua([new_ua])
-
-Gets/sets the user agent we're using to access shopify's api. By default we use LWP::UserAgent, with a timeout of 5 seconds.
-
-PLEASE NOTE: At the very least, with LWP::UserAgent, at least, on my system, I had to force the SSL layer of the agent to use SSLv3, using the line
-
-	LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
-
-Otherwise, Shopify does some very weird stuff, and some very weird errors are spit out. Just FYI.
-
-=cut
-
-sub ua { $_[0]->{_ua} = $_[1] if defined $_[1]; return $_[0]->{_ua}; }
 
 =head1 SEE ALSO
 

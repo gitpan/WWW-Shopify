@@ -34,7 +34,7 @@ BEGIN { $fields = {
 sub unique_fields { return qw(email); }
 
 sub get_fields { return grep { $_ ne "password" && $_ ne "password_confirmation" && $_ ne "send_email_invite" } keys(%{$_[0]->fields}); }
-sub creation_minimal { return qw(first_name last_name email); }
+sub creation_minimal { return qw(email); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(password password_confirmation); }

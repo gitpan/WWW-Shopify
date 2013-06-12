@@ -6,10 +6,11 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollection::Image;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_smart_collections_images');
 __PACKAGE__->add_columns(
-	"smart_collection_id", { data_type => 'INT' },
+	"smart_collection_id", { data_type => 'bigint' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"src", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'INT' }

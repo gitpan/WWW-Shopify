@@ -26,11 +26,10 @@ BEGIN { $fields = {
 	"confirmation_url" => new WWW::Shopify::Field::String::URL()};
 }
 sub countable() { return undef; }
-sub activatable($) { return 1; }
-
 sub creation_minimal { return qw(name price return_url); }
 sub creation_filled { return qw(id created_at confirmation_url); }
 sub update_filled { return qw(updated_at); }
+sub actions { return qw(activate); }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

@@ -6,13 +6,14 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_line_items');
 __PACKAGE__->add_columns(
-	"order_id", { data_type => 'INT' },
+	"order_id", { data_type => 'bigint' },
 	"sku", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"fulfillment_service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"grams", { data_type => 'INT', is_nullable => '1' },
 	"quantity", { data_type => 'INT', is_nullable => '1' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
@@ -23,8 +24,8 @@ __PACKAGE__->add_columns(
 	"variant_inventory_management", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"requires_shipping", { data_type => 'BOOL', is_nullable => '1' },
 	"vendor", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"product_id", { data_type => 'INT', is_nullable => '1' },
-	"variant_id", { data_type => 'INT', is_nullable => '1' }
+	"product_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"variant_id", { data_type => 'BIGINT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
 

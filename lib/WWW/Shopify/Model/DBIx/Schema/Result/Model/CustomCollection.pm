@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_custom_collections');
 __PACKAGE__->add_columns(
@@ -16,7 +17,7 @@ __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"body_html", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');
@@ -25,7 +26,7 @@ __PACKAGE__->set_primary_key('id');
 
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 
-__PACKAGE__->has_many(collects => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Collect', 'custom_collection_id');
+__PACKAGE__->has_many(collects => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Collect', 'collection_id');
 __PACKAGE__->has_many(metafields_hasmany => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionMetafield', 'custom_collection_id');
 __PACKAGE__->many_to_many(metafields => 'metafields_hasmany', 'metafield');
 sub represents { return 'WWW::Shopify::Model::CustomCollection'; }

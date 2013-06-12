@@ -6,10 +6,11 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Asset;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_themes_assets');
 __PACKAGE__->add_columns(
-	"theme_id", { data_type => 'INT' },
+	"theme_id", { data_type => 'bigint' },
 	"attachment", { data_type => 'TEXT', is_nullable => '1' },
 	"value", { data_type => 'TEXT', is_nullable => '1' },
 	"public_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },

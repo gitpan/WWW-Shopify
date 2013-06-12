@@ -6,6 +6,7 @@ use warnings;
 package WWW::Shopify::Model::DBIx::Schema::Result::Model::Product::Variant;
 use base qw/DBIx::Class::Core/;
 
+__PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_products_variants');
 __PACKAGE__->add_columns(
@@ -14,12 +15,13 @@ __PACKAGE__->add_columns(
 	"position", { data_type => 'INT', is_nullable => '1' },
 	"compare_at_price", { data_type => 'DECIMAL', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => '0' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"inventory_policy", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"inventory_management", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"grams", { data_type => 'INT', is_nullable => '1' },
 	"option3", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"taxable", { data_type => 'BOOL', is_nullable => '1' },
+	"barcode", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"option2", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"inventory_quantity", { data_type => 'INT', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
@@ -27,7 +29,7 @@ __PACKAGE__->add_columns(
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"fufillment_service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"requires_shipping", { data_type => 'BOOL', is_nullable => '1' },
-	"product_id", { data_type => 'INT' },
+	"product_id", { data_type => 'BIGINT' },
 	"shop_id", { data_type => "INT" }
 );
 __PACKAGE__->set_primary_key('id');

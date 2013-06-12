@@ -211,8 +211,8 @@ sub generate_class {
 		my $relation = $field->relation;
 		if ($field->is_db_belongs_to && $field->db_rand_count > 0) {
 			my $belongs_to;
-			$self->generate_class($relation, $ids, $parent, $restrictions) unless ($ids->{$package});
-			$belongs_to = $ids->{$package}->[rand(int(@{$ids->{$package}}))];
+			$self->generate_class($relation, $ids, $parent, $restrictions) unless ($ids->{$relation});
+			$belongs_to = $ids->{$relation}->[rand(int(@{$ids->{$relation}}))];
 			my $field_name = $field->name;
 			$field_name .= "_id" unless $field_name =~ m/_id$/;
 			$object->$field_name($belongs_to);
@@ -304,7 +304,7 @@ sub transform_name($) {
 use WWW::Shopify::Query;
 use List::Util qw(first);
 sub generate_conditions {
-	my ($self, $package, $specs) = @_;
+	my ($self, $package, $specs, $rs) = @_;
 	my %conditions = ();
 	my $queries = $package->queries;
 	foreach my $query (values(%$queries)) {
@@ -328,10 +328,12 @@ sub generate_conditions {
 			$conditions{$query->field_name} = $value;
 		}
 		elsif (ref($query) =~ m/Custom$/) {
-			
+			$rs = $query->routine->($rs, $value);
 		}
+		# We keep the conditions hash because of legacy reasons.
+		$rs = $rs->search({%conditions});
 	}
-	return %conditions;
+	return $rs;
 }
 
 sub filter_gettable {
@@ -368,9 +370,18 @@ sub get_all_limit {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);	
 	
-	my %conditions = $self->generate_conditions($package, $specs);
-
-	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), %conditions })->all();
+	my @return;
+	my $rs = undef;
+	if ($package =~ m/Metafield/ && $specs->{parent}) {
+		my $parent = $self->{_mapper}->from_shopify($self->{_db}, $specs->{parent}, $self->associate->id);
+		$parent = $parent->contents;
+		$rs = $parent->metafields->search({ 'me.shop_id' => $self->associate()->id() });
+	}
+	else {
+		$rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
+	}
+	$rs = $self->generate_conditions($package, $specs, $rs);
+	@return = $rs->all;
 	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
 	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
 }
@@ -379,6 +390,7 @@ sub get_all {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$package = $self->translate_model($package);
+	return $self->get_shop if $package eq "WWW::Shopify::Model::Shop";
 	$self->validate_item($package);
 	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
 	return $self->get_all_limit($package, $specs) if ($specs->{"limit"} <= WWW::Shopify->PULLING_ITEM_LIMIT);
@@ -401,7 +413,7 @@ sub search {
 	$self->validate_item($package);
 	my @criteria = split(/\s+/, $specs->{query});
 	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
-	my @return = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
+	my @return = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
 	@return = map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
 	return @return if wantarray;
 	return $return[0] if int(@return) > 0;
@@ -416,20 +428,22 @@ sub get_shop($) {
 	return $self->filter_gettable($obj);
 }
 
-sub get_count($$@) {
+sub get_count {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
-	return $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->count();
+
+	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
+	return $self->generate_conditions($package, $specs, $rs)->count;
 }
 
-sub get($$$@) {
+sub get {
 	my ($self, $package, $id, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
-	my $row = $self->{_db}->resultset(transform_name($package))->search({ shop_id => $self->associate()->id() })->find($id);
+	my $row = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() })->find($id);
 	return undef unless $row;
 	my $obj = $self->{_mapper}->to_shopify($row);
 	$obj->associate($self) if $obj;
@@ -454,7 +468,8 @@ sub create {
 
 	$self->validate_item(ref($item));
 	my $package = ref($item);
-	die "Missing minimal creation member $_." if first { !defined $item->{$_} } $item->creation_minimal;
+	my @missing = grep { !defined $item->{$_} } $item->creation_minimal;
+	die "Missing minimal creation member(s) " . join(", ", @missing) . "." if @missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
@@ -528,7 +543,7 @@ sub update {
 
 sub delete {
 	my ($self, $item) = @_;
-	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($item));
 	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($item)) unless ref($item) =~ m/Model/;
@@ -551,7 +566,7 @@ sub delete {
 # This function is solely for charges.
 sub activate {
 	my ($self, $class) = @_;
-	die new WWW::Shopify::Exception("Only charges can be activated.") unless defined $class && $class->activatable;
+	die new WWW::Shopify::Exception("Only charges can be activated.") unless defined $class && $class->can_activate;
 	$self->validate_item(ref($class));
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
@@ -566,7 +581,7 @@ sub activate {
 
 sub disable {
 	my ($self, $class) = @_;
-	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $class && $class->disablable;
+	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $class && $class->can_disable;
 	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($class));
 
@@ -582,7 +597,7 @@ sub disable {
 
 sub enable {
 	my ($self, $class) = @_;
-	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $class && $class->enableable;
+	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $class && $class->can_enable;
 	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($class));
 
@@ -618,8 +633,6 @@ When the shop doesn't have an access_token, this is what you should be redirecti
 
 =cut
 
-
-use URI::Escape;
 sub authorize_url {
 	my ($self, $scope, $redirect) = (@_);
 	return "$redirect?shop=" . $self->associate->myshopify_domain;

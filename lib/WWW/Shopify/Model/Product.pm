@@ -15,9 +15,10 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
 	"variants" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Variant", 1, 10),
-	"handle" => new WWW::Shopify::Field::String("[a-z]{2,8}\-[a-z]{2,8}"),
+	"handle" => new WWW::Shopify::Field::String::Regex("[a-z]{2,8}\-[a-z]{2,8}"),
 	"product_type" => new WWW::Shopify::Field::String::Words(1,2),
 	"template_suffix" => new WWW::Shopify::Field::String(),
+	"published_scope" => new WWW::Shopify::Field::String(),
 	"title" => new WWW::Shopify::Field::String::Words(1,2),
 	"vendor" => new WWW::Shopify::Field::String::Words(1,2),
 	"tags" => new WWW::Shopify::Field::String::Words(1,7),
@@ -40,15 +41,22 @@ BEGIN { $queries = {
 	published_status => new WWW::Shopify::Query::Enum('published_status', ['unpublished', 'published', 'any']),
 	product_type => new WWW::Shopify::Query::Match('product_type'),
 	vendor => new WWW::Shopify::Query::Match('vendor'),
-	collection_id => new WWW::Shopify::Query::Custom(),
+	collection_id => new WWW::Shopify::Query::Custom("collection_id", sub { 
+		my ($rs, $value) = @_;
+		return $rs->search({ 'collection_id' => $value },
+			{ 'join' => 'collects','+select' => ['collects.collection_id'], '+as' => ['collection_id'], }
+		);
+	}),
 	since_id => new WWW::Shopify::Query::LowerBound('id')
 }; }
 
+
+sub get_fields { return grep { $_ ne "collects" } keys($fields); }
 sub creation_minimal { return qw(title product_type vendor); }
 sub creation_filled { return qw(id created_at); }
 # Odd, even without an update method, it still has an updated at.
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options); }
+sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html); }
 sub throws_webhooks { return 1; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
