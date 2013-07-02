@@ -51,7 +51,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.991"
+         "version" : "0.992"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -74,6 +74,10 @@
          "version" : 0
       },
       "WWW::Shopify::Exception::InvalidKey" : {
+         "file" : "lib/WWW/Shopify/Exception.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Exception::NotFound" : {
          "file" : "lib/WWW/Shopify/Exception.pm",
          "version" : 0
       },
@@ -748,5 +752,5 @@
          "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
       }
    },
-   "version" : "0.991"
+   "version" : "0.992"
 }

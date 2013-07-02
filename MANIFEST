@@ -131,6 +131,7 @@ lib/WWW/Shopify/Model/Product.pm
 lib/WWW/Shopify/Model/ApplicationCharge.pm
 lib/WWW/Shopify/Model/Asset.pm
 lib/WWW/Shopify/Model/SmartCollection.pm
+
 scripts/dbix.pl
 META.yml
 META.json

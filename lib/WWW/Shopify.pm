@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.991';
+our $VERSION = '0.992';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -149,6 +149,7 @@ sub post_url { return $_[0]->url_handler->post_url($_[0]->encode_url($_[1]), $_[
 sub put_url { return $_[0]->url_handler->put_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 sub delete_url { return $_[0]->url_handler->delete_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 
+use Devel::StackTrace;
 sub resolve_trailing_url {
 	my ($self, $package, $action, $parent) = @_;
 	my $method = lc($action) . "_through_parent";
@@ -163,8 +164,9 @@ sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
 	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
+	return () if ($specs->{limit} == 0);
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json", $specs);
-	return map { my $object = $package->from_json($_); $object->associate($self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
+	return map { my $object = $package->from_json($_, $self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
 }
 
 =head2 get_all($self, $package, $filters)
@@ -176,18 +178,25 @@ If you don't want this behaviour, use the limit filter.
 =cut
 
 use POSIX qw/ceil/;
+use List::Util qw(min);
 sub get_all {
 	my ($self, $package, $specs) = @_;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
+	return $self->get_shop if $package->is_shop;
 	return $self->get_all_limit($package, $specs) if ((defined $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT) || !$package->countable());
 
 	my $item_count = $self->get_count($package, $specs);
+	$item_count = min($specs->{limit}, $item_count) if defined $specs->{limit};
 	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*499;
-	return $self->get_all_limit($package, $specs) if ($item_count <= PULLING_ITEM_LIMIT);
-
+	$specs->{limit} = $item_count;
+	return $self->get_all_limit($package, $specs) if $item_count <= PULLING_ITEM_LIMIT;
 	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
-	return map { $specs->{page} = $_; $self->get_all_limit($package, $specs) } 1..$page_count;
+	return map {
+		$specs->{page} = $_;
+		$specs->{limit} = (($_ < $page_count || $item_count % PULLING_ITEM_LIMIT == 0) ? PULLING_ITEM_LIMIT : ($item_count % PULLING_ITEM_LIMIT));
+		$self->get_all_limit($package, $specs);
+	} 1..$page_count;
 }
 
 =head2 get_shop($self)
@@ -202,8 +211,7 @@ sub get_shop {
 	my ($self) = @_;
 	my $package = 'WWW::Shopify::Model::Shop';
 	my ($decoded, $response) = $self->get_url("/admin/" . $package->singular() . ".json");
-	my $object = $package->from_json($decoded->{$package->singular()});
-	$object->associate($self);
+	my $object = $package->from_json($decoded->{$package->singular()}, $self);
 	return $object;
 }
 
@@ -248,8 +256,7 @@ sub get {
 		die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
 		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
 	}
-	my $class = $package->from_json($decoded->{$package->singular()});
-	$class->associate($self);
+	my $class = $package->from_json($decoded->{$package->singular()}, $self);
 	$class->associated_parent($specs->{parent});
 	return $class;
 }
@@ -275,9 +282,8 @@ sub search {
 
 	my @return = ();
 	foreach my $element (@{$decoded->{$package->plural()}}) {
-		my $class = $package->from_json($element);
+		my $class = $package->from_json($element, $self);
 		$class->associated_parent($specs->{parent}) if $specs->{parent};
-		$class->associate($self);
 		push(@return, $class);
 	}
 	return @return if wantarray;
@@ -304,8 +310,7 @@ sub create {
 	my $method = lc($item->create_method) . "_url";
 	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->associated_parent) . ".json", {$item->singular() => $specs}, $item->needs_login);
 	my $element = $decoded->{$item->singular};
-	my $object = ref($item)->from_json($element);
-	$object->associate($self);
+	my $object = ref($item)->from_json($element, $self);
 	$object->associated_parent($item->associated_parent);
 	return $object;
 }
@@ -327,8 +332,7 @@ sub update {
 	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
 
 	my $element = $decoded->{$class->singular()};
-	my $object = ref($class)->from_json($element);
-	$object->associate($self);
+	my $object = ref($class)->from_json($element, $self);
 	$object->associated_parent($class->associated_parent);
 	return $object;
 }
@@ -354,6 +358,7 @@ sub delete {
 }
 
 # For simple things like activating, enabling, disabling, that are a simple post to a custom URL.
+# Sometimes returns an object, sometimes returns a 1.
 use List::Util qw(first);
 sub custom_action {
 	my ($self, $object, $action) = @_;
@@ -361,9 +366,9 @@ sub custom_action {
 	my $id = $object->id;
 	my $url = $self->resolve_trailing_url($object, $action, $object->associated_parent) . "/$id/$action.json";
 	my ($decoded, $response) = $self->post_url($url, {$object->singular() => $object->to_json});
+	return 1 if !$decoded;
 	my $element = $decoded->{$object->singular()};
-	$object = ref($object)->from_json($element);
-	$object->associate($self);
+	$object = ref($object)->from_json($element, $self);
 	return $object;
 }
 

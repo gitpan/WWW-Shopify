@@ -5,6 +5,7 @@ use warnings;
 
 package WWW::Shopify::URLHandler;
 use JSON;
+use Data::Dumper;
 
 sub new($) { return bless {_parent => $_[1]}, $_[0]; }
 sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent}; }
@@ -26,9 +27,11 @@ sub get_url($$@) {
 	my $request = HTTP::Request->new("GET", $uri);
 	$request->header("Accept" => "application/json");
 	my $response = $self->parent->ua->request($request);
+	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
 	if (!$response->is_success) {
 		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
+		die new WWW::Shopify::Exception::NotFound($response) if $response->code() == 404;
 		die new WWW::Shopify::Exception($response);
 	}
 	my $limit = $response->header('x-shopify-shop-api-call-limit');
@@ -45,6 +48,7 @@ sub use_url($$$$) {
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");
 	$request->content($hash ? JSON::encode_json($hash) : undef);
 	my $response = $self->parent->ua->request($request);
+	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
 	if (!$response->is_success) {
 		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;

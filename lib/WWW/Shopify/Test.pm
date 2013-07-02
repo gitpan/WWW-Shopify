@@ -307,6 +307,9 @@ sub generate_conditions {
 	my ($self, $package, $specs, $rs) = @_;
 	my %conditions = ();
 	my $queries = $package->queries;
+	$rs = $rs->search({}, { rows => WWW::Shopify->PULLING_ITEM_LIMIT, page => $specs->{page} }) if exists $specs->{limit} && exists $specs->{page};
+	$rs = $rs->search({}, { rows => $specs->{limit} }) if exists $specs->{limit} && !exists $specs->{page};
+
 	foreach my $query (values(%$queries)) {
 		next unless exists $specs->{$query->name};
 		$conditions{$query->field_name} = {} unless exists $conditions{$query->field_name};
@@ -366,16 +369,16 @@ sub filter_gettable {
 sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	die new WWW::Shopify::Exception("Limit should always exist in here.") unless $specs->{limit};
+	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless $specs->{"limit"};
+	return () if ($specs->{limit} == 0);
 	$package = $self->translate_model($package);
 	$self->validate_item($package);	
 	
 	my @return;
 	my $rs = undef;
 	if ($package =~ m/Metafield/ && $specs->{parent}) {
-		my $parent = $self->{_mapper}->from_shopify($self->{_db}, $specs->{parent}, $self->associate->id);
-		$parent = $parent->contents;
-		$rs = $parent->metafields->search({ 'me.shop_id' => $self->associate()->id() });
+		my $parent = $self->{_mapper}->from_shopify($self->{_db}, $specs->{parent}, $self->associate->id)->contents;
+		$rs = $parent->metafields->search({ 'metafield.shop_id' => $self->associate->id() });
 	}
 	else {
 		$rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
@@ -384,24 +387,6 @@ sub get_all_limit {
 	@return = $rs->all;
 	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
 	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
-}
-
-sub get_all {
-	my ($self, $package, $specs) = @_;
-	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	$package = $self->translate_model($package);
-	return $self->get_shop if $package eq "WWW::Shopify::Model::Shop";
-	$self->validate_item($package);
-	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
-	return $self->get_all_limit($package, $specs) if ($specs->{"limit"} <= WWW::Shopify->PULLING_ITEM_LIMIT);
-	if ($package->countable()) {
-		my $itemCount = $self->get_count($package, $specs);
-		return $self->get_all_limit($package, $specs) if ($itemCount <= WWW::Shopify->PULLING_ITEM_LIMIT);
-		die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $itemCount > WWW::Shopify->PULLING_ITEM_LIMIT;
-	}
-	else {
-		return $self->get_all_limit($package, $specs);
-	}
 }
 
 sub search {

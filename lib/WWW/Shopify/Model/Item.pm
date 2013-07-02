@@ -335,26 +335,30 @@ sub add_metafield {
 	return $sa->create($metafield);
 }
 
-=head2 from_json($package, $json_hash)
+=head2 from_json($package, $json_hash, [$associated])
 
 Returns a WWW::Shopify::Model::... intermediate object from a hash that's been decoded from a JSON object (i.e. normal shopify object in the API docs, decoded using JSON qw(decode_json); ). Does a bunch of nice conversions, like putting DateTime objects in the proper places, and associate each individual obejct with a reference to its parent and to the WWW::Shopify object that created it.
 
 =cut
 
-sub from_json($$) {
-	my ($package, $json) = @_;
+sub from_json {
+	my ($package, $json, $associated) = @_;
 
 	sub decodeForRef { 
-		my ($self, $json, $ref) = @_;
+		my ($self, $json, $ref, $associated) = @_;
 		for (keys(%{$ref})) {
 			if ($ref->{$_}->is_relation()) {
 				my $package = $ref->{$_}->relation();
 				if ($ref->{$_}->is_many()) {
 					next unless exists $json->{$package->plural()};
-					$self->{$_} = [map { my $o = $package->from_json($_); $o->associated_parent($self); $o } @{$json->{$package->plural()}}];
+					$self->{$_} = [map {
+						my $o = $package->from_json($_, $associated);
+						$o->associated_parent($self);
+						$o;
+					} @{$json->{$package->plural()}}];
 				}
 				elsif ($ref->{$_}->is_one && $ref->{$_}->is_own) {
-					$self->{$_} = $package->from_json($json->{$_});
+					$self->{$_} = $package->from_json($json->{$_}, $associated);
 					$self->{$_}->associated_parent($self);
 				}
 				elsif ($ref->{$_}->is_one) {
@@ -371,8 +375,9 @@ sub from_json($$) {
 	}
 
 	my $self = $package->new();
+	$self->associate($associated) if ($associated);
 
-	$self->decodeForRef($json, $self->fields);
+	$self->decodeForRef($json, $self->fields, $associated);
 	return $self;
 }
 

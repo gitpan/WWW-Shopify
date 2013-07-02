@@ -11,6 +11,7 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_shops');
 __PACKAGE__->add_columns(
 	"source", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"google_apps_domain", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"taxes_included", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"money_format", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"tax_shipping", { data_type => 'VARCHAR(255)', is_nullable => '1' },
@@ -21,12 +22,13 @@ __PACKAGE__->add_columns(
 	"domain", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"myshopify_domain", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"public", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"google_apps_login_enabled", { data_type => 'BOOL', is_nullable => '1' },
 	"shop_owner", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"province", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"country", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"customer_email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"timezone", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"customer_email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"phone", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"money_with_currency_format", { data_type => 'VARCHAR(255)', is_nullable => '1' },

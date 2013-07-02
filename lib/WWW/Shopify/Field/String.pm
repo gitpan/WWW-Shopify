@@ -8,7 +8,7 @@ use parent 'WWW::Shopify::Field';
 sub sql_type { return "varchar(255)"; }
 sub generate($) {
 	return $_[0]->{arguments}->[0] if int(@{$_[0]->{arguments}} > 0);
-	return ::random_regex('\w{1,40}');
+	return join("", map { chr(int(rand()*10000+100)) } 1..40);
 }
 
 package WWW::Shopify::Field::String::Regex;
@@ -46,7 +46,7 @@ sub generate($) {
 package WWW::Shopify::Field::String::URL::Shopify;
 use parent 'WWW::Shopify::Field::String';
 sub generate($) {
-	return 'http://www.' . ::random_regex('[a-z\_0-9]{3,24}') . '.myshopify.com/' . ::random_regex('[a-z_0-9]{0,16}');
+	return 'http://www.' . ::random_regex('[a-z_0-9]{3,24}') . '.myshopify.com/' . ::random_regex('[a-z_0-9]{0,16}');
 }
 
 # We'll just generate like 1000 images in this folder.

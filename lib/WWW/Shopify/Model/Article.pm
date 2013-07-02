@@ -23,6 +23,18 @@ BEGIN { $fields = {
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
 }; }
 
+my $queries; sub queries { return $queries; }
+BEGIN { $queries = {
+	created_at_min => new WWW::Shopify::Query::LowerBound('created_at'),
+	created_at_max => new WWW::Shopify::Query::UpperBound('created_at'),
+	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
+	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
+	published_at_min => new WWW::Shopify::Query::LowerBound('published_at'),
+	published_at_max => new WWW::Shopify::Query::UpperBound('published_at'),
+	published_status => new WWW::Shopify::Query::Enum('published', ['published', 'unpublished', 'any']),
+	since_id => new WWW::Shopify::Query::LowerBound('id')
+}; }
+
 sub creation_minimal { return qw(title); }
 sub update_fields { return qw(author body_html summary_html published_at tags title); }
 
