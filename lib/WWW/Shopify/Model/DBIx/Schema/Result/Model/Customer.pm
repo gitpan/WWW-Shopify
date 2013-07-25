@@ -18,6 +18,7 @@ __PACKAGE__->add_columns(
 	"email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"password", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"multipass_identifier", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"password_confirmation", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"accepts_marketing", { data_type => 'BOOL', is_nullable => '1' },
@@ -25,7 +26,7 @@ __PACKAGE__->add_columns(
 	"tags", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"first_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"total_spent", { data_type => 'DECIMAL', is_nullable => '1' },
+	"total_spent", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"last_order_id", { data_type => 'BIGINT', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );

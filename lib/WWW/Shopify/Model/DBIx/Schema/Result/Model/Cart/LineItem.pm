@@ -11,12 +11,12 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_carts_line_items');
 __PACKAGE__->add_columns(
 	"cart_id", { data_type => 'bigint' },
-	"line_price", { data_type => 'DECIMAL', is_nullable => '1' },
+	"line_price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"sku", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"grams", { data_type => 'INT', is_nullable => '1' },
 	"quantity", { data_type => 'INT', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
-	"price", { data_type => 'DECIMAL', is_nullable => '1' },
+	"price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"vendor", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"variant_id", { data_type => 'BIGINT', is_nullable => '1' }

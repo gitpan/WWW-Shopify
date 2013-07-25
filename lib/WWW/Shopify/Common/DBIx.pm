@@ -176,7 +176,7 @@ sub generate_dbix {
 	}
 	# If we don't have an ID give us one, so that all DB stuff can have primary keys.
 	if (!$fields->{$ids[0]}) {
-		push(@columns, "\"" . $ids[0] . "\", { data_type => 'INT' }");		
+		push(@columns, "\"" . $ids[0] . "\", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }");
 	}
 	# All relationship columns that are belong to.
 	# ReferenceOne / Non-Nested / Interior : Belongs To
@@ -279,7 +279,7 @@ sub from_shopify {
 		# If we have a class relationship.
 		if ($type->is_relation) {
 			return undef if $type->relation && !$self->in_namespace($type->relation);
-			if ($type->is_many()) {
+			if ($type->is_many()) {		
 				return [] unless $data;
 				my $array = [map { $self->from_shopify($schema, $_, $shop_id); } @$data];
 				return $array;
@@ -302,7 +302,7 @@ sub from_shopify {
 	my $dbPackage = $self->transform_package(ref($shopifyObject));
 	my $identifier = $shopifyObject->identifier;
 	my $dbObject = undef;
-	$dbObject = $schema->resultset($dbPackage)->find($shopifyObject->$identifier) if $shopifyObject && $shopifyObject->$identifier;
+	$dbObject = $schema->resultset($dbPackage)->find($shopifyObject->$identifier) if $shopifyObject->{$identifier} && $shopifyObject && $shopifyObject->$identifier;
 	$dbObject = $schema->resultset($dbPackage)->new({}) unless $dbObject;
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);

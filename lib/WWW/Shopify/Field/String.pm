@@ -137,7 +137,7 @@ package WWW::Shopify::Field::String::Handle;
 use parent 'WWW::Shopify::Field::String';
 
 sub generate($) {
-	return join("-", rand_words(size => int(rand(2))+2));
+	return join("-", ::rand_words(size => int(rand(2))+2));
 }
 
 package WWW::Shopify::Field::String::Hostname;

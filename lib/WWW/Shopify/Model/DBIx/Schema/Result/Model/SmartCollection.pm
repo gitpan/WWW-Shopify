@@ -12,6 +12,7 @@ __PACKAGE__->table('shopify_smart_collections');
 __PACKAGE__->add_columns(
 	"published_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"sort_order", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"published_scope", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },

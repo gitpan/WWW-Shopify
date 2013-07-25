@@ -13,9 +13,9 @@ __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
 	"source", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"price", { data_type => 'DECIMAL', is_nullable => '1' },
+	"price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT' }
+	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');
 

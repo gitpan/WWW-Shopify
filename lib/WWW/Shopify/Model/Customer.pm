@@ -28,7 +28,8 @@ BEGIN { $fields = {
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"send_email_invite" => new WWW::Shopify::Field::Boolean(),
 	"password" => new WWW::Shopify::Field::String::Password(),
-	"password_confirmation" => new WWW::Shopify::Field::String::Password()	
+	"multipass_identifier" => new WWW::Shopify::Field::String(),
+	"password_confirmation" => new WWW::Shopify::Field::String::Password()
 }; }
 
 sub unique_fields { return qw(email); }

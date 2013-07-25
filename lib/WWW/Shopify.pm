@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.992';
+our $VERSION = '0.993';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -141,7 +141,9 @@ sub translate_model($) {
 }
 
 use constant {
-	PULLING_ITEM_LIMIT => 250
+	PULLING_ITEM_LIMIT => 250,
+	CALL_LIMIT_REFRESH => (60*60*5),
+	CALL_LIMIT_MAX => 500
 };
 
 sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
@@ -165,6 +167,7 @@ sub get_all_limit {
 	$package = $self->translate_model($package);
 	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
 	return () if ($specs->{limit} == 0);
+	return $self->get_shop if $package->is_shop;
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json", $specs);
 	return map { my $object = $package->from_json($_, $self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
 }
@@ -192,11 +195,22 @@ sub get_all {
 	$specs->{limit} = $item_count;
 	return $self->get_all_limit($package, $specs) if $item_count <= PULLING_ITEM_LIMIT;
 	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
-	return map {
-		$specs->{page} = $_;
-		$specs->{limit} = (($_ < $page_count || $item_count % PULLING_ITEM_LIMIT == 0) ? PULLING_ITEM_LIMIT : ($item_count % PULLING_ITEM_LIMIT));
-		$self->get_all_limit($package, $specs);
-	} 1..$page_count;
+	my @return = ();
+	my $start_page = $specs->{since_page} ? $specs->{since_page} : 1;
+	$specs->{limit} = PULLING_ITEM_LIMIT;
+	eval {
+		for($start_page..$page_count) {
+			$specs->{page} = $_;
+			push(@return, $self->get_all_limit($package, $specs));
+		};
+	};
+	if ($@) {
+		$@->extra(\@return) if ref($@) && $@->isa('WWW::Shopify::Exception::CallLimit');
+		die $@;
+	}
+	return @return if wantarray;
+	return $return[0] if int(@return) > 0;
+	return undef;
 }
 
 =head2 get_shop($self)

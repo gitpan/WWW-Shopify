@@ -15,7 +15,7 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
 	"variants" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Variant", 1, 10),
-	"handle" => new WWW::Shopify::Field::String::Regex("[a-z]{2,8}-[a-z]{2,8}"),
+	"handle" => new WWW::Shopify::Field::String::Handle(),
 	"product_type" => new WWW::Shopify::Field::String::Words(1,2),
 	"template_suffix" => new WWW::Shopify::Field::String(),
 	"published_scope" => new WWW::Shopify::Field::String(),
@@ -51,7 +51,7 @@ BEGIN { $queries = {
 }; }
 
 
-sub get_fields { return grep { $_ ne "collects" } keys($fields); }
+sub get_fields { return grep { $_ ne "collects" } keys(%$fields); }
 sub creation_minimal { return qw(title product_type vendor); }
 sub creation_filled { return qw(id created_at); }
 # Odd, even without an update method, it still has an updated at.

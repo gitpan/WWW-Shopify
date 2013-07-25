@@ -15,7 +15,7 @@ __PACKAGE__->add_columns(
 	"session_hash", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"user_agent", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"accept_language", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT' }
+	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');
 

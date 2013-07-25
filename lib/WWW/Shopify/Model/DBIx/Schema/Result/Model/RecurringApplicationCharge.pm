@@ -20,7 +20,7 @@ __PACKAGE__->add_columns(
 	"confirmation_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"price", { data_type => 'DECIMAL', is_nullable => '1' },
+	"price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"activated_on", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"billing_on", { data_type => 'DATETIME', is_nullable => '1' },

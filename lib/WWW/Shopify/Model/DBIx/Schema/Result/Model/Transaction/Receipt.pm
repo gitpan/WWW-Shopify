@@ -13,7 +13,7 @@ __PACKAGE__->add_columns(
 	"transaction_id", { data_type => 'bigint' },
 	"authorization", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"testcase", { data_type => 'BOOL', is_nullable => '1' },
-	"id", { data_type => 'INT' }
+	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');
 

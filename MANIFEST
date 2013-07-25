@@ -14,6 +14,7 @@ lib/WWW/Shopify/Query.pm
 lib/WWW/Shopify/Exception.pm
 lib/WWW/Shopify/Field.pm
 lib/WWW/Shopify/Nest.pm
+lib/WWW/Shopify/Tooltips.pm
 lib/WWW/Shopify/Field/String.pm
 lib/WWW/Shopify/Field/Identifier.pm
 lib/WWW/Shopify/Field/Relation.pm

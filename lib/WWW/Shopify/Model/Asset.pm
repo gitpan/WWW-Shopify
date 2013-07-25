@@ -18,6 +18,8 @@ BEGIN { $fields = {
 	"value" => new WWW::Shopify::Field::Text::HTML(),
 	"attachment" => new WWW::Shopify::Field::Text(),
 	"public_url" => new WWW::Shopify::Field::String::URL(),
+	"source_key" => new WWW::Shopify::Field::String(),
+	"src" => new WWW::Shopify::Field::String::URL(),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"content_type" => new WWW::Shopify::Field::String("image/(gif|jpg|png)"),

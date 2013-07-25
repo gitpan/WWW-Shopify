@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -51,7 +51,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.992"
+         "version" : "0.993"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -737,6 +737,10 @@
          "file" : "lib/WWW/Shopify/Test.pm",
          "version" : 0
       },
+      "WWW::Shopify::Tooltips" : {
+         "file" : "lib/WWW/Shopify/Tooltips.pm",
+         "version" : 0
+      },
       "WWW::Shopify::URLHandler" : {
          "file" : "lib/WWW/Shopify/URLHandler.pm",
          "version" : 0
@@ -752,5 +756,5 @@
          "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
       }
    },
-   "version" : "0.992"
+   "version" : "0.993"
 }

@@ -45,11 +45,14 @@ use parent 'WWW::Shopify';
 use String::Random qw(random_regex random_string);
 use Data::Random;
 use List::Util qw(shuffle first);
+use Data::Dumper;
 
 use Module::Find;
 # Make sure we include all our models so that when people call the model, we actually know what they're talking about.
 BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); die $@ if $@; }
 
+
+my %api_recycle_times = ();
 
 sub new($$) {
 	my ($package, $dbschema, $shop) = @_;
@@ -57,7 +60,7 @@ sub new($$) {
 		_db => $dbschema,
 		_associatedShop => undef,
 		_mapper => new WWW::Shopify::Common::DBIx(),
-		_callback => undef
+		_callback => undef,
 	}, $package;
 	$self->associate($shop) if $shop;
 	return $self;
@@ -75,13 +78,14 @@ This must be called (directly or indirectly) before any calls can be made to the
 
 =cut
 
-sub associate($$) {
+sub associate {
 	my $self = $_[0];
 	if (defined $_[1]) {
 		my $shop = $_[1];
 		if (ref($shop)) {
 			die ref($shop) unless ref($shop) =~ m/Model::.*Shop$/;
 			$self->{_associatedShop} = $shop;
+			$api_recycle_times{$shop->id} = {calls => 0, recycled => DateTime->now} if !exists $api_recycle_times{$shop->id};
 		}
 		else {
 			$self->associate($self->{_db}->resultset('Model::Shop')->find({myshopify_domain => $shop}));
@@ -249,6 +253,19 @@ sub generate_class {
 	return $object;
 }
 
+sub check_increment_calls {
+	my ($self) = @_;
+	my $duration = DateTime->now->subtract_datetime($api_recycle_times{$self->associate->id}->{recycled}->clone);
+	if ($duration->in_units('seconds') >= WWW::Shopify->CALL_LIMIT_REFRESH) {
+		$api_recycle_times{$self->associate->id}->{calls} = 0;
+		$api_recycle_times{$self->associate->id}->{recycled} = DateTime->now;
+	}
+	my $api_calls = $api_recycle_times{$self->associate->id}->{calls};
+	die new WWW::Shopify::Exception::CallLimit() if $api_calls == WWW::Shopify->CALL_LIMIT_MAX;
+	$self->api_calls($api_calls + 1);
+	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
+}
+
 use Sys::CPU;
 use threads;
 my $internal_range = 1000000;
@@ -309,6 +326,7 @@ sub generate_conditions {
 	my $queries = $package->queries;
 	$rs = $rs->search({}, { rows => WWW::Shopify->PULLING_ITEM_LIMIT, page => $specs->{page} }) if exists $specs->{limit} && exists $specs->{page};
 	$rs = $rs->search({}, { rows => $specs->{limit} }) if exists $specs->{limit} && !exists $specs->{page};
+	$rs = $rs->search({ 'closed_at' => undef, 'cancelled_at' => undef }) if !$specs->{status} && $package eq "WWW::Shopify::Model::Order";
 
 	foreach my $query (values(%$queries)) {
 		next unless exists $specs->{$query->name};
@@ -366,6 +384,7 @@ sub filter_gettable {
 	return $obj;
 }
 
+use POSIX qw(ceil);
 sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
@@ -373,6 +392,7 @@ sub get_all_limit {
 	return () if ($specs->{limit} == 0);
 	$package = $self->translate_model($package);
 	$self->validate_item($package);	
+	return $self->get_shop if $package->is_shop;
 	
 	my @return;
 	my $rs = undef;
@@ -382,9 +402,15 @@ sub get_all_limit {
 	}
 	else {
 		$rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
+		if ($package->get_through_parent) {
+			$rs = $rs->search({ 'me.' . $self->{_mapper}->transform_package($package)->parent_variable => $specs->{parent}->id });
+		}
 	}
 	$rs = $self->generate_conditions($package, $specs, $rs);
+	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	@return = $rs->all;
+	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
+	$self->check_increment_calls for (1..$call_count);
 	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
 	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
 }
@@ -398,7 +424,14 @@ sub search {
 	$self->validate_item($package);
 	my @criteria = split(/\s+/, $specs->{query});
 	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
-	my @return = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) })->all();
+	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) });
+	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
+	my @return = $rs->all;
+
+	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless $specs->{"limit"};
+	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
+	$self->check_increment_calls for (1..$call_count);
+
 	@return = map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
 	return @return if wantarray;
 	return $return[0] if int(@return) > 0;
@@ -408,6 +441,7 @@ sub search {
 sub get_shop($) {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$self->check_increment_calls;
 	my $obj = $self->{_mapper}->to_shopify($self->associate());
 	$obj->associate($self);
 	return $self->filter_gettable($obj);
@@ -416,19 +450,25 @@ sub get_shop($) {
 sub get_count {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$self->check_increment_calls;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 
 	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
-	return $self->generate_conditions($package, $specs, $rs)->count;
+	$rs = $self->generate_conditions($package, $specs, $rs);
+	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
+	return $rs->count;
 }
 
 sub get {
 	my ($self, $package, $id, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$self->check_increment_calls;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
-	my $row = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() })->find($id);
+	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), 'me.id' => $id });
+	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
+	my $row = $rs->first;
 	return undef unless $row;
 	my $obj = $self->{_mapper}->to_shopify($row);
 	$obj->associate($self) if $obj;
@@ -450,6 +490,7 @@ sub post_creation_fields {
 sub create {
 	my ($self, $item, $options) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
+	$self->check_increment_calls;
 
 	$self->validate_item(ref($item));
 	my $package = ref($item);
@@ -518,6 +559,8 @@ sub update {
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($item));
+	$self->check_increment_calls;
+
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	$dbixgroup->update;
 	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents);
@@ -532,6 +575,7 @@ sub delete {
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$self->validate_item(ref($item));
 	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($item)) unless ref($item) =~ m/Model/;
+	$self->check_increment_calls;
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	die new WWW::Shopify::Exception($item->singular . " with id " . $item->id . " does not exist.") unless $dbixgroup->contents->in_storage;
@@ -552,6 +596,7 @@ sub delete {
 sub activate {
 	my ($self, $class) = @_;
 	die new WWW::Shopify::Exception("Only charges can be activated.") unless defined $class && $class->can_activate;
+	$self->check_increment_calls;
 	$self->validate_item(ref($class));
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
@@ -568,6 +613,7 @@ sub disable {
 	my ($self, $class) = @_;
 	die new WWW::Shopify::Exception("You can only disable discount codes.") unless defined $class && $class->can_disable;
 	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
+	$self->check_increment_calls;
 	$self->validate_item(ref($class));
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });
@@ -584,6 +630,7 @@ sub enable {
 	my ($self, $class) = @_;
 	die new WWW::Shopify::Exception("You can only enable discount codes.") unless defined $class && $class->can_enable;
 	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
+	$self->check_increment_calls;
 	$self->validate_item(ref($class));
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });

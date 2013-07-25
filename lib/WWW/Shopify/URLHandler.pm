@@ -35,7 +35,10 @@ sub get_url($$@) {
 		die new WWW::Shopify::Exception($response);
 	}
 	my $limit = $response->header('x-shopify-shop-api-call-limit');
-	$self->parent->api_calls($limit) if $limit;
+	if ($limit) {
+		die new WWW::Shopify::Exception("Unrecognized limit.") unless $limit =~ m/(\d+)\/\d+/;
+		$self->parent->api_calls($1);
+	}
 	my $content = $response->decoded_content;
 	my $decoded = JSON::decode_json($content);
 	return ($decoded, $response);
@@ -55,7 +58,10 @@ sub use_url($$$$) {
 		die new WWW::Shopify::Exception($response);
 	}
 	my $limit = $response->header('x-shopify-shop-api-call-limit');
-	$self->parent->api_calls($limit) if $limit;
+	if ($limit) {
+		die new WWW::Shopify::Exception("Unrecognized limit.") unless $limit =~ m/(\d+)\/\d+/;
+		$self->parent->api_calls($1);
+	}
 	my $decoded = (length($response->decoded_content) >= 2) ? JSON::decode_json($response->decoded_content) : undef;
 	return ($decoded, $response);
 }

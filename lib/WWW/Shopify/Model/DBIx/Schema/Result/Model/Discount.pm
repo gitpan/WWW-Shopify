@@ -12,11 +12,11 @@ __PACKAGE__->table('shopify_discounts');
 __PACKAGE__->add_columns(
 	"starts_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"ends_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"value", { data_type => 'DECIMAL', is_nullable => '1' },
+	"value", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"applies_once", { data_type => 'BOOL', is_nullable => '1' },
 	"applies_to_resource", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"minimum_order_amount", { data_type => 'DECIMAL', is_nullable => '1' },
+	"minimum_order_amount", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"times_used", { data_type => 'INT', is_nullable => '1' },
 	"discount_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },

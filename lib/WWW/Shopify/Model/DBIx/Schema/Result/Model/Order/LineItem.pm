@@ -19,7 +19,7 @@ __PACKAGE__->add_columns(
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"variant_title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"fulfillment_status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"price", { data_type => 'DECIMAL', is_nullable => '1' },
+	"price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"variant_inventory_management", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"requires_shipping", { data_type => 'BOOL', is_nullable => '1' },

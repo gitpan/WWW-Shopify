@@ -10,7 +10,7 @@ use parent "WWW::Shopify::Model::Item";
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
-	"handle" => new WWW::Shopify::Field::String(),
+	"handle" => new WWW::Shopify::Field::String::Handle(),
 	"title" => new WWW::Shopify::Field::String(),
 	"id" => new WWW::Shopify::Field::Identifier(),
 #	"default" => new WWW::Shopify::Field::Boolean(),

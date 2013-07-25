@@ -19,7 +19,7 @@ BEGIN { $fields = {
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"authorization" => new WWW::Shopify::Field::String(),
 	"gateway" => new WWW::Shopify::Field::String(),
-	"order_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Order')};
+	"order_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Order')};
 }
 sub creation_minimal { return qw(path target); }
 sub creation_filled { return qw(id created_at); }

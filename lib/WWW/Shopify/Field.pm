@@ -104,7 +104,7 @@ sub generate($) { return rand() < 0.5 ? "USD" : "CAD"; }
 package WWW::Shopify::Field::Money;
 use parent 'WWW::Shopify::Field';
 use String::Numeric qw(is_float);
-sub sql_type { return "decimal"; }
+sub sql_type { return "decimal(10,2)"; }
 sub generate($) { return sprintf("%.2f", rand(10000)); }
 sub validate($) { return undef unless $_[1] =~ m/\s*\$?\s*$/; return is_float($`); }
 

@@ -8,9 +8,9 @@ use parent 'WWW::Shopify::Model::NestedItem';
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
-	"column" => new WWW::Shopify::Field::String::Words(1),
-	"relation" => new WWW::Shopify::Field::String("(equals|starts_with)"),
-	"condition" => new WWW::Shopify::Field::String::Words(2)
+	"column" => new WWW::Shopify::Field::String::Enum(["title", "type", "vendor", "tag", "weight", "variant_title", "variant_compare_at_price", "variant_inventory"]),
+	"relation" => new WWW::Shopify::Field::String::Enum(["equals", "greater_than", "less_than", "starts_with", "ends_with", "contains"]),
+	"condition" => new WWW::Shopify::Field::String(),
 }; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;

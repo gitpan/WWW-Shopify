@@ -12,12 +12,14 @@ __PACKAGE__->table('shopify_themes_assets');
 __PACKAGE__->add_columns(
 	"theme_id", { data_type => 'bigint' },
 	"attachment", { data_type => 'TEXT', is_nullable => '1' },
+	"src", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"source_key", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"value", { data_type => 'TEXT', is_nullable => '1' },
 	"public_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"size", { data_type => 'INT', is_nullable => '1' },
 	"key", { data_type => 'VARCHAR(255)', is_nullable => '0' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"content_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"shop_id", { data_type => "INT" }
 );
