@@ -54,7 +54,7 @@ BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); 
 
 my %api_recycle_times = ();
 
-sub new($$) {
+sub new {
 	my ($package, $dbschema, $shop) = @_;
 	my $self = bless {
 		_db => $dbschema,
@@ -85,7 +85,7 @@ sub associate {
 		if (ref($shop)) {
 			die ref($shop) unless ref($shop) =~ m/Model::.*Shop$/;
 			$self->{_associatedShop} = $shop;
-			$api_recycle_times{$shop->id} = {calls => 0, recycled => DateTime->now} if !exists $api_recycle_times{$shop->id};
+			$api_recycle_times{$shop->id} = {calls => 0, recycled => time} if !exists $api_recycle_times{$shop->id};
 		}
 		else {
 			$self->associate($self->{_db}->resultset('Model::Shop')->find({myshopify_domain => $shop}));
@@ -202,7 +202,12 @@ sub generate_class {
 	push(@{$ids->{$package}}, $id);
 	# Set parent ID.
 	my $parent_variable = $object->parent_variable;
-	$object->$parent_variable($parent->id) if $parent_variable && ref($parent) !~ m/Shop$/;
+	if ($parent_variable && ((!$package->parent && ref($parent) !~ m/Shop$/) || $package->parent)) {
+		my $parent_id = $parent->id;
+		my @ids = @{$ids->{$package->parent}};
+		$parent_id = $ids[int(rand(int(@ids)))] if (ref($parent) ne $package->parent);
+		$object->$parent_variable($parent_id);
+	}
 
 	# If we're not a shop and we don't have a parent, we have a shop_id field.
 	if ($package->has_shop_field) {
@@ -255,19 +260,20 @@ sub generate_class {
 
 sub check_increment_calls {
 	my ($self) = @_;
-	my $duration = DateTime->now->subtract_datetime($api_recycle_times{$self->associate->id}->{recycled}->clone);
-	if ($duration->in_units('seconds') >= WWW::Shopify->CALL_LIMIT_REFRESH) {
+	my $duration = time - $api_recycle_times{$self->associate->id}->{recycled};
+	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
+	if ($duration >= WWW::Shopify->CALL_LIMIT_REFRESH) {
 		$api_recycle_times{$self->associate->id}->{calls} = 0;
-		$api_recycle_times{$self->associate->id}->{recycled} = DateTime->now;
+		$api_recycle_times{$self->associate->id}->{recycled} = time;
 	}
 	my $api_calls = $api_recycle_times{$self->associate->id}->{calls};
-	die new WWW::Shopify::Exception::CallLimit() if $api_calls == WWW::Shopify->CALL_LIMIT_MAX;
+	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == WWW::Shopify->CALL_LIMIT_MAX;
 	$self->api_calls($api_calls + 1);
 	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
 }
 
-use Sys::CPU;
-use threads;
+#use Sys::CPU;
+#use threads;
 my $internal_range = 1000000;
 use List::Util qw(min);
 use List::MoreUtils qw(part);
@@ -277,9 +283,10 @@ sub generate {
 	# Take at least 5 shops.
 	my $shop_count = $items{'WWW::Shopify::Model::Shop'};
 	$shop_count = 5 unless defined $shop_count;
-	my $cpu_count = min(Sys::CPU::cpu_count(), $shop_count);
-	$cpu_count = min($ENV{'CPU'}, $cpu_count) if $ENV{'CPU'};
-	$cpu_count = 1 unless $ENV{'CPU'};
+	#my $cpu_count = min(Sys::CPU::cpu_count(), $shop_count);
+	#$cpu_count = min($ENV{'CPU'}, $cpu_count) if $ENV{'CPU'};
+	#$cpu_count = 1 unless $ENV{'CPU'};
+	my $cpu_count = 1;
 	print STDERR "Beginning generation of $shop_count shops on $cpu_count threads...\n";
 	my $i = 0;
 	my @partitions = part { $i++ % $cpu_count } 1..$shop_count;
@@ -304,13 +311,13 @@ sub generate {
 			print STDERR "====== SHOP FINISHED =======\n";
 		}
 	}
-	if ($cpu_count > 1) {
-		my @threads = map { threads->create('generate_thread', $self, $partitions[$_], \%items) } (1..$cpu_count);
-		$_->join() for (@threads);
-	}
-	else {
+	#if ($cpu_count > 1) {
+		#my @threads = map { threads->create('generate_thread', $self, $partitions[$_], \%items) } (1..$cpu_count);
+		#$_->join() for (@threads);
+	#}
+	#else {
 		generate_thread($self, $partitions[0], \%items);
-	}
+	#}
 }
 
 sub transform_name($) {
@@ -393,6 +400,8 @@ sub get_all_limit {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);	
 	return $self->get_shop if $package->is_shop;
+
+	$self->resolve_trailing_url($package, "get", $specs->{parent});
 	
 	my @return;
 	my $rs = undef;
@@ -422,6 +431,8 @@ sub search {
 	die new WWW::Shopify::Exception("Unable to search $package; it is not marked as searchable in Shopify's API.") unless $package->searchable;
 	die new WWW::Shopify::Exception("Must have a query to search.") unless $specs && $specs->{query};
 	$self->validate_item($package);
+	$self->resolve_trailing_url($package, "get", $specs->{parent});
+
 	my @criteria = split(/\s+/, $specs->{query});
 	my %values = map { my @inner = split(/:/, $_); $inner[0] => $inner[1] } @criteria;
 	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), map { $_ => { like => '%' . $values{$_} . '%' } } keys(%values) });
@@ -442,6 +453,7 @@ sub get_shop($) {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$self->check_increment_calls;
+
 	my $obj = $self->{_mapper}->to_shopify($self->associate());
 	$obj->associate($self);
 	return $self->filter_gettable($obj);
@@ -453,6 +465,8 @@ sub get_count {
 	$self->check_increment_calls;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
+
+	$self->resolve_trailing_url($package, "get", $specs->{parent});
 
 	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
 	$rs = $self->generate_conditions($package, $specs, $rs);
@@ -466,6 +480,9 @@ sub get {
 	$self->check_increment_calls;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
+	
+	$self->resolve_trailing_url($package, "get", $specs->{parent});
+
 	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), 'me.id' => $id });
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	my $row = $rs->first;
@@ -497,6 +514,8 @@ sub create {
 	my @missing = grep { !defined $item->{$_} } $item->creation_minimal;
 	die "Missing minimal creation member(s) " . join(", ", @missing) . "." if @missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
+
+	$self->resolve_trailing_url($item, "create", $item->associated_parent);
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 
@@ -561,6 +580,8 @@ sub update {
 	$self->validate_item(ref($item));
 	$self->check_increment_calls;
 
+	$self->resolve_trailing_url($item, "update", $item->associated_parent);
+
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	$dbixgroup->update;
 	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents);
@@ -576,6 +597,8 @@ sub delete {
 	$self->validate_item(ref($item));
 	die new WWW::Shopify::Exception("Class in deletion must be not null, and must be a blessed reference to a model object: " . ref($item)) unless ref($item) =~ m/Model/;
 	$self->check_increment_calls;
+
+	$self->resolve_trailing_url($item, "delete", $item->associated_parent);
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	die new WWW::Shopify::Exception($item->singular . " with id " . $item->id . " does not exist.") unless $dbixgroup->contents->in_storage;
@@ -599,6 +622,8 @@ sub activate {
 	$self->check_increment_calls;
 	$self->validate_item(ref($class));
 
+	$self->resolve_trailing_url($class, "activate", $class->associated_parent);
+
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
 	die new WWW::Shopify::Exception("Unable to find charge with id: " . $object->id()) unless defined $object;
 	$object->status("active");
@@ -616,6 +641,8 @@ sub disable {
 	$self->check_increment_calls;
 	$self->validate_item(ref($class));
 
+	$self->resolve_trailing_url($class, "disable", $class->associated_parent);
+
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });
 	die new WWW::Shopify::Exception("Unable to find discount code with id: " . $object->id) unless defined $object;
 	$object->status("disabled");
@@ -632,6 +659,8 @@ sub enable {
 	die new WWW::Shopify::Exception(ref($class) . " requires you to login with an admin account.") if $class->needs_login && !$self->logged_in_admin;
 	$self->check_increment_calls;
 	$self->validate_item(ref($class));
+
+	$self->resolve_trailing_url($class, "enable", $class->associated_parent);
 
 	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id });
 	die new WWW::Shopify::Exception("Unable to find discount code with id: " . $object->id) unless defined $object;

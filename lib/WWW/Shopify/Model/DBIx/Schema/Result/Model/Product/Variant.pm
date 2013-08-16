@@ -30,7 +30,7 @@ __PACKAGE__->add_columns(
 	"fufillment_service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"requires_shipping", { data_type => 'BOOL', is_nullable => '1' },
 	"product_id", { data_type => 'BIGINT' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

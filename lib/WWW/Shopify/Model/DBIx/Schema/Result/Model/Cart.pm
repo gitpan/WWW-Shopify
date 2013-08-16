@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

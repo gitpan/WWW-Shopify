@@ -22,7 +22,7 @@ __PACKAGE__->add_columns(
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"body_html", { data_type => 'TEXT', is_nullable => '1' },
 	"vendor", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

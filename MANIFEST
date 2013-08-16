@@ -51,6 +51,8 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/APIClient.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionMetafield.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ProductSearchEngine.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ArticleMetafield.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Event.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Page.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Shop.pm
@@ -82,6 +84,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Theme.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Cart.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Address.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldVariant.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Comment.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerMetafield.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/BlogMetafield.pm
@@ -89,12 +92,14 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Product.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ApplicationCharge.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldProduct.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/MetafieldPage.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CarrierService.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Asset.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollection.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/AddressCustomer.pm
 lib/WWW/Shopify/Model/DBIx/Schema.pm
 lib/WWW/Shopify/Model/ProductSearchEngine.pm
 lib/WWW/Shopify/Model/Transaction.pm
+lib/WWW/Shopify/Model/Event.pm
 lib/WWW/Shopify/Model/Page.pm
 lib/WWW/Shopify/Model/CustomCollection.pm
 lib/WWW/Shopify/Model/NestedItem.pm
@@ -126,13 +131,14 @@ lib/WWW/Shopify/Model/Order/Fulfillment/Receipt.pm
 lib/WWW/Shopify/Model/Theme.pm
 lib/WWW/Shopify/Model/Cart.pm
 lib/WWW/Shopify/Model/Address.pm
+lib/WWW/Shopify/Model/Comment.pm
 lib/WWW/Shopify/Model/Metafield.pm
 lib/WWW/Shopify/Model/Item.pm
 lib/WWW/Shopify/Model/Product.pm
 lib/WWW/Shopify/Model/ApplicationCharge.pm
+lib/WWW/Shopify/Model/CarrierService.pm
 lib/WWW/Shopify/Model/Asset.pm
 lib/WWW/Shopify/Model/SmartCollection.pm
-
 scripts/dbix.pl
 META.yml
 META.json

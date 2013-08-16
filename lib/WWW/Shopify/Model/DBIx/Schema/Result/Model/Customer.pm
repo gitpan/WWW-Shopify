@@ -28,7 +28,7 @@ __PACKAGE__->add_columns(
 	"first_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"total_spent", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"last_order_id", { data_type => 'BIGINT', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

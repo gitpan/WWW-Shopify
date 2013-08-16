@@ -21,7 +21,7 @@ __PACKAGE__->add_columns(
 	"content_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('key');
 

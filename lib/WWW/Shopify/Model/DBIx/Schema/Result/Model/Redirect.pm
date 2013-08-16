@@ -13,7 +13,7 @@ __PACKAGE__->add_columns(
 	"target", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"path", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

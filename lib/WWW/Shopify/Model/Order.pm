@@ -74,6 +74,12 @@ sub actions { return qw(open close cancel); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(note note_attributes email buyer_accepts_marketing); };
 
+sub status {
+	return "cancelled" if $_[0]->cancelled_at;
+	return "closed" if $_[0]->closed_at;
+	return "open";
+}
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

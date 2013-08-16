@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.993';
+our $VERSION = '0.994';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -142,8 +142,8 @@ sub translate_model($) {
 
 use constant {
 	PULLING_ITEM_LIMIT => 250,
-	CALL_LIMIT_REFRESH => (60*60*5),
-	CALL_LIMIT_MAX => 500
+	CALL_LIMIT_REFRESH => (60*5),
+	CALL_LIMIT_MAX => 500,
 };
 
 sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
@@ -398,6 +398,10 @@ sub enable { return $_[0]->custom_action($_[1], "enable"); }
 sub open { return $_[0]->custom_action($_[1], "open"); }
 sub close { return $_[0]->custom_action($_[1], "close"); }
 sub cancel { return $_[0]->custom_action($_[1], "cancel"); }
+sub approve { return $_[0]->custom_action($_[1], "approve"); }
+sub remove { return $_[0]->custom_action($_[1], "remove"); }
+sub spam { return $_[0]->custom_action($_[1], "spam"); }
+sub not_spam { return $_[0]->custom_action($_[1], "not_spam"); }
 
 =head2 login_admin($self, $email, $password)
 
@@ -537,7 +541,7 @@ Calculates the webhook_signature based off the shared secret and request body pa
 
 =cut
 
-=head2 verify_webhook($shared_Secret, $request_body)
+=head2 verify_webhook($shared_secret, $request_body)
 
 Shopify webhook authentication. ALMOST the same as login authentication, but, of course, because this is shopify they've got a different system. 'Cause you know, one's not good enough.
 

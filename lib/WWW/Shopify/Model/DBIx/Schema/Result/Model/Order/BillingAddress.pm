@@ -26,7 +26,7 @@ __PACKAGE__->add_columns(
 	"zip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"address1", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"first_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

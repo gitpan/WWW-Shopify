@@ -23,7 +23,7 @@ __PACKAGE__->add_columns(
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"usage_limit", { data_type => 'INT', is_nullable => '1' },
 	"applies_to_id", { data_type => 'BIGINT', is_nullable => '1' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 

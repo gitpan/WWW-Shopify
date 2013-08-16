@@ -238,7 +238,7 @@ sub generate_dbix {
 			grep { $_ =~ m/Address/i || (!$_->is_nested && !$_->is_shop && $_ !~ m/metafield/i) } @{$self->{namespace}};
 	}
 	elsif ($package->has_shop_field) {
-		push(@columns, "\"shop_id\", { data_type => \"INT\" }");
+		push(@columns, "\"shop_id\", { data_type => \"BIGINT\" }");
 		push(@shop_relations, "__PACKAGE__->belongs_to(shop => '" . $self->package_prefix . "::Model::Shop', 'shop_id');");
 	}
 

@@ -9,13 +9,14 @@ package WWW::Shopify::Exception;
 use overload 
 	'fallback' => 1,
 	'""' => sub { 
-		return "Error: " . $_[0]->error->decoded_content . "\n" . $_[0]->stack if $_[0]->error && ref($_[0]->error) && ref($_[0]->error) eq "HTTP::Response";
-		return "Error: " . $_[0]->error . "\n" . $_[0]->stack;
+		my ($exception) = @_;
+		return "Error: HTTP " . $exception->error->code . " : " . $exception->error->message . "\n" . $exception->error->decoded_content . "\n" . $exception->stack if $exception->error && ref($exception->error) && ref($exception->error) eq "HTTP::Response";
+		return "Error: " . $exception->error . "\n" . $exception->stack;
 	};
 # Generic constructor; class is blessed with the package that new specifies, and contains a hash specified inside the parentheses of a new call.
 # Example: new WWW::Shopify::Exception('try' => 'catch'); $_[0] is 'WWW::Shopify::Exception', $_[1] is {'try' => 'catch'}.
 # The object will be of type WWW::Shopify::Exception, and have the contents of {'try' => 'catch'}.
-sub new($$) { return bless {'error' => $_[1] ? $_[1] : $_[0]->default_error, 'stack' => Devel::StackTrace->new->as_string, extra => $_[2]}, $_[0]; }
+sub new { return bless {'error' => $_[1] ? $_[1] : $_[0]->default_error, 'stack' => Devel::StackTrace->new, extra => $_[2]}, $_[0]; }
 sub extra { return $_[0]->{extra}; }
 sub error { return $_[0]->{error}; }
 sub stack { return $_[0]->{stack}; }

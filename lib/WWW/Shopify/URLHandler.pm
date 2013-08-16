@@ -29,7 +29,7 @@ sub get_url($$@) {
 	my $response = $self->parent->ua->request($request);
 	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
 	if (!$response->is_success) {
-		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
+		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 429;
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception::NotFound($response) if $response->code() == 404;
 		die new WWW::Shopify::Exception($response);
@@ -53,7 +53,7 @@ sub use_url($$$$) {
 	my $response = $self->parent->ua->request($request);
 	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
 	if (!$response->is_success) {
-		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 503;
+		die new WWW::Shopify::Exception::CallLimit($response) if $response->code() == 429;
 		die new WWW::Shopify::Exception::InvalidKey($response) if $response->code() == 401;
 		die new WWW::Shopify::Exception($response);
 	}

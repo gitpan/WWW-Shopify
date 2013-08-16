@@ -8,7 +8,6 @@ use WWW::Shopify;
 package WWW::Shopify::Model::Article;
 use parent 'WWW::Shopify::Model::Item';
 
-sub parent { return "WWW::Shopify::Model::Blog" }
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
 	"author" => new WWW::Shopify::Field::String::Name(),
@@ -21,7 +20,6 @@ BEGIN { $fields = {
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"user_id" => new WWW::Shopify::Field::Int(),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"metafields" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Blog'),
 	"blog_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Blog'),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
@@ -40,6 +38,7 @@ BEGIN { $queries = {
 }; }
 
 sub has_metafields { return 1; }
+sub parent { return "WWW::Shopify::Model::Blog" }
 sub creation_minimal { return qw(title); }
 sub update_fields { return qw(author body_html summary_html published_at tags title); }
 

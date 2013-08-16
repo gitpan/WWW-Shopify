@@ -18,7 +18,7 @@ __PACKAGE__->add_columns(
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"order_id", { data_type => 'BIGINT' },
-	"shop_id", { data_type => "INT" }
+	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
 
