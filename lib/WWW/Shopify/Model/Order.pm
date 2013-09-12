@@ -61,8 +61,8 @@ BEGIN { $queries = {
 	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
 	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
 	status => new WWW::Shopify::Query::Enum('status', ['open', 'closed', 'cancelled', 'any']),
-	financial_status => new WWW::Shopify::Query::Match('financial_status'),
-	fulfillment_status => new WWW::Shopify::Query::Match('fulfillment_status'),
+	financial_status => new WWW::Shopify::Query::Enum('financial_status', ['authorized', 'pending', 'paid', 'partially_paid', 'abandoned', 'refunded', 'voided', 'any']),
+	fulfillment_status => new WWW::Shopify::Query::Enum('fulfillment_status', ['shipped', 'partial', 'unshipped', 'any']),
 	since_id => new WWW::Shopify::Query::LowerBound('id')
 }; }
 

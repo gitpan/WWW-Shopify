@@ -17,6 +17,7 @@ BEGIN { $fields = {
 			orders/create orders/updated orders/paid orders/cancelled orders/fulfilled orders/partially_fulfilled
 			app/uninstalled customer_groups/create customer_groups/update customer_groups/delete products/create
 			products/update products/delete collections/create collections/update collections/delete carts/create carts/update
+			shop/update
 		)
 	),
 	"id" => new WWW::Shopify::Field::Identifier(),

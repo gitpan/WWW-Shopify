@@ -284,11 +284,19 @@ sub associate { $_[0]->{associated_sa} = $_[1] if $_[1]; return $_[0]->{associat
 
 =head2 associate_parent($self)
 
-Returns the parent associated with this object. If we're a variant, it'll return the parent product (if it had access to it at one point; it usually does)
+Returns the parent associated with this object. If we're a variant, it'll return the parent product (if it had access to it at one point; it usually does). Weak reference.
 
 =cut
 
-sub associated_parent { $_[0]->{associated_parent} = $_[1] if $_[1]; return $_[0]->{associated_parent}; }
+
+use Scalar::Util qw(weaken);
+sub associated_parent { 
+	if (defined $_[1]) { 
+		$_[0]->{associated_parent} = $_[1];
+		weaken($_[0]->{associated_parent});
+	}
+	return $_[0]->{associated_parent};
+}
 
 =head2 metafields($self)
 
@@ -300,6 +308,7 @@ If this is the case, call the method below.
 
 =cut
 
+use Data::Dumper;
 sub metafields {
 	my $sa = $_[0]->associate;
 	if (!defined $_[0]->{metafields}) {
@@ -359,7 +368,7 @@ sub from_json {
 				}
 				elsif ($ref->{$_}->is_one && $ref->{$_}->is_own) {
 					$self->{$_} = $package->from_json($json->{$_}, $associated);
-					$self->{$_}->associated_parent($self);
+					$self->{$_}->associated_parent($self) if $self->{$_};
 				}
 				elsif ($ref->{$_}->is_one) {
 					$self->{$_} = $json->{$_};
@@ -373,6 +382,7 @@ sub from_json {
 			}
 		}
 	}
+	return undef unless $json;
 
 	my $self = $package->new();
 	$self->associate($associated) if ($associated);

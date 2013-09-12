@@ -10,7 +10,12 @@ use overload
 	'fallback' => 1,
 	'""' => sub { 
 		my ($exception) = @_;
-		return "Error: HTTP " . $exception->error->code . " : " . $exception->error->message . "\n" . $exception->error->decoded_content . "\n" . $exception->stack if $exception->error && ref($exception->error) && ref($exception->error) eq "HTTP::Response";
+		if ($exception->error && ref($exception->error) && ref($exception->error) eq "HTTP::Response") {
+			my $code = $exception->error->code;
+			my $message = $exception->error->message ? $exception->error->message : "N/A";
+			my $content = $exception->error->decoded_content ? $exception->error->decoded_content : "N/A";
+			return "Error: HTTP $code : $message\n$content\n" . $exception->stack;
+		}
 		return "Error: " . $exception->error . "\n" . $exception->stack;
 	};
 # Generic constructor; class is blessed with the package that new specifies, and contains a hash specified inside the parentheses of a new call.

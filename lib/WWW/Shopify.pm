@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.994';
+our $VERSION = '0.995';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -169,7 +169,8 @@ sub get_all_limit {
 	return () if ($specs->{limit} == 0);
 	return $self->get_shop if $package->is_shop;
 	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json", $specs);
-	return map { my $object = $package->from_json($_, $self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
+	my @return = map { my $object = $package->from_json($_, $self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
+	return @return;
 }
 
 =head2 get_all($self, $package, $filters)
@@ -271,6 +272,8 @@ sub get {
 		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
 	}
 	my $class = $package->from_json($decoded->{$package->singular()}, $self);
+	# Wow, this is straight up stupid that sometimes we don't get a 404.
+	die new WWW::Shopify::Exception::NotFound() unless $class;
 	$class->associated_parent($specs->{parent});
 	return $class;
 }

@@ -55,18 +55,21 @@ BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); 
 my %api_recycle_times = ();
 
 sub new {
-	my ($package, $dbschema, $shop) = @_;
+	my ($package, $dbschema, $shop, $access_token) = @_;
 	my $self = bless {
 		_db => $dbschema,
 		_associatedShop => undef,
 		_mapper => new WWW::Shopify::Common::DBIx(),
 		_callback => undef,
+		_access_token => $access_token
 	}, $package;
 	$self->associate($shop) if $shop;
 	return $self;
 }
 
 sub callback { $_[0]->{_callback} = $_[1] if defined $_[1]; return $_[0]->{_callback}; }
+
+sub access_token { $_[0]->{_access_token} = $_[1] if defined $_[1]; return $_[0]->{_access_token}; }
 
 =head2 ASSOCIATION METHODS
 
@@ -205,7 +208,10 @@ sub generate_class {
 	if ($parent_variable && ((!$package->parent && ref($parent) !~ m/Shop$/) || $package->parent)) {
 		my $parent_id = $parent->id;
 		my @ids = @{$ids->{$package->parent}};
-		$parent_id = $ids[int(rand(int(@ids)))] if (ref($parent) ne $package->parent);
+		# If we have something that's basically not a shop.
+		if ($parent->represents ne $package->parent) {
+			$parent_id = $ids[int(rand(int(@ids)))];
+		}
 		$object->$parent_variable($parent_id);
 	}
 
@@ -260,14 +266,17 @@ sub generate_class {
 
 sub check_increment_calls {
 	my ($self) = @_;
+	die new WWW::Shopify::Exception::InvalidKey() unless $self->access_token;
 	my $duration = time - $api_recycle_times{$self->associate->id}->{recycled};
 	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
-	if ($duration >= WWW::Shopify->CALL_LIMIT_REFRESH) {
+	my $call_limit_refresh = $ENV{'SHOPIFY_CALL_REFRESH'} ? $ENV{'SHOPIFY_CALL_REFRESH'} : WWW::Shopify->CALL_LIMIT_REFRESH;
+	my $call_limit_max = $ENV{'SHOPIFY_CALL_MAX'} ? $ENV{'SHOPIFY_CALL_MAX'} : WWW::Shopify->CALL_LIMIT_MAX;
+	if ($duration >= $call_limit_refresh) {
 		$api_recycle_times{$self->associate->id}->{calls} = 0;
 		$api_recycle_times{$self->associate->id}->{recycled} = time;
 	}
 	my $api_calls = $api_recycle_times{$self->associate->id}->{calls};
-	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == WWW::Shopify->CALL_LIMIT_MAX;
+	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == $call_limit_max;
 	$self->api_calls($api_calls + 1);
 	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
 }
@@ -421,7 +430,7 @@ sub get_all_limit {
 	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
 	$self->check_increment_calls for (1..$call_count);
 	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
-	return map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
+	return map { my $obj = $self->{_mapper}->to_shopify($_, $self); $obj->associated_parent($specs->{parent}); $self->filter_gettable($obj) } @return;
 }
 
 sub search {
@@ -443,19 +452,18 @@ sub search {
 	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
 	$self->check_increment_calls for (1..$call_count);
 
-	@return = map { my $obj = $self->{_mapper}->to_shopify($_); $obj->associate($self); $self->filter_gettable($obj) } @return;
+	@return = map { my $obj = $self->{_mapper}->to_shopify($_, $self); $obj->associate($self); $self->filter_gettable($obj) } @return;
 	return @return if wantarray;
 	return $return[0] if int(@return) > 0;
 	return undef;
 }
 
-sub get_shop($) {
+sub get_shop {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$self->check_increment_calls;
 
-	my $obj = $self->{_mapper}->to_shopify($self->associate());
-	$obj->associate($self);
+	my $obj = $self->{_mapper}->to_shopify($self->associate(), $self);
 	return $self->filter_gettable($obj);
 }
 
@@ -470,6 +478,18 @@ sub get_count {
 
 	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
 	$rs = $self->generate_conditions($package, $specs, $rs);
+	
+	if ($package =~ m/Metafield/ && $specs->{parent}) {
+		my $parent = $self->{_mapper}->from_shopify($self->{_db}, $specs->{parent}, $self->associate->id)->contents;
+		$rs = $parent->metafields->search({ 'metafield.shop_id' => $self->associate->id() });
+	}
+	else {
+		$rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id() });
+		if ($package->get_through_parent) {
+			$rs = $rs->search({ 'me.' . $self->{_mapper}->transform_package($package)->parent_variable => $specs->{parent}->id });
+		}
+	}
+	
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	return $rs->count;
 }
@@ -487,7 +507,7 @@ sub get {
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	my $row = $rs->first;
 	return undef unless $row;
-	my $obj = $self->{_mapper}->to_shopify($row);
+	my $obj = $self->{_mapper}->to_shopify($row, $self);
 	$obj->associate($self) if $obj;
 	return $self->filter_gettable($obj);
 }
@@ -563,7 +583,7 @@ sub create {
 		else {
 			$dbixgroup->insert;
 		}
-		$return = $self->{_mapper}->to_shopify($dbixgroup->contents);
+		$return = $self->{_mapper}->to_shopify($dbixgroup->contents, $self);
 		$return->associate($self);
 	};
 	if ($@) {
@@ -584,7 +604,7 @@ sub update {
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
 	$dbixgroup->update;
-	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents);
+	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents, $self);
 	$obj->associate($self);
 	$self->callback->webhook($self->associate, $item, "update") if $self->callback && $item->throws_update_webhooks;
 	return $obj;
@@ -629,7 +649,7 @@ sub activate {
 	$object->status("active");
 	$object->update;
 
-	my $obj = $self->{_mapper}->to_shopify($object);
+	my $obj = $self->{_mapper}->to_shopify($object, $self);
 	$obj->associate($self);
 	return $obj;
 }
@@ -648,7 +668,7 @@ sub disable {
 	$object->status("disabled");
 	$object->update;
 
-	my $obj = $self->{_mapper}->to_shopify($object);
+	my $obj = $self->{_mapper}->to_shopify($object, $self);
 	$obj->associate($self);
 	return $obj;
 }
@@ -667,7 +687,7 @@ sub enable {
 	$object->status("enabled");
 	$object->update;
 
-	my $obj = $self->{_mapper}->to_shopify($object);
+	my $obj = $self->{_mapper}->to_shopify($object, $self);
 	$obj->associate($self);
 	return $obj;
 }

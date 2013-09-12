@@ -6,8 +6,14 @@ use warnings;
 package WWW::Shopify::URLHandler;
 use JSON;
 use Data::Dumper;
+use Scalar::Util qw(weaken);
 
-sub new($) { return bless {_parent => $_[1]}, $_[0]; }
+sub new {
+	my ($package, $parent) = @_;
+	my $self = bless {_parent => $parent}, $package;
+	weaken($self->{_parent});
+	return $self;
+}
 sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent}; }
 
 sub get_url($$@) {
@@ -40,7 +46,7 @@ sub get_url($$@) {
 		$self->parent->api_calls($1);
 	}
 	my $content = $response->decoded_content;
-	my $decoded = JSON::decode_json($content);
+	my $decoded = JSON->new->utf8(0)->decode($content);
 	return ($decoded, $response);
 }
 
@@ -62,7 +68,7 @@ sub use_url($$$$) {
 		die new WWW::Shopify::Exception("Unrecognized limit.") unless $limit =~ m/(\d+)\/\d+/;
 		$self->parent->api_calls($1);
 	}
-	my $decoded = (length($response->decoded_content) >= 2) ? JSON::decode_json($response->decoded_content) : undef;
+	my $decoded = (length($response->decoded_content) >= 2) ? JSON->new->utf8(0)->decode($response->decoded_content) : undef;
 	return ($decoded, $response);
 }
 sub put_url($$$) { return shift->use_url("PUT", @_); }

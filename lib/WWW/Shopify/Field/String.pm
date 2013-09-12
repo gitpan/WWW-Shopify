@@ -22,6 +22,9 @@ sub generate($) {
 
 package WWW::Shopify::Field::String::Password;
 use parent 'WWW::Shopify::Field::String';
+sub generate($) {
+	return ::random_regex('\w{1,40}');
+}
 
 package WWW::Shopify::Field::String::Words;
 use parent 'WWW::Shopify::Field::String';

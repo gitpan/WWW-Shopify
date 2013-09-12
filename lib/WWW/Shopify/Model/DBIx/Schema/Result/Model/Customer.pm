@@ -25,6 +25,7 @@ __PACKAGE__->add_columns(
 	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"tags", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"image_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"first_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"total_spent", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"last_order_id", { data_type => 'BIGINT', is_nullable => '1' },

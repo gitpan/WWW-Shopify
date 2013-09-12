@@ -279,7 +279,7 @@ sub from_shopify {
 		# If we have a class relationship.
 		if ($type->is_relation) {
 			return undef if $type->relation && !$self->in_namespace($type->relation);
-			if ($type->is_many()) {		
+			if ($type->is_many()) {	
 				return [] unless $data;
 				my $array = [map { $self->from_shopify($schema, $_, $shop_id); } @$data];
 				return $array;
@@ -307,11 +307,9 @@ sub from_shopify {
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
 	
-	# Anything that's many-many like metafields shouldn't set parent variables on themselves.
-	if ($shopifyObject->associated_parent && ref($shopifyObject) !~ m/Metafield$/) {
+	# Anything that's many-many like metafields shouldn't set parent variables on themselves. Or not.
+	if ($shopifyObject->associated_parent && ref($shopifyObject) !~ m/Metafield$/ && $dbObject->parent_variable) {
 		my $parent_variable = $dbObject->parent_variable;
-		die new WWW::Shopify::Exception("Can't convert " . ref($shopifyObject) . ", has a parent variable set, yet has no parent_variable in it's DBIx class.")
-			unless $parent_variable;
 		$dbObject->$parent_variable($shopifyObject->associated_parent->id);
 	}
 	elsif (!$shopifyObject->is_shop && $shop_id && !$shopifyObject->is_nested) {
@@ -339,27 +337,33 @@ sub from_shopify {
 
 sub to_shopify {
 	my $internal_to = sub {
-		my ($self, $type, $data) = @_;
+		my ($self, $type, $data, $shopifyObject, $test) = @_;
 		# If we have a class relationship.
 		if ($type->is_relation()) {
 			if ($type->is_db_has_many || $type->is_db_many_many) {
+				return undef if $type->relation =~ m/Metafield/;
 				return [] unless $data;
-				my $array = [map { $self->to_shopify($_); } $data->all()];
+				my $array = [map { my $object = $self->to_shopify($_, $test); $object->associated_parent($shopifyObject); $object } $data->all()];
 				return $array;
 			}
 			elsif ($type->is_own()) {
 				return {} unless $data;
-				return $self->to_shopify($data);
+				my $object = $self->to_shopify($data, $test);
+				$object->associated_parent($shopifyObject); 
+				return $object;
 			}
 			elsif ($type->is_reference()) {
 				return undef unless $data;
-				return $type->to_shopify($data);
+				return $type->to_shopify($data, $test);
 			}
 		}
+		# This seems confusing, but due to us storing our stuff in the database as Shopify stuff
+		# We're transferring TYPE from shopify, but SELF to shopify.
+		return $type->from_shopify($data) if ref($type) =~ m/timezone/i;
 		return $data;
 	};
 
-	my ($self, $dbObject) = @_;
+	my ($self, $dbObject, $test) = @_;
 	return undef unless $dbObject;
 	die new WWW::Shopify::Exception('Invalid object passed into to_shopify: ' . ref($dbObject) . '.') unless ref($dbObject) =~ m/Model::/;
 
@@ -367,9 +371,9 @@ sub to_shopify {
 	my $fields = $shopifyObject->fields();
 	foreach my $key (keys(%$fields)) {
 		my $data = $dbObject->$key();
-		$shopifyObject->{$key} = &$internal_to($self, $fields->{$key}, $data) if defined $data;
+		$shopifyObject->{$key} = &$internal_to($self, $fields->{$key}, $data, $shopifyObject, $test) if defined $data;
 	}
-
+	$shopifyObject->associate($test);
 	return $shopifyObject;
 }
 

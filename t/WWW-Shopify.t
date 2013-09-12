@@ -18,6 +18,7 @@ $db->deploy({ add_drop_table => 1 });
 $sa->generate('WWW::Shopify::Model::Shop' => 1, 'WWW::Shopify::Model::Product' => 5);
 
 $sa->associate_randomly;
+$sa->access_token("asdkjfhslkjdghlk");
 
 my @products = $sa->get_all('Product');
 cmp_ok(int(@products), '>', 0);

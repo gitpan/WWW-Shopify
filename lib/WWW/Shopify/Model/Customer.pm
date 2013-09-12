@@ -26,6 +26,7 @@ BEGIN { $fields = {
 	"last_order_name" => new WWW::Shopify::Field::String(),
 	"addresses" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Address', 0, 3),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
+	"image_url" => new WWW::Shopify::Field::String::URL(),
 	"send_email_invite" => new WWW::Shopify::Field::Boolean(),
 	"password" => new WWW::Shopify::Field::String::Password(),
 	"multipass_identifier" => new WWW::Shopify::Field::String(),

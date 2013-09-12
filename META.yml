@@ -6,7 +6,7 @@ build_requires: {}
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921'
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -19,7 +19,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.994
+    version: 0.995
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
     version: 0
@@ -577,9 +577,10 @@ requires:
   LWP::UserAgent: 6.04
   MIME::Base64: 3.13
   SQL::Translator: 0.11016
+  Scalar::Util: 0
   String::Numeric: 0.9
   String::Random: 0.22
   URI::Escape: 3.31
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.994
+version: 0.995

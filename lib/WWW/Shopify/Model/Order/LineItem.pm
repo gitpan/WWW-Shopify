@@ -21,6 +21,7 @@ BEGIN { $fields = {
 	#
 	"quantity" => new WWW::Shopify::Field::Int(1, 20),
 	"requires_shipping" => new WWW::Shopify::Field::Boolean(),
+	"product_exists" => new WWW::Shopify::Field::Boolean(),
 	"sku" => new WWW::Shopify::Field::String(),
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"variant_title" => new WWW::Shopify::Field::String::Words(1,3),
