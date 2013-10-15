@@ -148,6 +148,12 @@ sub get_parent_column_name {
 	return undef;
 }
 
+sub has_shop_field { 
+	my $package = ref($_[0]) ? ref($_[0]) : $_[0];
+	$package = $package->represents if $package =~ m/DBIx/;
+	return !$package->is_shop && (!$package->is_nested || $package =~ m/Address/);
+}
+
 sub generate_dbix {
 	my ($self, $package) = @_;
 
@@ -237,7 +243,7 @@ sub generate_dbix {
 		@shop_relations = map { "__PACKAGE__->has_many(" . $_->plural . " => '" . $self->transform_package($_)  . "', 'shop_id');" }
 			grep { $_ =~ m/Address/i || (!$_->is_nested && !$_->is_shop && $_ !~ m/metafield/i) } @{$self->{namespace}};
 	}
-	elsif ($package->has_shop_field) {
+	elsif (has_shop_field($package)) {
 		push(@columns, "\"shop_id\", { data_type => \"BIGINT\" }");
 		push(@shop_relations, "__PACKAGE__->belongs_to(shop => '" . $self->package_prefix . "::Model::Shop', 'shop_id');");
 	}
@@ -270,6 +276,7 @@ sub parent_variable { return " . ($parent_variable ? "'$parent_variable'" : "und
 " . $self->arbitrary_sql($package) . "
 1;";
 }
+
 
 use WWW::Shopify::Common::DBIxGroup;
 # Takes in a schema and a shopify object and maps it to a DBIx existence.
@@ -312,10 +319,10 @@ sub from_shopify {
 		my $parent_variable = $dbObject->parent_variable;
 		$dbObject->$parent_variable($shopifyObject->associated_parent->id);
 	}
-	elsif (!$shopifyObject->is_shop && $shop_id && !$shopifyObject->is_nested) {
+	if (has_shop_field($shopifyObject) && $shop_id) {
 		$dbObject->shop_id($shop_id);
 	}
-	else {
+	if ($shopifyObject->is_shop) {
 		$shop_id = $dbObject->id;
 	}
 

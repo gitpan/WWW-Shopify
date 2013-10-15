@@ -42,6 +42,9 @@ sub get_through_parent { return undef; }
 sub update_through_parent { return undef; } 
 sub delete_through_parent { return undef; }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

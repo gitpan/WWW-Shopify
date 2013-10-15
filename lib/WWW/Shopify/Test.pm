@@ -54,6 +54,10 @@ BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); 
 
 my %api_recycle_times = ();
 
+sub PULLING_ITEM_LIMIT { return $ENV{'SHOPIFY_PULLING_ITEM_LIMIT'} ? $ENV{'SHOPIFY_PULLING_ITEM_LIMIT'} : WWW::Shopify->PULLING_ITEM_LIMIT; }
+sub CALL_LIMIT_REFRESH { return $ENV{'SHOPIFY_CALL_REFRESH'} ? $ENV{'SHOPIFY_CALL_REFRESH'} : WWW::Shopify->CALL_LIMIT_REFRESH; }
+sub CALL_LIMIT_MAX { return $ENV{'SHOPIFY_CALL_MAX'} ? $ENV{'SHOPIFY_CALL_MAX'} : WWW::Shopify->CALL_LIMIT_MAX; }
+
 sub new {
 	my ($package, $dbschema, $shop, $access_token) = @_;
 	my $self = bless {
@@ -216,7 +220,7 @@ sub generate_class {
 	}
 
 	# If we're not a shop and we don't have a parent, we have a shop_id field.
-	if ($package->has_shop_field) {
+	if (WWW::Shopify::Common::DBIx::has_shop_field($object)) {
 		die new WWW::Shopify::Exception("Everything not a shop requires a parent.") unless $parent;
 		$object->shop_id((ref($parent) !~ m/Shop$/) ? $parent->shop_id : $parent->id);
 	}
@@ -264,13 +268,25 @@ sub generate_class {
 	return $object;
 }
 
+sub finalize_class {
+	my ($self, $object) = @_;
+	my $package = ref($object);
+	my %dispatch_table = (
+		
+	);
+	my $sub = $dispatch_table{$package};
+	$object = $sub->($object) if $sub;
+	return $object;
+}
+
+
 sub check_increment_calls {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception::InvalidKey() unless $self->access_token;
 	my $duration = time - $api_recycle_times{$self->associate->id}->{recycled};
 	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
-	my $call_limit_refresh = $ENV{'SHOPIFY_CALL_REFRESH'} ? $ENV{'SHOPIFY_CALL_REFRESH'} : WWW::Shopify->CALL_LIMIT_REFRESH;
-	my $call_limit_max = $ENV{'SHOPIFY_CALL_MAX'} ? $ENV{'SHOPIFY_CALL_MAX'} : WWW::Shopify->CALL_LIMIT_MAX;
+	my $call_limit_refresh = $self->CALL_LIMIT_REFRESH;
+	my $call_limit_max = $self->CALL_LIMIT_MAX;
 	if ($duration >= $call_limit_refresh) {
 		$api_recycle_times{$self->associate->id}->{calls} = 0;
 		$api_recycle_times{$self->associate->id}->{recycled} = time;
@@ -279,6 +295,11 @@ sub check_increment_calls {
 	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == $call_limit_max;
 	$self->api_calls($api_calls + 1);
 	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
+}
+
+sub check_scope {
+	my ($self, $package, $read_write) = @_;
+	return undef;
 }
 
 #use Sys::CPU;
@@ -313,7 +334,9 @@ sub generate {
 
 			while (int(keys(%counts)) > 0) {
 				foreach my $item (keys(%counts)) {
-					$self->generate_class($item, \%ids, $shop, [$min_range, $max_range]);
+					$self->{_db}->txn_do(sub {
+						$self->generate_class($item, \%ids, $shop, [$min_range, $max_range]);
+					});
 					delete $counts{$item} if (--$counts{$item} == 0);
 				}
 			}
@@ -472,6 +495,10 @@ sub get_count {
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$self->check_increment_calls;
 	$package = $self->translate_model($package);
+	
+	die new WWW::Shopify::Exception("Can't count $package.") unless $package->countable;
+	die new WWW::Shopify::Exception("Can't count $package unless has parent.") if $package->count_through_parent && !$specs->{parent};
+	
 	$self->validate_item($package);
 
 	$self->resolve_trailing_url($package, "get", $specs->{parent});
@@ -714,9 +741,10 @@ When the shop doesn't have an access_token, this is what you should be redirecti
 
 =cut
 
+use URI::Escape;
 sub authorize_url {
 	my ($self, $scope, $redirect) = (@_);
-	return "$redirect?shop=" . $self->associate->myshopify_domain;
+	return "/mock/admin/oauth/authorize?redirect_uri=" . uri_escape($redirect) . "&shop=" . $self->associate->myshopify_domain . "&scope=" . uri_escape(join(",", @$scope));
 }
 
 =head2 exchange_token(shared_secret, code)
@@ -737,6 +765,7 @@ sub exchange_token {
 		'client_secret' => $shared_secret,
 		'code' => $code
 	);
+	sleep 1;
 	return md5_hex($self->api_key . $self->shop_url);
 }
 

@@ -24,6 +24,9 @@ sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(role name); }
 
+sub read_scope { return "read_themes"; }
+sub write_scope { return "write_themes"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

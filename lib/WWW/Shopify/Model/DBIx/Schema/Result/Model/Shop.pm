@@ -49,6 +49,7 @@ __PACKAGE__->set_primary_key('id');
 __PACKAGE__->has_many(blogs => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Blog', 'shop_id');
 __PACKAGE__->has_many(api_clients => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::APIClient', 'shop_id');
 __PACKAGE__->has_many(application_charges => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::ApplicationCharge', 'shop_id');
+__PACKAGE__->has_many(countries => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Country', 'shop_id');
 __PACKAGE__->has_many(webhooks => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook', 'shop_id');
 __PACKAGE__->has_many(product_search_engines => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::ProductSearchEngine', 'shop_id');
 __PACKAGE__->has_many(redirects => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Redirect', 'shop_id');
@@ -65,6 +66,7 @@ __PACKAGE__->has_many(carrier_services => 'WWW::Shopify::Model::DBIx::Schema::Re
 __PACKAGE__->has_many(events => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Event', 'shop_id');
 __PACKAGE__->has_many(orders => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'shop_id');
 __PACKAGE__->has_many(smart_collections => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::SmartCollection', 'shop_id');
+__PACKAGE__->has_many(fulfillment_services => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentService', 'shop_id');
 __PACKAGE__->has_many(link_lists => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList', 'shop_id');
 __PACKAGE__->has_many(addresses => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Address', 'shop_id');
 __PACKAGE__->has_many(script_tags => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::ScriptTag', 'shop_id');

@@ -59,6 +59,9 @@ sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html); }
 sub throws_webhooks { return 1; }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

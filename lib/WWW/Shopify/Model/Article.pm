@@ -42,6 +42,9 @@ sub parent { return "WWW::Shopify::Model::Blog" }
 sub creation_minimal { return qw(title); }
 sub update_fields { return qw(author body_html summary_html published_at tags title); }
 
+sub read_scope { return "read_content"; }
+sub write_scope { return "write_content"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

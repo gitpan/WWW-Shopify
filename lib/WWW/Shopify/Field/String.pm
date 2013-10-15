@@ -8,7 +8,8 @@ use parent 'WWW::Shopify::Field';
 sub sql_type { return "varchar(255)"; }
 sub generate($) {
 	return $_[0]->{arguments}->[0] if int(@{$_[0]->{arguments}} > 0);
-	return join("", map { chr(int(rand()*10000+100)) } 1..40);
+	#return join("", map { chr(int(rand()*10000+100)) } 1..(rand(16)+1));
+	return join("-", map { lc($_) } ::rand_words(size => int(rand(2))+1));
 }
 
 package WWW::Shopify::Field::String::Regex;
@@ -154,7 +155,7 @@ package WWW::Shopify::Field::String::Hostname::Shopify;
 use parent 'WWW::Shopify::Field::String';
 
 sub generate($) {
-	return ::random_regex("[a-z\_0-9]{3,24}") . ".myshopify.com";
+	return lc(WWW::Shopify::Field::String::LastName->generate) . "-" . lc(WWW::Shopify::Field::String::LastName->generate) . ::random_regex("[0-9]{4}") . ".myshopify.com";
 }
 
 package WWW::Shopify::Field::String::IPAddress;
@@ -177,6 +178,34 @@ sub generate($) { return $_[0]->{arguments}->[0]($_[0]); }
 
 package WWW::Shopify::Field::String::HTML;
 use parent 'WWW::Shopify::Field::String';
+
+package WWW::Shopify::Field::String::Hex32;
+use parent 'WWW::Shopify::Field::String';
+
+sub generate {
+	return ::random_regex("[a-f0-9]{32}");
+}
+
+package WWW::Shopify::Field::String::ProvinceCode;
+use parent 'WWW::Shopify::Field::String';
+
+sub generate {
+	return ::random_regex("[A-Z]{2}");
+}
+
+package WWW::Shopify::Field::String::CountryCode;
+use parent 'WWW::Shopify::Field::String';
+
+sub generate {
+	return ::random_regex("[A-Z]{3}");
+}
+
+package WWW::Shopify::Field::String::Zip;
+use parent 'WWW::Shopify::Field::String';
+
+sub generate {
+	return ::random_regex("[A-Z]{5,6}");
+}
 
 1;
 

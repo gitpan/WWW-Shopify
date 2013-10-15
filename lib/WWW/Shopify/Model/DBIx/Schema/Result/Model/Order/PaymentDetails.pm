@@ -12,9 +12,9 @@ __PACKAGE__->table('shopify_orders_payment_details');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
 	"credit_card_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"credit_card_numer", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"avs_result_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"credit_card_bin", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"credit_card_number", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"cvv_result_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
 );

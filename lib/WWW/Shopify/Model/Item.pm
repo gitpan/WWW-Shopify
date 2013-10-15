@@ -238,8 +238,6 @@ sub throws_create_webhooks { return $_[0]->throws_webhooks; }
 sub throws_update_webhooks { return $_[0]->throws_webhooks; }
 sub throws_delete_webhooks { return $_[0]->throws_webhooks; }
 
-sub has_shop_field { return (!$_[0]->is_nested || !$_[0]->parent) && !$_[0]->is_shop }
-
 # Oh fucking WOW. WHAT THE FUCK. Variants, of course, delete directly with their id, and modify with it.
 # Metafields delete with their id, but modify through their parent. They also get through their parents.
 # Variants of course, get through their id directly. I'm at a loss for words. Why!? Article are different, yet again.
@@ -254,6 +252,7 @@ These tell you which objects have to go through their parent, and which don't. I
 
 sub get_all_through_parent { return defined $_[0]->parent; }
 sub get_through_parent { return defined $_[0]->parent; }
+sub count_through_parent { return $_[0]->get_all_through_parent; }
 sub create_through_parent { return defined $_[0]->parent; }
 sub update_through_parent { return defined $_[0]->parent; } 
 sub delete_through_parent { return defined $_[0]->parent; }
@@ -433,11 +432,7 @@ sub to_json($) {
 			$final->{$key} = $self->$key()->to_json() if ($fields->{$key}->is_one() && $fields->{$key}->is_own());
 		}
 		else {
-			$final->{$key} = $self->$key();
-			if ($final->{$key} && ref($final->{$key}) eq "DateTime") {
-				$final->{$key} = $final->{$key}->strftime('%Y-%m-%dT%H:%M:%S%z');
-				$final->{$key} =~ s/(\d\d)$/:$1/;
-			}
+			$final->{$key} = $fields->{$key}->to_shopify($self->$key);
 		}
 	}
 	return $final;
@@ -452,6 +447,9 @@ sub generate_accessors {
 		(map { "sub $_ { my \$sa = \$_[0]->associate; die \"Can't call a special action on an unassociated item.\" unless \$sa; return \$sa->$_(\$_[0]); }" } $_[0]->actions)
 	); 
 }
+
+sub read_scope { return undef; }
+sub write_scope { return undef; }
 
 =head1 SEE ALSO
 

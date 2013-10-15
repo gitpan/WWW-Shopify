@@ -22,6 +22,9 @@ BEGIN { $fields = {
 sub creation_minimal { return qw(name callback_url format service_discovery); }
 sub creation_filled { return qw(id active carrier_service_type); }
 
+sub read_scope { return "read_shipping"; }
+sub write_scope { return "write_shipping"; } 
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

@@ -32,6 +32,9 @@ sub throws_webhooks { return 1; }
 
 sub has_metafields { return 1; }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

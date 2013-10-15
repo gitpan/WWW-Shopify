@@ -25,6 +25,9 @@ sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(name query); }
 sub throws_webhooks { return 1; }
 
+sub read_scope { return "read_customers"; }
+sub write_scope { return "write_customers"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

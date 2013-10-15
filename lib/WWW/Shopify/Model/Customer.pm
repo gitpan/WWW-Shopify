@@ -44,6 +44,9 @@ sub throws_webhooks { return 1; }
 
 sub searchable($) { return 1; }
 
+sub read_scope { return "read_customers"; }
+sub write_scope { return "write_customers"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

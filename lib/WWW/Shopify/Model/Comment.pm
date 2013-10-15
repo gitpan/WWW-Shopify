@@ -53,6 +53,9 @@ sub actions { return qw(remove approve not_spam spam); }
 sub create_minimal { return qw(body author email ip blog_id article_id); }
 sub create_filled { return qw(body_html created_at id published_at status updated_at user_agent); }
 
+sub read_scope { return "read_content"; }
+sub write_scope { return "write_content"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

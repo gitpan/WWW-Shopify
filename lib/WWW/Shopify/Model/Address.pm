@@ -21,10 +21,10 @@ BEGIN { $fields = {
 	"longitude" => new WWW::Shopify::Field::Float(-180, 180),
 	"phone" => new WWW::Shopify::Field::String::Phone(),
 	"province" => new WWW::Shopify::Field::String::Words(1),
-	"zip" => new WWW::Shopify::Field::String("[A-Z][0-9][A-Z] [0-9][A-Z][0-9]"),
+	"zip" => new WWW::Shopify::Field::String::Zip(),
 	"name" => new WWW::Shopify::Field::String::Words(1, 3),
-	"country_code" => new WWW::Shopify::Field::String("[A-Z]{3}"),
-	"province_code" => new WWW::Shopify::Field::String("[A-Z]{2}"),
+	"country_code" => new WWW::Shopify::Field::String::CountryCode(),
+	"province_code" => new WWW::Shopify::Field::String::ProvinceCode(),
 	"id" => new WWW::Shopify::Field::Identifier()
 }; }
 sub plural { return 'addresses'; }

@@ -21,6 +21,9 @@ sub creation_minimal { return qw(event src); }
 sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 
+sub read_scope { return "read_script_tags"; }
+sub write_scope { return "write_script_tags"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

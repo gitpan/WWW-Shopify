@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "unknown"
    ],
@@ -50,7 +50,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.995"
+         "version" : "0.996"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm",
@@ -156,6 +156,10 @@
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
+      "WWW::Shopify::Field::String::CountryCode" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Field::String::Custom" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
@@ -181,6 +185,10 @@
          "version" : 0
       },
       "WWW::Shopify::Field::String::Hash" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Hex32" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
@@ -220,6 +228,10 @@
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
+      "WWW::Shopify::Field::String::ProvinceCode" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Field::String::Regex" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
@@ -237,6 +249,10 @@
          "version" : 0
       },
       "WWW::Shopify::Field::String::Words" : {
+         "file" : "lib/WWW/Shopify/Field/String.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Field::String::Zip" : {
          "file" : "lib/WWW/Shopify/Field/String.pm",
          "version" : 0
       },
@@ -296,8 +312,40 @@
          "file" : "lib/WWW/Shopify/Model/Checkout.pm",
          "version" : 0
       },
+      "WWW::Shopify::Model::Checkout::DiscountCode" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/DiscountCode.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Checkout::LineItem" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/LineItem.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Checkout::LineItem::Property" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/LineItem/Property.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Checkout::NoteAttributes" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/NoteAttributes.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Checkout::ShippingLine" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/ShippingLine.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Checkout::TaxLine" : {
+         "file" : "lib/WWW/Shopify/Model/Checkout/TaxLine.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Model::Comment" : {
          "file" : "lib/WWW/Shopify/Model/Comment.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Country" : {
+         "file" : "lib/WWW/Shopify/Model/Country.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::Country::Province" : {
+         "file" : "lib/WWW/Shopify/Model/Country/Province.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::CustomCollection" : {
@@ -376,8 +424,40 @@
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout.pm",
          "version" : 0
       },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::DiscountCode" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/DiscountCode.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::LineItem" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/LineItem.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::LineItem::Property" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/LineItem/Property.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::NoteAttributes" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/NoteAttributes.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::ShippingLine" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/ShippingLine.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Checkout::TaxLine" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Checkout/TaxLine.pm",
+         "version" : 0
+      },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Comment" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Comment.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Country" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Country.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::Country::Province" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Country/Province.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection" : {
@@ -414,6 +494,10 @@
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentService" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentService.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList" : {
@@ -578,6 +662,10 @@
       },
       "WWW::Shopify::Model::Event" : {
          "file" : "lib/WWW/Shopify/Model/Event.pm",
+         "version" : 0
+      },
+      "WWW::Shopify::Model::FulfillmentService" : {
+         "file" : "lib/WWW/Shopify/Model/FulfillmentService.pm",
          "version" : 0
       },
       "WWW::Shopify::Model::Item" : {
@@ -783,5 +871,5 @@
          "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
       }
    },
-   "version" : "0.995"
+   "version" : "0.996"
 }

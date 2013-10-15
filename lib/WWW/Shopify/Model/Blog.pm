@@ -27,6 +27,9 @@ sub creation_minimal { return qw(title); }
 sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 
+sub read_scope { return "read_content"; }
+sub write_scope { return "write_content"; }
+
 sub has_metafields { return 1; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;

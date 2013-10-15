@@ -29,6 +29,9 @@ sub creation_filled { return qw(id created_at published_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(author body_html summary_html title handle metafields); }
 
+sub read_scope { return "read_content"; }
+sub write_scope { return "write_content"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

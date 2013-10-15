@@ -24,6 +24,9 @@ BEGIN { $fields = {
 sub cancellable { return undef; }
 sub deletable { return undef; }
 
+sub read_scope { return "read_orders"; }
+sub write_scope { return "write_orders"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

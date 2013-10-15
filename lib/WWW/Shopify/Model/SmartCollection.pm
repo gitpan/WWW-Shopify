@@ -33,6 +33,9 @@ sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(body_html handle sort_order template_suffix title rules image); }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

@@ -12,7 +12,7 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"name" => new WWW::Shopify::Field::String::Words(1),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"position" => new WWW::Shopify::Field::Int(),
+	"position" => new WWW::Shopify::Field::Int(1, 3),
 	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product')
 }; }
 

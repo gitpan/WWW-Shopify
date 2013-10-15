@@ -30,6 +30,9 @@ sub creation_minimal { return qw(product_id collection_id); }
 sub creation_filled { return qw(position created_at); }
 sub update_filled { return qw(updated_at); }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

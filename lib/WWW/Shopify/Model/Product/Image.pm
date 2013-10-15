@@ -25,6 +25,9 @@ sub updated_filled { return qw(updated_at); }
 
 sub updatable { return undef; }
 
+sub read_scope { return "read_products"; }
+sub write_scope { return "write_products"; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

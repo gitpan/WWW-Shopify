@@ -247,6 +247,7 @@ sub shopify_timezones { return keys(%from_shopify_timezones); }
 
 sub to_shopify {
 	my $dttz = $_[1];
+	return undef unless $dttz;
 	my $mapping = $to_shopify_timezones{$dttz->name};
 	$mapping = "(GMT+00:00) UTC" unless $mapping;
 	return $mapping;
@@ -254,6 +255,7 @@ sub to_shopify {
 
 sub from_shopify {
 	my $dttz = $_[1];
+	return undef unless $dttz;
 	my $mapping = $from_shopify_timezones{$dttz};
 	$mapping = "UTC" unless $mapping;
 	return DateTime::TimeZone->new(name => $mapping);
@@ -283,6 +285,7 @@ use DateTime;
 sub sql_type { return 'datetime'; }
 sub to_shopify {
 	my $dt = $_[1];
+	return undef unless $dt;
 	if (ref($dt) eq "DateTime") {
 		my $t = $dt->strftime('%Y-%m-%dT%H:%M:%S%z');
 		$t =~ s/(\d\d)$/:$1/;
@@ -319,6 +322,8 @@ sub validate($) { return scalar($_[1] =~ m/(\d+-\d+-\d+)T?(\d+:\d+:\d+)/); }
 
 sub generate($) {
 	my %hash = @{$_[0]->{arguments}};
+	$hash{min} = '2010-01-01 00:00:00' unless $hash{min};
+	$hash{max} = 'now' unless $hash{max};
 	return ::rand_datetime(%hash);
 }
 

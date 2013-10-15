@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.995';
+our $VERSION = '0.996';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -140,11 +140,9 @@ sub translate_model($) {
 	return "WWW::Shopify::Model::" . $_[1];
 }
 
-use constant {
-	PULLING_ITEM_LIMIT => 250,
-	CALL_LIMIT_REFRESH => (60*5),
-	CALL_LIMIT_MAX => 500,
-};
+sub PULLING_ITEM_LIMIT { return 250; }
+sub CALL_LIMIT_REFRESH { return 60*5; }
+sub CALL_LIMIT_MAX { return 500; }
 
 sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 sub post_url { return $_[0]->url_handler->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
@@ -177,6 +175,8 @@ sub get_all_limit {
 
 Gets up to 249 * CALL_LIMIT objects (currently 124750) from Shopify at once. Goes in a loop until it's got everything. Performs a count first to see where it's at.
 
+	@products = $sa->get_all("Product")
+
 If you don't want this behaviour, use the limit filter.
 
 =cut
@@ -192,7 +192,7 @@ sub get_all {
 
 	my $item_count = $self->get_count($package, $specs);
 	$item_count = min($specs->{limit}, $item_count) if defined $specs->{limit};
-	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > PULLING_ITEM_LIMIT*499;
+	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > $self->PULLING_ITEM_LIMIT*499;
 	$specs->{limit} = $item_count;
 	return $self->get_all_limit($package, $specs) if $item_count <= PULLING_ITEM_LIMIT;
 	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
@@ -205,9 +205,9 @@ sub get_all {
 			push(@return, $self->get_all_limit($package, $specs));
 		};
 	};
-	if ($@) {
-		$@->extra(\@return) if ref($@) && $@->isa('WWW::Shopify::Exception::CallLimit');
-		die $@;
+	if (my $exception = $@) {
+		$exception->extra(\@return) if ref($exception) && $exception->isa('WWW::Shopify::Exception::CallLimit');
+		die $exception;
 	}
 	return @return if wantarray;
 	return $return[0] if int(@return) > 0;
@@ -234,7 +234,7 @@ sub get_shop {
 
 Gets the item count from the shopify store. So if we wanted to count all our orders, we'd do:
 
-	my $order = $sa->get('Order', 142345, { status => "any" });
+	my $order = $sa->get_count('Order', { status => "any" });
 
 It's as easy as that. Keep in mind not all items are countable (who the hell knows why); a glaring exception is assets. Either check the shopify docs, or grep for the sub "countable".
 
@@ -255,7 +255,7 @@ Gets the item from the shopify store. Returns it in local (classed up) form. In 
 
 	my $order = $sa->get('Order', 142345);
 
-It's as easy as that.
+It's as easy as that. If we don't retrieve anything, we return undef.
 
 =cut
 
@@ -265,15 +265,21 @@ sub get {
 	$self->validate_item($package);
 	# We have a special case for asssets, for some arbitrary reason.
 	my ($decoded, $response);
-	if ($package !~ m/Asset/) {
-		($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/$id.json");
-	} else {
-		die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
-		($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
+	eval {
+		if ($package !~ m/Asset/) {
+			($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/$id.json");
+		} else {
+			die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
+			($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
+		}
+	};
+	if (my $exp = $@) {
+		return undef if ref($exp) && $exp->isa("WWW::Shopify::Exception::NotFound");
+		die $exp;
 	}
 	my $class = $package->from_json($decoded->{$package->singular()}, $self);
 	# Wow, this is straight up stupid that sometimes we don't get a 404.
-	die new WWW::Shopify::Exception::NotFound() unless $class;
+	return undef unless $class;
 	$class->associated_parent($specs->{parent});
 	return $class;
 }
@@ -346,7 +352,15 @@ sub update {
 	$vars = { $class->singular => {map { $_ => $vars->{$_} } grep { exists $mods{$_} } keys(%$vars)} };
 	my $method = lc($class->update_method) . "_url";
 
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
+	my ($decoded, $response);
+	
+	if (ref($class) =~ m/Asset/) {
+		my $url = $self->resolve_trailing_url(ref($class), "update", $class->associated_parent) . ".json?asset[key]=" . $class->key;
+		($decoded, $response) = $self->$method($url, { $class->singular => $vars });
+	}
+	else {
+		($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
+	}
 
 	my $element = $decoded->{$class->singular()};
 	my $object = ref($class)->from_json($element, $self);

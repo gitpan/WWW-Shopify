@@ -10,12 +10,15 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_transactions');
 __PACKAGE__->add_columns(
+	"test", { data_type => 'BOOL', is_nullable => '1' },
 	"gateway", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"authorization", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"device_id", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"amount", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"kind", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"user_id", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"order_id", { data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
@@ -27,7 +30,7 @@ __PACKAGE__->set_primary_key('id');
 __PACKAGE__->belongs_to(shop => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop', 'shop_id');
 
 __PACKAGE__->belongs_to(order => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'order_id');
-__PACKAGE__->has_many(receipt => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt', 'transaction_id');
+__PACKAGE__->has_one(receipt => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt', 'transaction_id');
 sub represents { return 'WWW::Shopify::Model::Transaction'; }
 sub parent_variable { return 'order_id'; }
 
