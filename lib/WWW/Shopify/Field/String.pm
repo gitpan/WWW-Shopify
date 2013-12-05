@@ -67,6 +67,9 @@ sub generate($) {
 	return ::random_regex('[a-z]{3,10}@gmail') . '.com';
 }
 
+package WWW::Shopify::Field::String::Base64;
+use parent 'WWW::Shopify::Field::String';
+
 package WWW::Shopify::Field::String::Name;
 use parent 'WWW::Shopify::Field::String';
 

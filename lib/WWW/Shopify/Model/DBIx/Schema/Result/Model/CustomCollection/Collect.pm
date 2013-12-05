@@ -11,7 +11,7 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_collects');
 __PACKAGE__->add_columns(
 	"position", { data_type => 'INT', is_nullable => '1' },
-	"sort_value", { data_type => 'INT', is_nullable => '1' },
+	"sort_value", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"featured", { data_type => 'BOOL', is_nullable => '1' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },

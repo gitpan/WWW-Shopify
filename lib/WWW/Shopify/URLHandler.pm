@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 package WWW::Shopify::URLHandler;
-use JSON;
+use JSON qw(from_json to_json encode_json);
 use Data::Dumper;
 use Scalar::Util qw(weaken);
 
@@ -46,7 +46,8 @@ sub get_url($$@) {
 		$self->parent->api_calls($1);
 	}
 	my $content = $response->decoded_content;
-	my $decoded = JSON->new->utf8(0)->decode($content);
+	# From JSON because decodec content is already a perl internal string.
+	my $decoded = from_json($content);
 	return ($decoded, $response);
 }
 
@@ -55,7 +56,7 @@ sub use_url($$$$) {
 	my $request = HTTP::Request->new($method, $url);
 	print STDERR "$method $url\n" if $ENV{'SHOPIFY_LOG'};
 	$request->header("Accept" => "application/json", "Content-Type" => "application/json");
-	$request->content($hash ? JSON::encode_json($hash) : undef);
+	$request->content($hash ? encode_json($hash) : undef);
 	my $response = $self->parent->ua->request($request);
 	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
 	if (!$response->is_success) {
@@ -68,7 +69,8 @@ sub use_url($$$$) {
 		die new WWW::Shopify::Exception("Unrecognized limit.") unless $limit =~ m/(\d+)\/\d+/;
 		$self->parent->api_calls($1);
 	}
-	my $decoded = (length($response->decoded_content) >= 2) ? JSON->new->utf8(0)->decode($response->decoded_content) : undef;
+	# From JSON because decodec content is already a perl internal string.
+	my $decoded = (length($response->decoded_content) >= 2) ? from_json($response->decoded_content) : undef;
 	return ($decoded, $response);
 }
 sub put_url($$$) { return shift->use_url("PUT", @_); }

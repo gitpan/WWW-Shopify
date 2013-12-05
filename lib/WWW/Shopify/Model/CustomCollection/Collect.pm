@@ -12,12 +12,13 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product"),
 	"collection_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::CustomCollection"),
-	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"created_at" => new WWW::Shopify::Field::Date(),
+	"updated_at" => new WWW::Shopify::Field::Date(),
 	"featured" => new WWW::Shopify::Field::Boolean(),
 	"position" => new WWW::Shopify::Field::Int(),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"sort_value" => new WWW::Shopify::Field::Int(),
+	# Same as position, but padded with 0s. Unfortunately, this is a lie, and is ocassionally a product name, arbitarily.
+	"sort_value" => new WWW::Shopify::Field::String(),
 }; }
 
 

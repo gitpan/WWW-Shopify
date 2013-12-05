@@ -56,7 +56,7 @@ sub creation_minimal { return qw(title product_type vendor); }
 sub creation_filled { return qw(id created_at); }
 # Odd, even without an update method, it still has an updated at.
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html); }
+sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html variants); }
 sub throws_webhooks { return 1; }
 
 sub read_scope { return "read_products"; }

@@ -12,15 +12,15 @@ my $fields; sub fields { return $fields; }
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::String::HTML(),
 	"handle" => new WWW::Shopify::Field::String::Handle(),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"updated_at" => new WWW::Shopify::Field::Date(),
 	"published" => new WWW::Shopify::Field::Boolean(),
 	"published_scope" => new WWW::Shopify::Field::String::Enum(["global"]),
-	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"published_at" => new WWW::Shopify::Field::Date(),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"sort_order" => new WWW::Shopify::Field::String::Enum(["manual", "best-selling",  "alpha-asc", "alpha-desc", "price-asc", "price-desc", "created", "created-desc"]),
 	"template_suffix" => new WWW::Shopify::Field::String(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
-	"image" => new WWW::Shopify::Field::String::URL(),
+	"image" => new WWW::Shopify::Field::Relation::OwnOne('WWW::Shopify::Model::CustomCollection::Image'),
 	"title" => new WWW::Shopify::Field::String::Words(1, 2),
 #	"collects" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::CustomCollection::Collect")
 }; }

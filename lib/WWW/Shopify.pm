@@ -64,13 +64,14 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.996';
+our $VERSION = '0.997';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
 use Module::Find;
 use WWW::Shopify::URLHandler;
 use WWW::Shopify::Query;
+use WWW::Shopify::Login;
 
 # Make sure we include all our models so that when people call the model, we actually know what they're talking about.
 BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); }
@@ -92,6 +93,7 @@ sub new {
 	$ua->cookie_jar({ });
 	$ua->timeout(10);	
 	$ua->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
+	$package = "WWW::Shopify::Login" if $package eq "WWW::Shopify";
 	my $self = bless { _shop_url => $shop_url, _ua => $ua, _url_handler => undef, _api_calls => 0 }, $package;
 	$self->url_handler(new WWW::Shopify::URLHandler($self));
 	$self->login_admin($email, $password) if defined $email && defined $password;
@@ -141,8 +143,11 @@ sub translate_model($) {
 }
 
 sub PULLING_ITEM_LIMIT { return 250; }
-sub CALL_LIMIT_REFRESH { return 60*5; }
-sub CALL_LIMIT_MAX { return 500; }
+#sub CALL_LIMIT_REFRESH { return 60*5; }
+#sub CALL_LIMIT_MAX { return 500; }
+sub CALL_LIMIT_MAX { return 40; }
+sub CALL_LIMIT_LEAK_TIME { return 1; }
+sub CALL_LIMIT_LEAK_RATE { return 2; }
 
 sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
 sub post_url { return $_[0]->url_handler->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
@@ -153,7 +158,7 @@ use Devel::StackTrace;
 sub resolve_trailing_url {
 	my ($self, $package, $action, $parent) = @_;
 	my $method = lc($action) . "_through_parent";
-	if ($package->$method) {
+	if ($package->$method && (!$parent || !$parent->is_shop || $package ne "WWW::Shopify::Model::Metafield")) {
 		die new WWW::Shopify::Exception("Cannot get, no parent specified.") unless $parent;
 		return "/admin/" . $parent->plural . "/" . $parent->id . "/" . $package->plural;
 	}
@@ -185,6 +190,8 @@ use POSIX qw/ceil/;
 use List::Util qw(min);
 sub get_all {
 	my ($self, $package, $specs) = @_;
+	# We copy our specs so that we don't modify the original hash. Doesn't have to be a deep copy.
+	$specs = {%$specs} if $specs;
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	return $self->get_shop if $package->is_shop;
@@ -355,8 +362,8 @@ sub update {
 	my ($decoded, $response);
 	
 	if (ref($class) =~ m/Asset/) {
-		my $url = $self->resolve_trailing_url(ref($class), "update", $class->associated_parent) . ".json?asset[key]=" . $class->key;
-		($decoded, $response) = $self->$method($url, { $class->singular => $vars });
+		my $url = $self->resolve_trailing_url(ref($class), "update", $class->associated_parent) . ".json";
+		($decoded, $response) = $self->$method($url, $vars);
 	}
 	else {
 		($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
@@ -475,7 +482,12 @@ sub logged_in_admin {
 }
 
 sub is_valid { eval { $_[0]->get_shop; }; return undef if ($@); return 1; }
-
+sub handleize {
+	my ($self, $handle) = @_;
+	$handle =~ s/\s/-/g;
+	$handle =~ s/[\(\)]//;
+	return lc($handle);
+}
 
 
 =head2 create_private_app()
@@ -567,7 +579,7 @@ Follows this: http://wiki.shopify.com/Verifying_Webhooks.
 =cut
 
 use Exporter 'import';
-our @EXPORT_OK = qw(verify_webhook verify_login verify_proxy calc_webhook_signature calc_login_signature calc_proxy_signature);
+our @EXPORT_OK = qw(verify_webhook verify_login verify_proxy calc_webhook_signature calc_login_signature calc_proxy_signature handleize);
 use Digest::MD5 'md5_hex';
 use Digest::SHA qw(hmac_sha256_hex hmac_sha256_base64);
 use MIME::Base64;
@@ -603,7 +615,7 @@ Also, they don't have a code parameter. For whatever reason.
 
 sub calc_login_signature {
 	my ($shared_secret, $params) = @_;
-	return md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (grep { $_ ne "signature" } keys(%$params))));
+	return md5_hex($shared_secret . join("", map { "$_=" . $params->{$_} } (sort(grep { $_ ne "signature" } keys(%$params)))));
 }
 
 sub verify_login {

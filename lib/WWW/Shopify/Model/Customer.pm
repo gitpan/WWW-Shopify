@@ -39,7 +39,7 @@ sub get_fields { return grep { $_ ne "password" && $_ ne "password_confirmation"
 sub creation_minimal { return qw(email); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(password password_confirmation); }
+sub update_fields { return qw(password password_confirmation metafields last_name first_name accepts_marketing tags note); }
 sub throws_webhooks { return 1; }
 
 sub searchable($) { return 1; }

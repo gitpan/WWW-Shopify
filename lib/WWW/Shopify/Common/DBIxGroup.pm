@@ -71,6 +71,20 @@ sub insert {
 	$_->insert for ($self->children);
 }
 
+# Ensure that we have no unecessary children present.
+sub ensure_synchronicity {
+	my ($self) = @_;
+	my $package = $self->contents->represents;
+	my $fields = $package->fields;
+	print STDERR "Ensuring synchronicity for $package...\n";
+	foreach my $field (grep { $_->is_relation && ($_->is_many || $_->is_own) && $_->relation !~ m/Metafield/ } values(%$fields)) {
+		my $name = $field->name;
+		my @children = grep { $_->contents->represents eq $field->relation } $self->children;
+		$self->contents->$name->search({ id => { -not_in => [map { $_->contents->id } @children] } })->delete;
+		print STDERR "Remaining $package " . $field->relation .  " Children " . int(@children) . "\n";
+	}
+}
+
 sub nested { my ($self) = @_; return ($self->contents, map { $_->nested } $self->children); }
 
 1;

@@ -46,7 +46,13 @@ Generates a new intermediate stage (WWW::Shopify::Model::...) object.
 
 =cut
 
-sub new { my $self = (defined $_[1]) ? $_[1] : {}; return bless $self, $_[0]; }
+use Scalar::Util qw(weaken);
+
+sub new { 
+	my $self = (defined $_[1]) ? $_[1] : {};
+	weaken($self->{associated_parent}) if $self->{associated_parent};
+	return bless $self, $_[0];
+}
 
 =head2 parent($package)
 
@@ -110,7 +116,17 @@ sub needs_login { return undef; }
 
 # List of fields that should be filled automatically on creation.
 sub is_nested { return undef; }
-sub identifier { return "id"; }
+sub identifier { return ("id"); }
+
+# Counts the ::. Is helpful in a bunch of ways.
+sub nested_level {
+	my ($package) = @_;
+	my $level = -2;
+	while ($package =~ m/::/g) {
+		++$level;
+	}
+	return $level;
+}
 
 
 # I cannot fucking believe I'm doing this. Everything can be counted.
@@ -429,7 +445,7 @@ sub to_json($) {
 					$final->{$key} = undef;
 				}
 			}
-			$final->{$key} = $self->$key()->to_json() if ($fields->{$key}->is_one() && $fields->{$key}->is_own());
+			$final->{$key} = ($self->$key ? $self->$key->to_json() : undef) if ($fields->{$key}->is_one() && $fields->{$key}->is_own());
 		}
 		else {
 			$final->{$key} = $fields->{$key}->to_shopify($self->$key);

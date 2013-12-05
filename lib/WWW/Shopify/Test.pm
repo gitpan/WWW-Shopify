@@ -45,7 +45,6 @@ use parent 'WWW::Shopify';
 use String::Random qw(random_regex random_string);
 use Data::Random;
 use List::Util qw(shuffle first);
-use Data::Dumper;
 
 use Module::Find;
 # Make sure we include all our models so that when people call the model, we actually know what they're talking about.
@@ -54,9 +53,11 @@ BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); 
 
 my %api_recycle_times = ();
 
+#sub CALL_LIMIT_REFRESH { return $ENV{'SHOPIFY_CALL_REFRESH'} ? $ENV{'SHOPIFY_CALL_REFRESH'} : WWW::Shopify->CALL_LIMIT_REFRESH; }
 sub PULLING_ITEM_LIMIT { return $ENV{'SHOPIFY_PULLING_ITEM_LIMIT'} ? $ENV{'SHOPIFY_PULLING_ITEM_LIMIT'} : WWW::Shopify->PULLING_ITEM_LIMIT; }
-sub CALL_LIMIT_REFRESH { return $ENV{'SHOPIFY_CALL_REFRESH'} ? $ENV{'SHOPIFY_CALL_REFRESH'} : WWW::Shopify->CALL_LIMIT_REFRESH; }
 sub CALL_LIMIT_MAX { return $ENV{'SHOPIFY_CALL_MAX'} ? $ENV{'SHOPIFY_CALL_MAX'} : WWW::Shopify->CALL_LIMIT_MAX; }
+sub CALL_LIMIT_LEAK_TIME { return $ENV{'SHOPIFY_CALL_LEAK_TIME'} ? $ENV{'SHOPIFY_CALL_LEAK_TIME'} : WWW::Shopify->CALL_LIMIT_LEAK_TIME; }
+sub CALL_LIMIT_LEAK_RATE { return $ENV{'SHOPIFY_CALL_LEAK_RATE'} ? $ENV{'SHOPIFY_CALL_LEAK_RATE'} : WWW::Shopify->CALL_LIMIT_LEAK_RATE; }
 
 sub new {
 	my ($package, $dbschema, $shop, $access_token) = @_;
@@ -181,6 +182,15 @@ sub get_class {
 	
 }
 
+# Used to make objects make sense.
+sub correct_object {
+	my ($self, $object) = @_;
+	if (ref($object) =~ m/Product$/) {
+		my $i = 1;
+		$_->update({ position => $i++ }) for ($object->options->all);
+	}
+}
+
 use List::Util qw(shuffle);
 sub generate_class {
 	my ($self, $package, $ids, $parent, $restrictions) = @_;
@@ -211,6 +221,7 @@ sub generate_class {
 	my $parent_variable = $object->parent_variable;
 	if ($parent_variable && ((!$package->parent && ref($parent) !~ m/Shop$/) || $package->parent)) {
 		my $parent_id = $parent->id;
+		die "Can't find parent for $package looking in " . $package->parent unless $ids->{$package->parent};
 		my @ids = @{$ids->{$package->parent}};
 		# If we have something that's basically not a shop.
 		if ($parent->represents ne $package->parent) {
@@ -246,6 +257,7 @@ sub generate_class {
 			}
 		}
 	}
+	$self->correct_object($object);
 	$object = $object->insert;
 	# Many-Many
 	foreach my $field (grep { $_->is_relation && $_->is_db_many_many } values(%$fields)) {
@@ -280,21 +292,24 @@ sub finalize_class {
 }
 
 
+use List::Util qw(max);
 sub check_increment_calls {
 	my ($self) = @_;
 	die new WWW::Shopify::Exception::InvalidKey() unless $self->access_token;
 	my $duration = time - $api_recycle_times{$self->associate->id}->{recycled};
-	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
-	my $call_limit_refresh = $self->CALL_LIMIT_REFRESH;
-	my $call_limit_max = $self->CALL_LIMIT_MAX;
-	if ($duration >= $call_limit_refresh) {
-		$api_recycle_times{$self->associate->id}->{calls} = 0;
-		$api_recycle_times{$self->associate->id}->{recycled} = time;
-	}
 	my $api_calls = $api_recycle_times{$self->associate->id}->{calls};
-	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == $call_limit_max;
+	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
+	$api_calls = max(0, $api_calls - (int($duration / $self->CALL_LIMIT_LEAK_TIME) * $self->CALL_LIMIT_LEAK_RATE));
+	$self->reset_call_limit($api_calls);
+	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == $self->CALL_LIMIT_MAX;
 	$self->api_calls($api_calls + 1);
 	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
+}
+sub reset_call_limit {
+	my ($self, $calls) = @_;
+	die new WWW::Shopify::Exception("Cannot reset call limit on unassociated api.") unless $self->associate;
+	$api_recycle_times{$self->associate->id}->{calls} = $calls;
+	$api_recycle_times{$self->associate->id}->{recycled} = time;
 }
 
 sub check_scope {
@@ -333,7 +348,10 @@ sub generate {
 			my %counts = map { $_ => $items->{$_} } grep { $_ !~ m/Shop$/ } keys(%$items);
 
 			while (int(keys(%counts)) > 0) {
-				foreach my $item (keys(%counts)) {
+				# This should be really fixed. We really shouldn't have to do this.
+				my @keys = sort { ((($a =~ m/Checkout/) ? 11 : 0) + ($a =~ m/Order/ ? 10 : 0) + ($a =~ m/Customer/ ? 9 : 0) + ($a =~ m/Transaction/ ? 12 : 0) + $a->nested_level + ($self->{_mapper}->transform_package($a)->parent_variable ? 1 : 0)) <=> 
+				((($b =~ m/Checkout/) ? 11 : 0) + ($b =~ m/Order/ ? 10 : 0) + ($b =~ m/Customer/ ? 9 : 0) + ($b =~ m/Transaction/ ? 12 : 0) + $b->nested_level + ($self->{_mapper}->transform_package($b)->parent_variable ? 1 : 0)) } keys(%counts);
+				foreach my $item (@keys) {
 					$self->{_db}->txn_do(sub {
 						$self->generate_class($item, \%ids, $shop, [$min_range, $max_range]);
 					});
@@ -424,6 +442,7 @@ sub filter_gettable {
 }
 
 use POSIX qw(ceil);
+use Data::Dumper;
 sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
@@ -530,7 +549,7 @@ sub get {
 	
 	$self->resolve_trailing_url($package, "get", $specs->{parent});
 
-	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), 'me.id' => $id });
+	my $rs = $self->{_db}->resultset(transform_name($package))->search({ 'me.shop_id' => $self->associate()->id(), ('me.' . $package->identifier) => $id });
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	my $row = $rs->first;
 	return undef unless $row;
@@ -630,6 +649,7 @@ sub update {
 	$self->resolve_trailing_url($item, "update", $item->associated_parent);
 
 	my $dbixgroup = $self->{_mapper}->from_shopify($self->{_db}, $item);
+	$dbixgroup->contents->updated_at(DateTime->now) if $item->fields->{updated_at};
 	$dbixgroup->update;
 	my $obj = $self->{_mapper}->to_shopify($dbixgroup->contents, $self);
 	$obj->associate($self);

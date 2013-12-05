@@ -23,7 +23,7 @@ __PACKAGE__->add_columns(
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"shop_id", { data_type => "BIGINT" }
 );
-__PACKAGE__->set_primary_key('key');
+__PACKAGE__->set_primary_key('key', 'theme_id');
 
 
 

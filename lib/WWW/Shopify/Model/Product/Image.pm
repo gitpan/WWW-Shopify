@@ -13,12 +13,14 @@ BEGIN { $fields = {
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"position" => new WWW::Shopify::Field::Int(1, 4),
 	"src" => new WWW::Shopify::Field::String::URL::Image(),
+	"attachment" => new WWW::Shopify::Field::Text(),
 	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product'),
 	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
+	"metafields" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Metafield')
 }; }
 
-sub creation_minimal { return qw(position src); }
+sub creation_minimal { return qw(position); }
 sub creation_filled { return qw(id created_at ); }
 # Odd, even without an update method, it still has an updated at.
 sub updated_filled { return qw(updated_at); } 

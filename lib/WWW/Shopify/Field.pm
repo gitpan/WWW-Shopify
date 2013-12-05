@@ -47,6 +47,30 @@ sub is_db_has_many { return undef; }
 sub is_db_many_many { return undef; }
 sub is_db_has_one { return undef; }
 
+use constant {
+	TYPE_QUANTITATIVE => 0,
+	TYPE_QUALITATIVE => 1,
+	TYPE_BOOLEAN => 2
+};
+
+use constant {
+	# No order, no set distance (E.G. Telephone Numbers)
+	SET_NOMINAL => 0,
+	# No set distance between values.
+	SET_ORDINAL => 1,
+	# Distinguishable distance between values. (E.G. Real Numbers)
+	SET_CARDINAL => 2	
+};
+
+use base 'Exporter';
+our @EXPORT_OK = qw(TYPE_QUANTITATIVE TYPE_QUALITATIVE TYPE_BOOLEAN SET_NOMINAL SET_ORDINAL SET_CARDINAL);
+
+sub data_type { return TYPE_QUALITATIVE; }
+sub is_qualitative { return $_[0]->data_type == TYPE_QUANTITATIVE; }
+sub is_quantitative { return $_[0]->data_type == TYPE_QUALITATIVE; }
+sub is_boolean { return $_[0]->data_type == TYPE_BOOLEAN; }
+sub number_type { return $_[0]->is_quantitative ? SET_CARDINAL : SET_NOMINAL }
+
 package WWW::Shopify::Field::Hook;
 use parent 'WWW::Shopify::Field';
 sub new($) { return bless { internal => $_[1], qualifier => $_[2] }, $_[0]; }
@@ -70,14 +94,28 @@ sub generate($) {
 	return $_[0]->{arguments}->[0] if (int(@{$_[0]->{arguments}}) == 1);
 	return int(rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1) + $_[0]->{arguments}->[0]);
 }
+sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
 sub validate($$) { return is_int($_[1]); }
+
+package WWW::Shopify::Field::BigInt;
+use parent 'WWW::Shopify::Field';
+use String::Numeric qw(is_int);
+sub sql_type { return "bigint"; }
+sub generate($) { 
+	return int(rand(10000000)) if (int(@{$_[0]->{arguments}}) == 0);
+	return $_[0]->{arguments}->[0] if (int(@{$_[0]->{arguments}}) == 1);
+	return int(rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1) + $_[0]->{arguments}->[0]);
+}
+sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
+sub validate { return is_int($_[1]); }
 
 package WWW::Shopify::Field::Boolean;
 use Scalar::Util qw(looks_like_number);
 use parent 'WWW::Shopify::Field';
 sub sql_type { return "bool"; }
-sub generate($) { return (rand() < 0.5); }
-sub validate($$) { return looks_like_number($_[1]) ? ($_[1] == 0 || $_[1] == 1) : (lc($_[1]) == 'true' || lc($_[1]) == 'false'); }
+sub generate { return (rand() < 0.5); }
+sub validate { return looks_like_number($_[1]) ? ($_[1] == 0 || $_[1] == 1) : (lc($_[1]) == 'true' || lc($_[1]) == 'false'); }
+sub data_type { return WWW::Shopify::Field::TYPE_BOOLEAN; }
 
 package WWW::Shopify::Field::Float;
 use parent 'WWW::Shopify::Field';
@@ -276,8 +314,12 @@ package WWW::Shopify::Field::Money;
 use parent 'WWW::Shopify::Field';
 use String::Numeric qw(is_float);
 sub sql_type { return "decimal(10,2)"; }
-sub generate($) { return sprintf("%.2f", rand(10000)); }
+sub generate($) { return sprintf("%.2f", rand(500)); }
 sub validate($) { return undef unless $_[1] =~ m/\s*\$?\s*$/; return is_float($`); }
+sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
+
+package WWW::Shopify::Field::Money::USD;
+use parent -norequire, 'WWW::Shopify::Field::Money';
 
 package WWW::Shopify::Field::Date;
 use parent 'WWW::Shopify::Field';
@@ -326,5 +368,6 @@ sub generate($) {
 	$hash{max} = 'now' unless $hash{max};
 	return ::rand_datetime(%hash);
 }
+sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
 
 1;

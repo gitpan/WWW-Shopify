@@ -18,6 +18,7 @@ BEGIN { $fields = {
 }; }
 
 sub singular { return "link_list"; }
+sub countable { return undef; }
 
 sub creation_minimal { return qw(handle); }
 sub creation_filled { return qw(id); }

@@ -154,6 +154,7 @@ sub has_shop_field {
 	return !$package->is_shop && (!$package->is_nested || $package =~ m/Address/);
 }
 
+use List::Util qw(first);
 sub generate_dbix {
 	my ($self, $package) = @_;
 
@@ -176,7 +177,7 @@ sub generate_dbix {
 		my $field = $fields->{$field_name};
 		my %attributes = ();
 		$attributes{'data_type'} = $field->sql_type;
-		$attributes{'is_nullable'} = ($package->identifier ne $field_name && (!$package->is_nested || !$package->parent || $parent_variable ne $field_name)) ? 1 : 0;
+		$attributes{'is_nullable'} = ((!first { $field_name eq $_ } $package->identifier) && (!$package->is_nested || !$package->parent || $parent_variable ne $field_name)) ? 1 : 0;
 		push(@columns, "\"$field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
 		
 	}
@@ -307,9 +308,8 @@ sub from_shopify {
 	return undef unless $shopifyObject;
 	die new WWW::Shopify::Exception('Invalid object passed into to_shopify: ' . ref($shopifyObject) . '.') unless ref($shopifyObject) =~ m/Model::/;
 	my $dbPackage = $self->transform_package(ref($shopifyObject));
-	my $identifier = $shopifyObject->identifier;
 	my $dbObject = undef;
-	$dbObject = $schema->resultset($dbPackage)->find($shopifyObject->$identifier) if $shopifyObject->{$identifier} && $shopifyObject && $shopifyObject->$identifier;
+	$dbObject = $schema->resultset($dbPackage)->find({map { $_ => $shopifyObject->$_ } $shopifyObject->identifier}) if $shopifyObject && (!first { !$shopifyObject->{$_} } $shopifyObject->identifier);
 	$dbObject = $schema->resultset($dbPackage)->new({}) unless $dbObject;
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
@@ -331,10 +331,10 @@ sub from_shopify {
 		my $data = $shopifyObject->$key();
 		if ($data) {
 			my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data, $shop_id);
-			if ($fields->{$key}->is_relation() && $fields->{$key}->is_many()) {
+			if ($fields->{$key}->is_relation && $fields->{$key}->is_many()) {
 				$group->add_children(grep { defined $_ } @$db_value);
 			}
-			else {
+			elsif (!$fields->{$key}->is_relation || $fields->{$key}->is_reference) {
 				$dbObject->$key($db_value);
 			}
 		}

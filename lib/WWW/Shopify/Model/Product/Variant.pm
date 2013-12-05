@@ -37,6 +37,7 @@ sub creation_minimal { return qw(option1 price); }
 sub creation_filled { return qw(id created_at product_id); }
 # Odd, even without an update method, it still has an updated at.
 sub update_filled { return qw(updated_at); }
+sub update_fields { return qw(fulfillment_service grams inventory_management inventory_policy option1 option2 option3 position price requires_shipping sku taxable compare_at_price inventory_quantity barcode metafields); }
 
 sub get_through_parent { return undef; }
 sub update_through_parent { return undef; } 

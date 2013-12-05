@@ -10,7 +10,7 @@ use parent "WWW::Shopify::Model::Item";
 
 sub parent { return "WWW::Shopify::Model::Theme"; }
 sub countable { return undef; }
-sub identifier { return "key"; }
+sub identifier { return qw(key theme_id); }
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
@@ -29,7 +29,8 @@ BEGIN { $fields = {
 # Look into finding some way to validate whether it's value OR attachment.
 sub creation_minimal { return qw(key); }
 sub creation_filled { return qw(public_url created_at); }
-sub update_filled { return qw(updated_at); }
+sub update_filled { return qw(updated_at size src content_type); }
+sub update_fields { qw(attachment value key) }
 sub create_method { return "PUT"; }
 
 sub read_scope { return "read_themes"; }
