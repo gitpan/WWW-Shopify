@@ -23,7 +23,12 @@ my $build = Module::Build->new(
 		'LWP::Protocol::https' => '6.03',
 		'HTTP::Request::Common' => '6.04',
 		'URI::Escape' => '3.31',
-		'Scalar::Util' => 0
+		'Scalar::Util' => 0,
+		'Math::Round' => 0,
+		'Clone' => 0
+	},
+	build_requires => {
+		'DBD::SQLite' => 0
 	},
 	meta_merge => {
 		resources => {

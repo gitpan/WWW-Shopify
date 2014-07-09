@@ -10,8 +10,8 @@ use base qw/DBIx::Class::Core/;
 __PACKAGE__->table('shopify_metafieldsorders');
 __PACKAGE__->add_columns(
 	'id', { data_type => 'INT', is_nullable => '0', is_auto_increment => 1 },
-	'order_id', { data_type => 'INT', is_nullable => 0 },
-	'metafield_id', { data_type => 'INT', is_nullable => 0 }
+	'order_id', { data_type => 'bigint', is_nullable => 0 },
+	'metafield_id', { data_type => 'bigint', is_nullable => 0 }
 );
 __PACKAGE__->set_primary_key('id');
 __PACKAGE__->belongs_to(order => 'WWW::Shopify::Model::DBIx::Schema::Result::Model::Order', 'order_id');

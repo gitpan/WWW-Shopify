@@ -27,8 +27,16 @@ BEGIN { $fields = {
 	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"published_scope" => new WWW::Shopify::Field::String()
 }; }
+my $queries; sub queries { return $queries; }
+BEGIN { $queries = {
+	created_at_min => new WWW::Shopify::Query::LowerBound('created_at'),
+	created_at_max => new WWW::Shopify::Query::UpperBound('created_at'),
+	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
+	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
+}; }
 
-sub creation_minimal { return qw(topic address); }
+
+sub creation_minimal { return qw(title); }
 sub creation_filled { return qw(id created_at); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(body_html handle sort_order template_suffix title rules image); }

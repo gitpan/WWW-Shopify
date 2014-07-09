@@ -10,16 +10,16 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_blogs');
 __PACKAGE__->add_columns(
-	"feedburner_location", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"feedburner", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"tags", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"template_suffix", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"commentable", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"handle", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"feedburner", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"tags", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
-	"commentable", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"feedburner_location", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

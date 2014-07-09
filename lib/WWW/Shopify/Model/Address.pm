@@ -30,6 +30,9 @@ BEGIN { $fields = {
 sub plural { return 'addresses'; }
 sub parent { return undef; }
 
+# Addresses are always included in both customer and order objects.
+sub included_in_parent { return 1; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

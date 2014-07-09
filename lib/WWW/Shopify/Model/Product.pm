@@ -14,7 +14,7 @@ use parent "WWW::Shopify::Model::Item";
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
-	"variants" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Variant", 1, 10),
+	"variants" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Variant", 1),
 	"handle" => new WWW::Shopify::Field::String::Handle(),
 	"product_type" => new WWW::Shopify::Field::String::Words(1,2),
 	"template_suffix" => new WWW::Shopify::Field::String(),
@@ -22,13 +22,13 @@ BEGIN { $fields = {
 	"title" => new WWW::Shopify::Field::String::Words(1,2),
 	"vendor" => new WWW::Shopify::Field::String::Words(1,2),
 	"tags" => new WWW::Shopify::Field::String::Words(1,7),
-	"images" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Image", 1, 10),
+	"images" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Image"),
 	"options" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Option", 1, 3),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
-	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')};
+	"created_at" => new WWW::Shopify::Field::Date(),
+	"published_at" => new WWW::Shopify::Field::Date(),
+	"updated_at" => new WWW::Shopify::Field::Date()};
 }
 my $queries; sub queries { return $queries; }
 BEGIN { $queries = {

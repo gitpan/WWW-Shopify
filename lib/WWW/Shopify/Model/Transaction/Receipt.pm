@@ -33,7 +33,8 @@ BEGIN { $fields = {
 	"amount_currency" => new WWW::Shopify::Field::Currency(),
 	"avs_code" => new WWW::Shopify::Field::String(),
 	"cvv2_code" => new WWW::Shopify::Field::String(),
-	"transaction_id" => new WWW::Shopify::Field::String()
+	"transaction_id" => new WWW::Shopify::Field::String(),
+	"payment_details" => new WWW::Shopify::Field::Freeform()
 }; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;

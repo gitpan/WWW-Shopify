@@ -115,8 +115,8 @@ use base qw/DBIx::Class::Core/;
 __PACKAGE__->table('" . $self->table_prefix . $self->joining_table_name($join1, $join2) . "');
 __PACKAGE__->add_columns(
 	'id', { data_type => 'INT', is_nullable => '0', is_auto_increment => 1 },
-	'" . $join1->singular . "_id', { data_type => 'INT', is_nullable => 0 },
-	'" . $join2->singular . "_id', { data_type => 'INT', is_nullable => 0 }
+	'" . $join1->singular . "_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type . "', is_nullable => 0 },
+	'" . $join2->singular . "_id', { data_type => '" . WWW::Shopify::Field::Identifier->sql_type . "', is_nullable => 0 }
 );
 __PACKAGE__->set_primary_key('id');
 __PACKAGE__->belongs_to(" . $join1->singular . " => '" . $self->transform_package($join1) . "', '" . $join1->singular . "_id');
@@ -183,7 +183,7 @@ sub generate_dbix {
 	}
 	# If we don't have an ID give us one, so that all DB stuff can have primary keys.
 	if (!$fields->{$ids[0]}) {
-		push(@columns, "\"" . $ids[0] . "\", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }");
+		push(@columns, "\"" . $ids[0] . "\", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }");
 	}
 	# All relationship columns that are belong to.
 	# ReferenceOne / Non-Nested / Interior : Belongs To
@@ -279,6 +279,7 @@ sub parent_variable { return " . ($parent_variable ? "'$parent_variable'" : "und
 }
 
 
+use JSON qw(encode_json from_json);
 use WWW::Shopify::Common::DBIxGroup;
 # Takes in a schema and a shopify object and maps it to a DBIx existence.
 sub from_shopify {
@@ -301,6 +302,7 @@ sub from_shopify {
 				return $type->from_shopify($data);
 			}
 		}
+		return encode_json($type) if ($type eq 'WWW::Shopify::Field::Freeform');
 		return $type->from_shopify($data);
 	};
 
@@ -367,6 +369,7 @@ sub to_shopify {
 		# This seems confusing, but due to us storing our stuff in the database as Shopify stuff
 		# We're transferring TYPE from shopify, but SELF to shopify.
 		return $type->from_shopify($data) if ref($type) =~ m/timezone/i;
+		return from_json($data) if ($data && ref($type) eq 'WWW::Shopify::Field::Freeform');
 		return $data;
 	};
 

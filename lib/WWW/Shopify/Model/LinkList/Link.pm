@@ -23,6 +23,14 @@ sub creation_minimal { return qw(title link_type); }
 sub creation_filled { return qw(); }
 sub update_filled { return qw(); }
 
+sub link_model_type {
+	return ('WWW::Shopify::Model::CustomCollection', 'WWW::Shopify::Model::SmartCollection') if $_[0]->link_type eq 'collection';
+	return 'WWW::Shopify::Model::Product' if $_[0]->link_type eq 'product';
+	return 'WWW::Shopify::Model::Page' if $_[0]->link_type eq 'page';
+	return 'WWW::Shopify::Model::Blog' if $_[0]->link_type eq 'blog';
+	return undef;
+}
+
 sub needs_login { return 1; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;

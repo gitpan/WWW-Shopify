@@ -10,9 +10,9 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_locales_authorships');
 __PACKAGE__->add_columns(
+	"user_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"accepted", { data_type => 'BOOL', is_nullable => '1' },
-	"user_id", { data_type => 'BIGINT', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"locale_id", { data_type => 'BIGINT' }
 );
 __PACKAGE__->set_primary_key('id');

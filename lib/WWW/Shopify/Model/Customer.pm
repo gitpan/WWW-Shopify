@@ -24,13 +24,15 @@ BEGIN { $fields = {
 	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
 	"tags" => new WWW::Shopify::Field::String::Words(0, 6),
 	"last_order_name" => new WWW::Shopify::Field::String(),
+	"default_address" => new WWW::Shopify::Field::Relation::OwnOne('WWW::Shopify::Model::Address'),
 	"addresses" => new WWW::Shopify::Field::Relation::Many('WWW::Shopify::Model::Address', 0, 3),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"image_url" => new WWW::Shopify::Field::String::URL(),
 	"send_email_invite" => new WWW::Shopify::Field::Boolean(),
 	"password" => new WWW::Shopify::Field::String::Password(),
 	"multipass_identifier" => new WWW::Shopify::Field::String(),
-	"password_confirmation" => new WWW::Shopify::Field::String::Password()
+	"password_confirmation" => new WWW::Shopify::Field::String::Password(),
+	"verified_email" => new WWW::Shopify::Field::Boolean()
 }; }
 
 sub unique_fields { return qw(email); }
@@ -39,13 +41,15 @@ sub get_fields { return grep { $_ ne "password" && $_ ne "password_confirmation"
 sub creation_minimal { return qw(email); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(password password_confirmation metafields last_name first_name accepts_marketing tags note); }
+sub update_fields { return qw(password password_confirmation metafields last_name first_name accepts_marketing tags note state); }
 sub throws_webhooks { return 1; }
 
 sub searchable($) { return 1; }
 
 sub read_scope { return "read_customers"; }
 sub write_scope { return "write_customers"; }
+
+sub actions { return qw(enable disable); }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

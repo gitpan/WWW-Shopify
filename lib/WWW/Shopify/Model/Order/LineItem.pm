@@ -10,15 +10,16 @@ use parent "WWW::Shopify::Model::NestedItem";
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
-	"fulfillment_service" => new WWW::Shopify::Field::String("(automatic|manual)"),
+	"fulfillment_service" => new WWW::Shopify::Field::String::Enum(["automatic", "manual"]),
 	"fulfillment_status" => new WWW::Shopify::Field::String(),
 	"grams" => new WWW::Shopify::Field::Int(1, 2000),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"price" => new WWW::Shopify::Field::Money(),
 	# These are not always filled out. If a product is deleted, these are null.
-	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product'),
-	"variant_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product::Variant'),
+	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product', 1),
+	"variant_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Product::Variant', 1),
 	#
+	"gift_card" => new WWW::Shopify::Field::Boolean(),
 	"quantity" => new WWW::Shopify::Field::Int(1, 20),
 	"requires_shipping" => new WWW::Shopify::Field::Boolean(),
 	"product_exists" => new WWW::Shopify::Field::Boolean(),
@@ -27,8 +28,10 @@ BEGIN { $fields = {
 	"variant_title" => new WWW::Shopify::Field::String::Words(1,3),
 	"vendor" => new WWW::Shopify::Field::String(),
 	"name" => new WWW::Shopify::Field::String::Words(1, 3),
-	"properties" => => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem::Property"),
-	"variant_inventory_management" => new WWW::Shopify::Field::String("(shopify|manual)")};
+	"properties" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem::Property"),
+	"tax_lines" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem::TaxLine"),
+	"taxable" => new WWW::Shopify::Field::Boolean(),
+	"variant_inventory_management" => new WWW::Shopify::Field::String::Enum(["shopify", "manual"]) };
 }
 
 sub creatable { return undef; }

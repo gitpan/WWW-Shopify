@@ -10,16 +10,16 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_pages');
 __PACKAGE__->add_columns(
-	"summary_html", { data_type => 'TEXT', is_nullable => '1' },
-	"published_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"author", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"summary_html", { is_nullable => '1', data_type => 'TEXT' },
 	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"template_suffix", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"body_html", { data_type => 'TEXT', is_nullable => '1' },
-	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"published_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
 	"shop_id", { data_type => 'BIGINT', is_nullable => '1' },
 	"shop_id", { data_type => "BIGINT" }
 );

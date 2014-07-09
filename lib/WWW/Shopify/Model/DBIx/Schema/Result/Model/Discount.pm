@@ -10,19 +10,19 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_discounts');
 __PACKAGE__->add_columns(
-	"starts_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"ends_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"value", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
-	"status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"applies_once", { data_type => 'BOOL', is_nullable => '1' },
-	"applies_to_resource", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"minimum_order_amount", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
-	"times_used", { data_type => 'INT', is_nullable => '1' },
-	"discount_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"minimum_order_amount", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
+	"discount_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"usage_limit", { data_type => 'INT', is_nullable => '1' },
-	"applies_to_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"times_used", { data_type => 'INT', is_nullable => '1' },
+	"applies_to_resource", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"status", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"applies_once", { data_type => 'BOOL', is_nullable => '1' },
+	"starts_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"usage_limit", { is_nullable => '1', data_type => 'INT' },
+	"ends_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"value", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
+	"applies_to_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

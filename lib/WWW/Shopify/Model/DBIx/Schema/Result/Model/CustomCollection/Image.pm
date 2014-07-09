@@ -11,10 +11,10 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_custom_collections_images');
 __PACKAGE__->add_columns(
 	"custom_collection_id", { data_type => 'bigint' },
-	"attachment", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
 	"src", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
+	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"attachment", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');
 

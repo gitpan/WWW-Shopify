@@ -22,7 +22,8 @@ BEGIN { $fields = {
 	"taxable" => new WWW::Shopify::Field::Boolean(),
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
 	"compare_at_price" => new WWW::Shopify::Field::Money(),
-	"inventory_quantity" => new WWW::Shopify::Field::Int(1, 20),
+	"inventory_quantity" => new WWW::Shopify::Field::Int(),
+	"old_inventory_quantity" => new WWW::Shopify::Field::Int(),
 	"barcode" => new WWW::Shopify::Field::String(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
@@ -35,7 +36,6 @@ sub parent { return 'WWW::Shopify::Model::Product'; }
 
 sub creation_minimal { return qw(option1 price); }
 sub creation_filled { return qw(id created_at product_id); }
-# Odd, even without an update method, it still has an updated at.
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(fulfillment_service grams inventory_management inventory_policy option1 option2 option3 position price requires_shipping sku taxable compare_at_price inventory_quantity barcode metafields); }
 

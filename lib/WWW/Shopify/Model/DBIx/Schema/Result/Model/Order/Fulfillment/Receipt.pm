@@ -12,8 +12,8 @@ __PACKAGE__->table('shopify_fulfillments_receipts');
 __PACKAGE__->add_columns(
 	"fulfillment_id", { data_type => 'bigint' },
 	"authorization", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"testcase", { data_type => 'BOOL', is_nullable => '1' },
-	"id", { data_type => 'INT', is_nullable => 0, is_auto_increment => 1 }
+	"testcase", { is_nullable => '1', data_type => 'BOOL' },
+	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');
 

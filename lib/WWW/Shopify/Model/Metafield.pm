@@ -27,6 +27,7 @@ sub get_through_parent { return 1; }
 sub create_through_parent { return 1; }
 sub update_through_parent { return 1; } 
 sub delete_through_parent { return undef; }
+sub included_in_parent { return undef; }
 
 sub creation_minimal { return qw(key namespace value_type value); }
 sub creation_filled { return qw(created_at id owner_resource); }

@@ -10,11 +10,11 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_themes');
 __PACKAGE__->add_columns(
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"role", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

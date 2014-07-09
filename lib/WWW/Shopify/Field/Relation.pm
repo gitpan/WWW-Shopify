@@ -30,8 +30,8 @@ sub is_db_has_many { return !$_[0]->is_db_belongs_to && !$_[0]->is_db_has_one &&
 sub is_db_many_many { return !$_[0]->is_db_belongs_to && !$_[0]->is_db_has_one && !$_[0]->is_db_has_many && ($_[0]->is_many || $_[0]->is_own); }
 sub db_min_count { }
 sub db_max_count { }
-use POSIX qw/ceil/;
-sub db_rand_count { return $_[0]->db_min_count + ceil(rand($_[0]->db_max_count - $_[0]->db_min_count)); }
+use Math::Round qw(round);
+sub db_rand_count { return $_[0]->db_min_count + round(rand($_[0]->db_max_count - $_[0]->db_min_count)); }
 
 package WWW::Shopify::Field::Relation::Parent;
 use parent 'WWW::Shopify::Field::Relation';
@@ -53,8 +53,9 @@ package WWW::Shopify::Field::Relation::ReferenceOne;
 use parent 'WWW::Shopify::Field::Relation';
 sub is_one { return 1; }
 sub is_reference { return 1; }
+sub data_type { return WWW::Shopify::Field->TYPE_QUANTITATIVE; }
 
-sub db_min_count { return 0; }
+sub db_min_count { return defined $_[0]->{arguments}->[1] ? $_[0]->{arguments}->[1] : 0; }
 sub db_max_count { return 1; }
 
 package WWW::Shopify::Field::Relation::OwnOne;
@@ -62,7 +63,7 @@ use parent 'WWW::Shopify::Field::Relation';
 sub is_one { return 1; }
 sub is_own { return 1; }
 
-sub db_min_count { return 0; }
+sub db_min_count { return defined $_[0]->{arguments}->[1] ? $_[0]->{arguments}->[1] : 0; }
 sub db_max_count { return 1; }
 
 1;

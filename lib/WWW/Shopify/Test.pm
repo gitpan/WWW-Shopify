@@ -192,6 +192,7 @@ sub correct_object {
 }
 
 use List::Util qw(shuffle);
+use JSON qw(encode_json);
 sub generate_class {
 	my ($self, $package, $ids, $parent, $restrictions) = @_;
 	$ids = {} unless defined $ids;
@@ -202,7 +203,10 @@ sub generate_class {
 	# Simple fields.
 	foreach my $field (grep { !$_->is_relation } values(%$fields)) {
 		my $name = $field->name;
-		$object->$name($field->generate());
+		my $value = $field->generate();
+		# If it's a hash, encode it as JSON.
+		$value = encode_json($value) if ref($value) && ref($value) eq "HASH";
+		$object->$name($value);
 	}
 	$ids->{$package} = [] unless defined $ids->{$package};
 
@@ -237,6 +241,8 @@ sub generate_class {
 	}
 
 	# Simpler relationships.
+	
+	$object = $object->insert;
 	foreach my $field (grep { $_->is_relation && !$_->is_parent } values(%$fields)) {
 		my $relation = $field->relation;
 		if ($field->is_db_belongs_to && $field->db_rand_count > 0) {
@@ -258,11 +264,11 @@ sub generate_class {
 		}
 	}
 	$self->correct_object($object);
-	$object = $object->insert;
+	$object->update;
 	# Many-Many
 	foreach my $field (grep { $_->is_relation && $_->is_db_many_many } values(%$fields)) {
 		my $relation = $field->relation;
-		next if $relation =~ m/Metafield/i;
+		#next if $relation =~ m/Metafield/i;
 		my $accessor = "add_to_" . $field->name . "_hasmany";
 		if (defined $ids->{$relation}) {
 			my $many_count = $field->db_rand_count;
@@ -295,13 +301,24 @@ sub finalize_class {
 use List::Util qw(max);
 sub check_increment_calls {
 	my ($self) = @_;
+	$self->last_timestamp(DateTime->now);
 	die new WWW::Shopify::Exception::InvalidKey() unless $self->access_token;
 	my $duration = time - $api_recycle_times{$self->associate->id}->{recycled};
 	my $api_calls = $api_recycle_times{$self->associate->id}->{calls};
 	print STDERR "ID: " . $self->associate->id . " Seconds: " . $duration . " Calls: " . $api_recycle_times{$self->associate->id}->{calls} .  "\n";
 	$api_calls = max(0, $api_calls - (int($duration / $self->CALL_LIMIT_LEAK_TIME) * $self->CALL_LIMIT_LEAK_RATE));
 	$self->reset_call_limit($api_calls);
-	die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached")) if $api_calls == $self->CALL_LIMIT_MAX;
+	if ($api_calls == $self->CALL_LIMIT_MAX) {
+		if ($self->sleep_for_limit) {
+			sleep(1);
+			$duration = time - $api_recycle_times{$self->associate->id}->{recycled};
+			$api_calls = $api_recycle_times{$self->associate->id}->{calls};
+			$api_calls = max(0, $api_calls - (int($duration / $self->CALL_LIMIT_LEAK_TIME) * $self->CALL_LIMIT_LEAK_RATE));
+			$self->reset_call_limit($api_calls);
+		} else {
+			die WWW::Shopify::Exception::CallLimit->new(HTTP::Response->new(429, "API Call Limit Reached"));
+		}
+	}
 	$self->api_calls($api_calls + 1);
 	$api_recycle_times{$self->associate->id}->{calls} = $api_calls+1;
 }
@@ -311,15 +328,25 @@ sub reset_call_limit {
 	$api_recycle_times{$self->associate->id}->{calls} = $calls;
 	$api_recycle_times{$self->associate->id}->{recycled} = time;
 }
+sub reset_all_calls {
+	for (keys(%api_recycle_times)) {
+		$api_recycle_times{$_}->{calls} = 0;
+		$api_recycle_times{$_}->{recycled} = time;
+	}
+}
 
 sub check_scope {
 	my ($self, $package, $read_write) = @_;
 	return undef;
 }
 
+sub get_timestamp {
+	return DateTime->now->subtract( seconds => 6);
+}
+
 #use Sys::CPU;
 #use threads;
-my $internal_range = 1000000;
+my $internal_range = 1000000000;
 use List::Util qw(min);
 use List::MoreUtils qw(part);
 sub generate {
@@ -342,9 +369,9 @@ sub generate {
 			my $max_range = ($initial_range+1) * $internal_range;
 
 			print STDERR "====== GENERATING SHOP =======\n";
-			my %ids = ();
+			my %ids = ( );
 			my $shop = $self->generate_class('WWW::Shopify::Model::Shop', \%ids);
-			%ids = ();
+			%ids = ( 'WWW::Shopify::Model::Shop' => [$shop->id] );
 			my %counts = map { $_ => $items->{$_} } grep { $_ !~ m/Shop$/ } keys(%$items);
 
 			while (int(keys(%counts)) > 0) {
@@ -381,36 +408,55 @@ sub generate_conditions {
 	my ($self, $package, $specs, $rs) = @_;
 	my %conditions = ();
 	my $queries = $package->queries;
-	$rs = $rs->search({}, { rows => WWW::Shopify->PULLING_ITEM_LIMIT, page => $specs->{page} }) if exists $specs->{limit} && exists $specs->{page};
+	$rs = $rs->search({}, { rows => $self->PULLING_ITEM_LIMIT, page => $specs->{page} }) if exists $specs->{limit} && exists $specs->{page};
 	$rs = $rs->search({}, { rows => $specs->{limit} }) if exists $specs->{limit} && !exists $specs->{page};
-	$rs = $rs->search({ 'closed_at' => undef, 'cancelled_at' => undef }) if !$specs->{status} && $package eq "WWW::Shopify::Model::Order";
+	
+	
+	my %override = (
+		'WWW::Shopify::Model::Order' => {
+			'status' => sub {
+				my ($rs, $value) = @_;
+				return $rs if $value eq "any";
+				return $rs->search({ closed_at => undef, cancelled_at => undef }) if $value eq "open";
+				return $rs->search({ cancelled_at => { '!=' => undef } }) if $value eq "cancelled";
+				return $rs->search({ closed_at => { '!=' => undef } }) if $value eq "closed";
+			}
+		}
+	);
 
 	foreach my $query (values(%$queries)) {
 		next unless exists $specs->{$query->name};
-		$conditions{$query->field_name} = {} unless exists $conditions{$query->field_name};
 		my $value = $specs->{$query->name};
 		$value = $self->{_db}->storage->datetime_parser->format_datetime($value) if ref($value) eq "DateTime";
-		if (ref($query) =~ m/LowerBound$/) {
-			$conditions{$query->field_name}->{'>='} = $value;
+		
+		if ($override{$package} && $override{$package}->{$query->name}) {
+			my $sub = $override{$package}->{$query->name};
+			$rs = &$sub($rs, $value);
 		}
-		elsif (ref($query) =~ m/UpperBound$/) {
-			$conditions{$query->field_name}->{'<='} = $value;
+		else {
+			$conditions{$query->field_name} = {} unless exists $conditions{$query->field_name};
+			if (ref($query) =~ m/LowerBound$/) {
+				$conditions{$query->field_name}->{'>='} = $value;
+			}
+			elsif (ref($query) =~ m/UpperBound$/) {
+				$conditions{$query->field_name}->{'<='} = $value;
+			}
+			elsif (ref($query) =~ m/Enum$/) {
+				$conditions{$query->field_name} = $value;
+				die new WWW::Shopify::Exception("Can't specify $value for enum " . $query->name . ", must be one of the following: " .  join(", ", $query->enums)) unless
+					first { $_ eq $value } $query->enums;
+				delete $conditions{$query->field_name} if $value eq "any";
+			}
+			elsif (ref($query) =~ m/Match$/) {
+				$conditions{$query->field_name} = $value;
+			}
+			elsif (ref($query) =~ m/Custom$/) {
+				$rs = $query->routine->($rs, $value);
+			}
 		}
-		elsif (ref($query) =~ m/Enum$/) {
-			$conditions{$query->field_name} = $value;
-			die new WWW::Shopify::Exception("Can't specify $value for enum " . $query->name . ", must be one of the following: " .  join(", ", $query->enums)) unless
-				first { $_ eq $value } $query->enums;
-			delete $conditions{$query->field_name} if $value eq "any";
-		}
-		elsif (ref($query) =~ m/Match$/) {
-			$conditions{$query->field_name} = $value;
-		}
-		elsif (ref($query) =~ m/Custom$/) {
-			$rs = $query->routine->($rs, $value);
-		}
-		# We keep the conditions hash because of legacy reasons.
-		$rs = $rs->search({%conditions});
 	}
+	# We keep the conditions hash because of legacy reasons.
+	$rs = $rs->search({%conditions}) if %conditions;
 	return $rs;
 }
 
@@ -446,7 +492,7 @@ use Data::Dumper;
 sub get_all_limit {
 	my ($self, $package, $specs) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
-	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless $specs->{"limit"};
+	$specs->{"limit"} = $self->PULLING_ITEM_LIMIT unless $specs->{"limit"};
 	return () if ($specs->{limit} == 0);
 	$package = $self->translate_model($package);
 	$self->validate_item($package);	
@@ -467,11 +513,11 @@ sub get_all_limit {
 		}
 	}
 	$rs = $self->generate_conditions($package, $specs, $rs);
+	$rs = $rs->search({ }, { rows => $specs->{limit} });
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	@return = $rs->all;
-	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
+	my $call_count = ceil($specs->{limit} / $self->PULLING_ITEM_LIMIT);
 	$self->check_increment_calls for (1..$call_count);
-	splice(@return, $specs->{limit}) if (int(@return) > $specs->{limit});
 	return map { my $obj = $self->{_mapper}->to_shopify($_, $self); $obj->associated_parent($specs->{parent}); $self->filter_gettable($obj) } @return;
 }
 
@@ -490,8 +536,8 @@ sub search {
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	my @return = $rs->all;
 
-	$specs->{"limit"} = WWW::Shopify->PULLING_ITEM_LIMIT unless $specs->{"limit"};
-	my $call_count = ceil($specs->{limit} / WWW::Shopify->PULLING_ITEM_LIMIT);
+	$specs->{"limit"} = $self->PULLING_ITEM_LIMIT unless $specs->{"limit"};
+	my $call_count = ceil($specs->{limit} / $self->PULLING_ITEM_LIMIT);
 	$self->check_increment_calls for (1..$call_count);
 
 	@return = map { my $obj = $self->{_mapper}->to_shopify($_, $self); $obj->associate($self); $self->filter_gettable($obj) } @return;
@@ -535,6 +581,7 @@ sub get_count {
 			$rs = $rs->search({ 'me.' . $self->{_mapper}->transform_package($package)->parent_variable => $specs->{parent}->id });
 		}
 	}
+	$rs = $self->generate_conditions($package, $specs, $rs);
 	
 	print STDERR Dumper([$rs->as_query]) if $ENV{'SHOPIFY_LOG'};
 	return $rs->count;
@@ -568,16 +615,21 @@ sub post_creation_fields {
 	elsif (ref($item) =~ m/Discount/) {
 		$item->status("enabled");
 	}
+	$item->created_at(DateTime->now) if ($item->has_column('created_at'));
+	$item->updated_at(DateTime->now) if ($item->has_column('updated_at'));
 }
 
 sub create {
 	my ($self, $item, $options) = @_;
 	die new WWW::Shopify::Exception("WWW::Shopify::Test object not associated with shop. Call associate.") unless $self->associate();
 	$self->check_increment_calls;
+	
+	# Helps to have a little delay from time to time.
+	sleep(int(rand()*3));
 
 	$self->validate_item(ref($item));
 	my $package = ref($item);
-	my @missing = grep { !defined $item->{$_} } $item->creation_minimal;
+	my @missing = grep { !exists $item->{$_} } $item->creation_minimal;
 	die "Missing minimal creation member(s) " . join(", ", @missing) . "." if @missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 
@@ -612,6 +664,17 @@ sub create {
 		}
 	}
 	fill_creation($self, $dbixgroup->nested);
+
+	my %validities = (
+		'WWW::Shopify::Model::Order::Fulfillment' => sub {
+			# my ($item) = @_;
+			# my $order = $item->parent;
+			# my @fulfillments = $order->fulfillments->all;
+			# if ($order->
+		}
+	);
+	#my $represents = $dbixgroup->contents->represents;
+	#my $sub = $validities{$represents}($dbixgroup->contents) if $validites{$represents};
 
 	my $return;
 	eval {
@@ -680,6 +743,27 @@ sub delete {
 	$self->callback->webhook($self->associate, $item, "delete") if $self->callback && $item->throws_delete_webhooks;
 
 	return 1;
+}
+
+# For orders, among others.
+sub close {
+	my ($self, $class) = @_;
+	die new WWW::Shopify::Exception("Only orders can be closed.") unless defined $class && $class->can_close;
+	$self->check_increment_calls;
+	$self->validate_item(ref($class));
+
+	$self->resolve_trailing_url($class, "close", $class->associated_parent);
+
+	my $object = $self->{_db}->resultset(transform_name(ref($class)))->find({ id => $class->id() });
+	die new WWW::Shopify::Exception("Unable to find orders with id: " . $class->id()) unless defined $object;
+	die new WWW::Shopify::Exception("Unable to close " . $class->singular . " " . $class->id . "; is already closed!")
+		if $object->closed_at;
+	$object->closed_at(DateTime->now);
+	$object->update;
+
+	my $obj = $self->{_mapper}->to_shopify($object, $self);
+	$obj->associate($self);
+	return $obj;
 }
 
 # This function is solely for charges.

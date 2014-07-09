@@ -14,10 +14,12 @@ BEGIN { $fields = {
 	"address" => new WWW::Shopify::Field::String::URL(),
 	"topic" => new WWW::Shopify::Field::String::Enum(
 		qw(	
-			orders/create orders/updated orders/paid orders/cancelled orders/fulfilled orders/partially_fulfilled
-			app/uninstalled customer_groups/create customer_groups/update customer_groups/delete products/create
-			products/update products/delete collections/create collections/update collections/delete carts/create carts/update
-			shop/update
+			orders/create orders/delete orders/updated orders/paid orders/cancelled orders/fulfilled orders/partially_fulfilled carts/create
+			carts/update checkouts/create checkouts/update checkouts/delete products/create products/update
+			products/delete collections/create collections/update collections/delete customer_groups/create
+			customer_groups/update customer_groups/delete customers/create customers/enable customers/disable
+			customers/update customers/delete fulfillments/create fulfillments/update shop/update app/uninstalled
+			
 		)
 	),
 	"id" => new WWW::Shopify::Field::Identifier(),

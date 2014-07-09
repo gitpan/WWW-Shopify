@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.997';
+our $VERSION = '0.998';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -73,10 +73,13 @@ use WWW::Shopify::URLHandler;
 use WWW::Shopify::Query;
 use WWW::Shopify::Login;
 
+
 # Make sure we include all our models so that when people call the model, we actually know what they're talking about.
 BEGIN {	eval(join("\n", map { "require $_;" } findallmod WWW::Shopify::Model)); }
 
 package WWW::Shopify;
+
+use Date::Parse;
 
 =head1 METHODS
 
@@ -91,10 +94,10 @@ sub new {
 	die new WWW::Shopify::Exception("Can't create a shop without a shop url.") unless $shop_url;
 	my $ua = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
 	$ua->cookie_jar({ });
-	$ua->timeout(10);	
+	$ua->timeout(30);	
 	$ua->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
 	$package = "WWW::Shopify::Login" if $package eq "WWW::Shopify";
-	my $self = bless { _shop_url => $shop_url, _ua => $ua, _url_handler => undef, _api_calls => 0 }, $package;
+	my $self = bless { _shop_url => $shop_url, _ua => $ua, _url_handler => undef, _api_calls => 0, _sleep_for_limit => 0, _last_timestamp => undef }, $package;
 	$self->url_handler(new WWW::Shopify::URLHandler($self));
 	$self->login_admin($email, $password) if defined $email && defined $password;
 	return $self;
@@ -103,6 +106,8 @@ sub new {
 
 sub api_calls { $_[0]->{_api_calls} = $_[1] if defined $_[1]; return $_[0]->{_api_calls}; }
 sub url_handler { $_[0]->{_url_handler} = $_[1] if defined $_[1]; return $_[0]->{_url_handler}; }
+sub sleep_for_limit { $_[0]->{_sleep_for_limit} = $_[1] if defined $_[1]; return $_[0]->{_sleep_for_limit}; }
+sub last_timestamp { $_[0]->{_last_timestamp} = $_[1] if defined $_[1]; return $_[0]->{_last_timestamp}; }
 
 =head2 encode_url($url)
 
@@ -149,10 +154,39 @@ sub CALL_LIMIT_MAX { return 40; }
 sub CALL_LIMIT_LEAK_TIME { return 1; }
 sub CALL_LIMIT_LEAK_RATE { return 2; }
 
-sub get_url { return $_[0]->url_handler->get_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub post_url { return $_[0]->url_handler->post_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub put_url { return $_[0]->url_handler->put_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
-sub delete_url { return $_[0]->url_handler->delete_url($_[0]->encode_url($_[1]), $_[2], $_[3]); }
+sub get_url { return $_[0]->url_handler->get_url($_[1], $_[2], $_[3], $_[4]); }
+sub post_url { return $_[0]->url_handler->post_url($_[1], $_[2], $_[3], $_[4]); }
+sub put_url { return $_[0]->url_handler->put_url($_[1], $_[2], $_[3], $_[4]); }
+sub delete_url { return $_[0]->url_handler->delete_url($_[1], $_[2], $_[3], $_[4]); }
+
+use Data::Dumper;
+sub use_url {
+	my ($self, $type, $url, @args) = @_;
+	my $method = lc($type) . "_url";
+	my ($decoded, $response);
+	$url = $self->encode_url($url);
+	eval {
+		if ($self->sleep_for_limit) {
+			do { 
+				eval { ($decoded, $response) = $self->$method($url, @args); };
+				if (my $exp = $@) { 
+					die $exp if !ref($exp) || ref($exp) ne 'WWW::Shopify::Exception::CallLimit';
+					sleep(1);
+				}
+			} while (!$response);
+		} else {
+			($decoded, $response) = $self->$method($url, @args);
+		}
+	};
+	if (my $exp = $@) {
+		print STDERR Dumper($exp->error) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
+		die $exp;
+	}
+	print STDERR uc($type) . " " . $response->request->uri . "\n" if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} == 1;
+	print STDERR Dumper($response) if $ENV{'SHOPIFY_LOG'} && $ENV{'SHOPIFY_LOG'} > 1;
+	$self->last_timestamp(DateTime->from_epoch( epoch => str2time($response->header('Date'))) );
+	return ($decoded, $response);
+}
 
 use Devel::StackTrace;
 sub resolve_trailing_url {
@@ -171,7 +205,8 @@ sub get_all_limit {
 	$specs->{"limit"} = PULLING_ITEM_LIMIT unless exists $specs->{"limit"};
 	return () if ($specs->{limit} == 0);
 	return $self->get_shop if $package->is_shop;
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json", $specs);
+	my $url = $self->resolve_trailing_url($package, "get", $specs->{parent}) . ".json";
+	my ($decoded, $response) = $self->use_url('get', $url, $specs);
 	my @return = map { my $object = $package->from_json($_, $self); $object->associated_parent($specs->{parent}); $object; } @{$decoded->{$package->plural}};
 	return @return;
 }
@@ -196,29 +231,23 @@ sub get_all {
 	$self->validate_item($package);
 	return $self->get_shop if $package->is_shop;
 	return $self->get_all_limit($package, $specs) if ((defined $specs->{"limit"} && $specs->{"limit"} <= PULLING_ITEM_LIMIT) || !$package->countable());
-
-	my $item_count = $self->get_count($package, $specs);
-	$item_count = min($specs->{limit}, $item_count) if defined $specs->{limit};
-	die new WWW::Shopify::Exception("OVER LIMIT GET; NOT IMPLEMENTED.") if $item_count > $self->PULLING_ITEM_LIMIT*499;
-	$specs->{limit} = $item_count;
-	return $self->get_all_limit($package, $specs) if $item_count <= PULLING_ITEM_LIMIT;
-	my $page_count = ceil($item_count / PULLING_ITEM_LIMIT);
-	my @return = ();
-	my $start_page = $specs->{since_page} ? $specs->{since_page} : 1;
-	$specs->{limit} = PULLING_ITEM_LIMIT;
+	
+	my @return;
 	eval {
-		for($start_page..$page_count) {
-			$specs->{page} = $_;
-			push(@return, $self->get_all_limit($package, $specs));
-		};
+		$specs->{page} = 1;
+		my @chunk;
+		do {
+			@chunk = $self->get_all_limit($package, $specs);
+			push(@return, @chunk);
+			$specs->{page}++;
+		} while (int(@chunk) == $specs->{limit});
 	};
 	if (my $exception = $@) {
 		$exception->extra(\@return) if ref($exception) && $exception->isa('WWW::Shopify::Exception::CallLimit');
 		die $exception;
 	}
 	return @return if wantarray;
-	return $return[0] if int(@return) > 0;
-	return undef;
+	return $return[0];
 }
 
 =head2 get_shop($self)
@@ -232,9 +261,25 @@ Returns the actual shop object.
 sub get_shop {
 	my ($self) = @_;
 	my $package = 'WWW::Shopify::Model::Shop';
-	my ($decoded, $response) = $self->get_url("/admin/" . $package->singular() . ".json");
+	my ($decoded, $response) = $self->use_url('get', "/admin/" . $package->singular() . ".json");
 	my $object = $package->from_json($decoded->{$package->singular()}, $self);
 	return $object;
+}
+
+=head2 get_timestamp($self)
+
+Uses a call to Shopify to determine the DateTime on the shopify server. This can be used to synchronize things without worrying about the 
+local clock being out of sync with Shopify.
+
+=cut
+
+sub get_timestamp {
+	my ($self) = @_;
+	my $ua = $self->ua;
+	my ($decoded, $response) = $self->use_url('get', "/admin/shop.json");
+	my $date = $response->header('Date');
+	my $time = str2time($date);
+	return DateTime->from_epoch( epoch => $time );
 }
 
 =head2 get_count($self, $package, $filters)
@@ -252,7 +297,7 @@ sub get_count {
 	$package = $self->translate_model($package);
 	$self->validate_item($package);
 	die "Cannot count $package." unless $package->countable();
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/count.json", $specs);
+	my ($decoded, $response) = $self->use_url('get', $self->resolve_trailing_url($package, "get", $specs->{parent}) . "/count.json", $specs);
 	return $decoded->{'count'};
 }
 
@@ -274,10 +319,10 @@ sub get {
 	my ($decoded, $response);
 	eval {
 		if ($package !~ m/Asset/) {
-			($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/$id.json");
+			($decoded, $response) = $self->use_url('get', $self->resolve_trailing_url($package, "get", $specs->{parent}) . "/$id.json");
 		} else {
 			die new WWW::Shopify::Exception("MUST have a parent with assets.") unless $specs->{parent};
-			($decoded, $response) = $self->get_url("/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
+			($decoded, $response) = $self->use_url('get', "/admin/themes/" . $specs->{parent}->id . "/assets.json", {'asset[key]' => $id, theme_id => $specs->{parent}->id});
 		}
 	};
 	if (my $exp = $@) {
@@ -308,7 +353,7 @@ sub search {
 	die new WWW::Shopify::Exception("Must have a query to search.") unless $specs && $specs->{query};
 	$self->validate_item($package);
 
-	my ($decoded, $response) = $self->get_url($self->resolve_trailing_url($package, "get", $specs->{parent}) . "/search.json", $specs);
+	my ($decoded, $response) = $self->use_url('get', $self->resolve_trailing_url($package, "get", $specs->{parent}) . "/search.json", $specs);
 
 	my @return = ();
 	foreach my $element (@{$decoded->{$package->plural()}}) {
@@ -333,12 +378,11 @@ sub create {
 	my ($self, $item, $options) = @_;
 	$self->validate_item(ref($item));
 	my $specs = {};
-	my $missing = first { !defined $item->{$_} } $item->creation_minimal;
+	my $missing = first { !exists $item->{$_} } $item->creation_minimal;
 	die new WWW::Shopify::Exception("Missing minimal creation member: $missing in " . ref($item)) if $missing;
 	die new WWW::Shopify::Exception(ref($item) . " requires you to login with an admin account.") if $item->needs_login && !$self->logged_in_admin;
 	$specs = $item->to_json();
-	my $method = lc($item->create_method) . "_url";
-	my ($decoded, $response) = $self->$method($self->resolve_trailing_url($item, "create", $item->associated_parent) . ".json", {$item->singular() => $specs}, $item->needs_login);
+	my ($decoded, $response) = $self->use_url($item->create_method, $self->resolve_trailing_url(ref($item), "create", $item->associated_parent) . ".json", {$item->singular() => $specs}, $item->needs_login);
 	my $element = $decoded->{$item->singular};
 	my $object = ref($item)->from_json($element, $self);
 	$object->associated_parent($item->associated_parent);
@@ -357,16 +401,14 @@ sub update {
 	my %mods = map { $_ => 1 } $class->update_fields;
 	my $vars = $class->to_json();
 	$vars = { $class->singular => {map { $_ => $vars->{$_} } grep { exists $mods{$_} } keys(%$vars)} };
-	my $method = lc($class->update_method) . "_url";
 
 	my ($decoded, $response);
-	
 	if (ref($class) =~ m/Asset/) {
 		my $url = $self->resolve_trailing_url(ref($class), "update", $class->associated_parent) . ".json";
-		($decoded, $response) = $self->$method($url, $vars);
+		($decoded, $response) = $self->use_url($class->update_method, $url, $vars);
 	}
 	else {
-		($decoded, $response) = $self->$method($self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
+		($decoded, $response) = $self->use_url($class->update_method, $self->resolve_trailing_url($class, "update", $class->associated_parent) . "/" . $class->id . ".json", $vars);
 	}
 
 	my $element = $decoded->{$class->singular()};
@@ -384,13 +426,12 @@ Deletes the item from the shopify store. Not all items are deletable, check the 
 sub delete {
 	my ($self, $class) = @_;
 	$self->validate_item(ref($class));
-	my $method = lc($class->delete_method) . "_url";
 	if (ref($class) =~ m/Asset/) {
 		my $url = $self->resolve_trailing_url(ref($class), "delete", $class->associated_parent) . ".json?asset[key]=" . $class->key;
-		$self->$method($url);
+		$self->use_url($class->delete_method, $url);
 	}
 	else {
-		$self->$method($self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
+		$self->use_url($class->delete_method, $self->resolve_trailing_url($class, "delete", $class->associated_parent) . "/" . $class->id . ".json");
 	}
 	return 1;
 }
@@ -403,7 +444,7 @@ sub custom_action {
 	die new WWW::Shopify::Exception("You can't $action " . $object->plural . ".") unless defined $object && first { $_ eq $action } $object->actions;
 	my $id = $object->id;
 	my $url = $self->resolve_trailing_url($object, $action, $object->associated_parent) . "/$id/$action.json";
-	my ($decoded, $response) = $self->post_url($url, {$object->singular() => $object->to_json});
+	my ($decoded, $response) = $self->use_url('post', $url, {$object->singular() => $object->to_json});
 	return 1 if !$decoded;
 	my $element = $decoded->{$object->singular()};
 	$object = ref($object)->from_json($element, $self);
@@ -472,9 +513,10 @@ Determines whether or not you're logged in to the Shopify store as an admin.
 
 sub logged_in_admin {
 	my ($self) = @_;
+	return undef unless $self->{authenticity_token};
 	return 1 if $self->{last_login_check} && (time - $self->{last_login_check}) < 1000;
 	my $ua = $self->ua;
-	die new WWW::Shopify::Exception("Unable to login as admin without a cookie jar.") unless defined $ua->cookie_jar;
+	return undef unless $ua->cookie_jar;
 	my $res = $ua->get('https://' . $self->shop_url . '/admin/discounts/count.json');
 	return undef unless $res->is_success;
 	$self->{last_login_check} = time;
@@ -484,9 +526,12 @@ sub logged_in_admin {
 sub is_valid { eval { $_[0]->get_shop; }; return undef if ($@); return 1; }
 sub handleize {
 	my ($self, $handle) = @_;
+	$handle = $self if !ref($self);
+	$handle = lc($handle);
 	$handle =~ s/\s/-/g;
-	$handle =~ s/[\(\)]//;
-	return lc($handle);
+	$handle =~ s/[^a-z0-9\-]//g;
+	$handle =~ s/\-+/-/g;
+	return $handle;
 }
 
 
@@ -660,7 +705,7 @@ Adam Harrison (adamdharrison@gmail.com)
 
 =head1 LICENSE
 
-Copyright (C) 2013 Adam Harrison
+Copyright (C) 2014 Adam Harrison
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

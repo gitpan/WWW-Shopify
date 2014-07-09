@@ -10,8 +10,8 @@ use parent "WWW::Shopify::Model::Item";
 
 my $fields; sub fields { return $fields; } 
 BEGIN { $fields = {
-	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product"),
-	"collection_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::CustomCollection"),
+	"product_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product", 1),
+	"collection_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::CustomCollection", 1),
 	"created_at" => new WWW::Shopify::Field::Date(),
 	"updated_at" => new WWW::Shopify::Field::Date(),
 	"featured" => new WWW::Shopify::Field::Boolean(),

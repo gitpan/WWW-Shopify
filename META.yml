@@ -2,7 +2,8 @@
 abstract: 'Main object representing acess to a particular Shopify store.'
 author:
   - 'Adam Harrison (adamdharrison@gmail.com)'
-build_requires: {}
+build_requires:
+  DBD::SQLite: 0
 configure_requires:
   Module::Build: 0.38
 dynamic_config: 1
@@ -19,7 +20,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.997
+    version: 0.998
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
   WWW::Shopify::Common::DBIxGroup:
@@ -45,6 +46,8 @@ provides:
   WWW::Shopify::Field::Date:
     file: lib/WWW/Shopify/Field.pm
   WWW::Shopify::Field::Float:
+    file: lib/WWW/Shopify/Field.pm
+  WWW::Shopify::Field::Freeform:
     file: lib/WWW/Shopify/Field.pm
   WWW::Shopify::Field::Hook:
     file: lib/WWW/Shopify/Field.pm
@@ -240,6 +243,8 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection/Collect.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollection::Image:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollection/Image.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionCollect:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionCollect.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::CustomCollectionMetafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomCollectionMetafield.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Customer:
@@ -254,10 +259,14 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/EmailTemplate.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Event:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Event.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::File:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/File.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentLineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::FulfillmentService:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentService.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::GiftCard:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/GiftCard.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LinkList.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::LinkList::Link:
@@ -268,6 +277,8 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Locale/Authorship.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::LocaleTranslation:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/LocaleTranslation.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Location:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Location.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Metafield:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Metafield.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::MetafieldImage:
@@ -292,12 +303,20 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/DiscountCode.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::LineItem:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment/LineItem.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::LineItem::Property:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment/LineItem/Property.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::LineItem::TaxLine:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment/LineItem/TaxLine.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::Fulfillment::Receipt:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/Fulfillment/Receipt.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/LineItem.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem::Property:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/LineItem/Property.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::LineItem::TaxLine:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/LineItem/TaxLine.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::NoteAttributes:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/NoteAttributes.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::PaymentDetails:
@@ -308,6 +327,8 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ShippingAddress.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingLine:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ShippingLine.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::ShippingLine::TaxLine:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/ShippingLine/TaxLine.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Order::TaxLine:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Order/TaxLine.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Page:
@@ -326,6 +347,12 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RecurringApplicationCharge.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Redirect:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Redirect.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Refund:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Refund::LineItem:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund/LineItem.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::RefundTransaction:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RefundTransaction.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ScriptTag:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ScriptTag.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Shop:
@@ -350,8 +377,12 @@ provides:
     file: lib/WWW/Shopify/Model/EmailTemplate.pm
   WWW::Shopify::Model::Event:
     file: lib/WWW/Shopify/Model/Event.pm
+  WWW::Shopify::Model::File:
+    file: lib/WWW/Shopify/Model/File.pm
   WWW::Shopify::Model::FulfillmentService:
     file: lib/WWW/Shopify/Model/FulfillmentService.pm
+  WWW::Shopify::Model::GiftCard:
+    file: lib/WWW/Shopify/Model/GiftCard.pm
   WWW::Shopify::Model::Item:
     file: lib/WWW/Shopify/Model/Item.pm
   WWW::Shopify::Model::LinkList:
@@ -364,6 +395,8 @@ provides:
     file: lib/WWW/Shopify/Model/Locale/Authorship.pm
   WWW::Shopify::Model::LocaleTranslation:
     file: lib/WWW/Shopify/Model/LocaleTranslation.pm
+  WWW::Shopify::Model::Location:
+    file: lib/WWW/Shopify/Model/Location.pm
   WWW::Shopify::Model::Metafield:
     file: lib/WWW/Shopify/Model/Metafield.pm
   WWW::Shopify::Model::NestedItem:
@@ -378,12 +411,20 @@ provides:
     file: lib/WWW/Shopify/Model/Order/DiscountCode.pm
   WWW::Shopify::Model::Order::Fulfillment:
     file: lib/WWW/Shopify/Model/Order/Fulfillment.pm
+  WWW::Shopify::Model::Order::Fulfillment::LineItem:
+    file: lib/WWW/Shopify/Model/Order/Fulfillment/LineItem.pm
+  WWW::Shopify::Model::Order::Fulfillment::LineItem::Property:
+    file: lib/WWW/Shopify/Model/Order/Fulfillment/LineItem/Property.pm
+  WWW::Shopify::Model::Order::Fulfillment::LineItem::TaxLine:
+    file: lib/WWW/Shopify/Model/Order/Fulfillment/LineItem/TaxLine.pm
   WWW::Shopify::Model::Order::Fulfillment::Receipt:
     file: lib/WWW/Shopify/Model/Order/Fulfillment/Receipt.pm
   WWW::Shopify::Model::Order::LineItem:
     file: lib/WWW/Shopify/Model/Order/LineItem.pm
   WWW::Shopify::Model::Order::LineItem::Property:
     file: lib/WWW/Shopify/Model/Order/LineItem/Property.pm
+  WWW::Shopify::Model::Order::LineItem::TaxLine:
+    file: lib/WWW/Shopify/Model/Order/LineItem/TaxLine.pm
   WWW::Shopify::Model::Order::NoteAttributes:
     file: lib/WWW/Shopify/Model/Order/NoteAttributes.pm
   WWW::Shopify::Model::Order::PaymentDetails:
@@ -394,6 +435,8 @@ provides:
     file: lib/WWW/Shopify/Model/Order/ShippingAddress.pm
   WWW::Shopify::Model::Order::ShippingLine:
     file: lib/WWW/Shopify/Model/Order/ShippingLine.pm
+  WWW::Shopify::Model::Order::ShippingLine::TaxLine:
+    file: lib/WWW/Shopify/Model/Order/ShippingLine/TaxLine.pm
   WWW::Shopify::Model::Order::TaxLine:
     file: lib/WWW/Shopify/Model/Order/TaxLine.pm
   WWW::Shopify::Model::Page:
@@ -412,6 +455,10 @@ provides:
     file: lib/WWW/Shopify/Model/RecurringApplicationCharge.pm
   WWW::Shopify::Model::Redirect:
     file: lib/WWW/Shopify/Model/Redirect.pm
+  WWW::Shopify::Model::Refund:
+    file: lib/WWW/Shopify/Model/Refund.pm
+  WWW::Shopify::Model::Refund::LineItem:
+    file: lib/WWW/Shopify/Model/Refund/LineItem.pm
   WWW::Shopify::Model::ScriptTag:
     file: lib/WWW/Shopify/Model/ScriptTag.pm
   WWW::Shopify::Model::Shop:
@@ -457,6 +504,7 @@ provides:
   WWW::Shopify::URLHandler::Queued:
     file: lib/WWW/Shopify/URLHandler/Queued.pm
 requires:
+  Clone: 0
   Crypt::Eksblowfish: 0.009
   DBIx::Class: 0.08204
   Data::Random: 0.08
@@ -469,6 +517,7 @@ requires:
   LWP::Protocol::https: 6.03
   LWP::UserAgent: 6.04
   MIME::Base64: 3.13
+  Math::Round: 0
   SQL::Translator: 0.11016
   Scalar::Util: 0
   String::Numeric: 0.9
@@ -476,4 +525,4 @@ requires:
   URI::Escape: 3.31
 resources:
   repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.997
+version: 0.998

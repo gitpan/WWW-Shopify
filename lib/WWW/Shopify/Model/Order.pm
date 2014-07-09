@@ -34,7 +34,10 @@ BEGIN { $fields = {
 	"token" => new WWW::Shopify::Field::String::Hex32(),
 	"total_discounts" =>  new WWW::Shopify::Field::Money(),
 	"total_line_items_price" =>  new WWW::Shopify::Field::Money(),
-	"source" =>  new WWW::Shopify::Field::String::Enum(["web", "pos"]),
+	"source" =>  new WWW::Shopify::Field::String::Enum(["browser", "pos"]),
+	"source_name" => new WWW::Shopify::Field::String::Enum(["web", "pos"]),
+	"source_identifier" => new WWW::Shopify::Field::String(),
+	"source_url" => new WWW::Shopify::Field::String::URL(),
 	"total_price" =>  new WWW::Shopify::Field::Money(),
 	"total_price_usd" =>  new WWW::Shopify::Field::Money::USD(),
 	"total_tax" =>  new WWW::Shopify::Field::Money(),
@@ -42,20 +45,27 @@ BEGIN { $fields = {
 	"updated_at" => new WWW::Shopify::Field::Date(),
 	"browser_ip" => new WWW::Shopify::Field::String::IPAddress(),
 	"landing_site_ref" => new WWW::Shopify::Field::String(),
+	"tags" => new WWW::Shopify::Field::String(),
 	"order_number" => new WWW::Shopify::Field::Int(),
-	"discount_codes" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::DiscountCode"),
+	"location_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::Location'),
+	"discount_codes" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::DiscountCode", 0, 1),
 	"note_attributes" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::NoteAttributes"),
 	"processing_method" => new WWW::Shopify::Field::String::Enum(["direct", "indirect"]),
-	"line_items" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem"),
+	"line_items" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::LineItem", 1),
 	"shipping_lines" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::ShippingLine"),
 	"tax_lines" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::TaxLine"),
 	"payment_details" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Order::PaymentDetails"),
-	"billing_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address"),
-	"shipping_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address"),
+	"billing_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address", 1),
+	"shipping_address" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Address", 1),
 	"fulfillments" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Order::Fulfillment"),
 	"client_details" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Order::ClientDetails"),
 	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer"),
-	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield")
+	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
+	
+	"send_webhooks" => new WWW::Shopify::Field::Boolean(),
+	"send_receipt" => new WWW::Shopify::Field::Boolean(),
+	"send_fulfillment_receipt" => new WWW::Shopify::Field::Boolean(),
+	"inventory_behaviour" => new WWW::Shopify::Field::String::Enum(["bypass", "decrement_ignoring_policy", "decrement_obeying_policy"])
 }; }
 my $queries; sub queries { return $queries; }
 BEGIN { $queries = {
@@ -66,14 +76,19 @@ BEGIN { $queries = {
 	status => new WWW::Shopify::Query::Enum('status', ['open', 'closed', 'cancelled', 'any']),
 	financial_status => new WWW::Shopify::Query::Enum('financial_status', ['authorized', 'pending', 'paid', 'partially_paid', 'abandoned', 'refunded', 'voided', 'any']),
 	fulfillment_status => new WWW::Shopify::Query::Enum('fulfillment_status', ['shipped', 'partial', 'unshipped', 'any']),
-	since_id => new WWW::Shopify::Query::LowerBound('id')
+	since_id => new WWW::Shopify::Query::LowerBound('id'),
+	customer_id => new WWW::Shopify::Query::Custom('customer_id', sub { 
+		my ($rs, $value) = @_;
+		return $rs->search({ 'customer.id' => $value },
+			{ 'join' => 'customer', '+select' => ['collects.collection_id'], '+as' => ['collection_id'], }
+		)
+	})
 }; }
-
-sub creatable { return undef; }
-sub updatable { return undef; }
 
 sub actions { return qw(open close cancel); }
 
+sub get_fields { return grep { $_ ne "send_webhooks" && $_ ne "send_receipt" && $_ ne "send_fulfillment_receipt" && $_ ne "inventory_behaviour" } keys(%$fields); }
+sub creation_minimal { return qw(line_items); }
 sub update_filled { return qw(updated_at); }
 sub update_fields { return qw(note note_attributes email buyer_accepts_marketing); };
 

@@ -280,6 +280,14 @@ sub cancel_through_parent { return defined $_[0]->parent; }
 sub enable_through_parent { return defined $_[0]->parent; }
 sub disable_through_parent { return defined $_[0]->parent; }
 
+=head2 included_in_parent
+
+Tells you whether a sub-object is included by defualt when you get an object as a sub-object. Most cases is 1.
+
+=cut
+
+sub included_in_parent { return 1; }
+
 =head2 field($package, $name), fields($package)
 
 Returns a WWW::Shopify::Field::... which describes the specified field, or returns a hash containing all fields.
@@ -312,6 +320,8 @@ sub associated_parent {
 	}
 	return $_[0]->{associated_parent};
 }
+
+sub has_metafields { return defined $_[0]->field('metafields'); }
 
 =head2 metafields($self)
 
@@ -382,18 +392,19 @@ sub from_json {
 					} @{$json->{$package->plural()}}];
 				}
 				elsif ($ref->{$_}->is_one && $ref->{$_}->is_own) {
+					next unless (exists $json->{$_});
 					$self->{$_} = $package->from_json($json->{$_}, $associated);
 					$self->{$_}->associated_parent($self) if $self->{$_};
 				}
 				elsif ($ref->{$_}->is_one) {
-					$self->{$_} = $json->{$_};
+					$self->{$_} = $json->{$_} if exists $json->{$_};
 				}
 				else {
 					die "Relationship specified must be either many, or one in $package.";
 				}
 			}
 			else {
-				$self->{$_} = $ref->{$_}->from_shopify($json->{$_});
+				$self->{$_} = $ref->{$_}->from_shopify($json->{$_}) if exists $json->{$_};
 			}
 		}
 	}
@@ -427,7 +438,7 @@ sub to_json($) {
 					$final->{$key} = [map { $_->to_json() } @results];
 				}
 				else {
-					$final->{$key} = [];
+					$final->{$key} = [] if exists $self->{$key};
 				}
 			}
 			if ($fields->{$key}->is_one() && $fields->{$key}->is_reference()) {
@@ -442,13 +453,13 @@ sub to_json($) {
 					}
 				}
 				else {
-					$final->{$key} = undef;
+					$final->{$key} = undef if exists $self->{$key};
 				}
 			}
-			$final->{$key} = ($self->$key ? $self->$key->to_json() : undef) if ($fields->{$key}->is_one() && $fields->{$key}->is_own());
+			$final->{$key} = ($self->$key ? $self->$key->to_json() : undef) if (exists $self->{$key} && $fields->{$key}->is_one() && $fields->{$key}->is_own());
 		}
 		else {
-			$final->{$key} = $fields->{$key}->to_shopify($self->$key);
+			$final->{$key} = $fields->{$key}->to_shopify($self->$key) if exists $self->{$key};
 		}
 	}
 	return $final;

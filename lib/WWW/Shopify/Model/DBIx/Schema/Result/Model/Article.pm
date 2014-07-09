@@ -10,15 +10,15 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_blogs_articles');
 __PACKAGE__->add_columns(
-	"summary_html", { data_type => 'TEXT', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"published", { is_nullable => '1', data_type => 'BOOL' },
+	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"published_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"author", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"tags", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"published", { data_type => 'BOOL', is_nullable => '1' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"tags", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"user_id", { data_type => 'INT', is_nullable => '1' },
+	"author", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"summary_html", { is_nullable => '1', data_type => 'TEXT' },
 	"body_html", { data_type => 'TEXT', is_nullable => '1' },
 	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"blog_id", { data_type => 'BIGINT' },

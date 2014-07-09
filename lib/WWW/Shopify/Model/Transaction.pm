@@ -31,6 +31,8 @@ sub update_fields { return qw(amount kind); }
 sub read_scope { return "read_orders"; }
 sub write_scope { return "write_orders"; }
 
+sub included_in_parent { return 0; }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1

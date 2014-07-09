@@ -15,7 +15,8 @@ BEGIN { $fields = {
 	"session_hash" => new WWW::Shopify::Field::String("[0-9A-F]{32}"),
 	"user_agent" => new WWW::Shopify::Field::String()
 }; }
-sub plural() { return 'properties'; }
+sub singular { return 'client_details'; }
+sub plural { return 'client_details'; }
 sub creatable { return undef; }
 sub updatable { return undef; }
 sub deletable { return undef; }

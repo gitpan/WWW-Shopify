@@ -10,13 +10,13 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_api_permissions');
 __PACKAGE__->add_columns(
-	"api_permissions_count", { data_type => 'INT', is_nullable => '1' },
-	"app_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"access_token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"callback_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"app_url", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"access_token", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"callback_url", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"api_permissions_count", { is_nullable => '1', data_type => 'INT' },
 	"preferences_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"api_client_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"api_client_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

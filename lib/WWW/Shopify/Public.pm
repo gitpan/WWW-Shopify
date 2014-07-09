@@ -77,6 +77,42 @@ sub authorize_url {
 	return "https://$hostname/admin/oauth/authorize?" . join("&", map { "$_=" . uri_escape($parameters{$_}) } keys(%parameters));
 }
 
+=head2 scope_compare(@$scope1, @$scope2)
+	
+Determines whether scope1 is more or less permissive than scope2. If the scopes cannot be compared easily
+(e.g. [write_orders, read_products], [read_products, write_script_tag]),  then undef is returned. If scopes
+can be compared, returns -1, 0 or 1 as appropriate.
+
+=cut
+
+use Exporter 'import';
+our @EXPORT_OK = qw(scope_compare);
+
+sub scope_compare {
+	my ($scope1, $scope2) = @_;
+	die new WWW::Shopify::Exception("Invalid scopes passed to compare.") unless ref($scope1) && ref($scope2) && ref($scope1) eq "ARRAY" && ref($scope2) eq "ARRAY";
+	# If scope2 has more permission settings than scope1, we've jumped up in permissions.
+	return 1 if int(@$scope1) < int(@$scope2);
+	return -1 if (int(@$scope1) > int(@$scope2));
+	# Here, we should have exactly equal amounts of scopes in both arrays, sorted. So they should be the same types down.
+	$scope1 = [sort(@$scope1)];
+	$scope2 = [sort(@$scope2)];
+	for (0..int(@$scope1)-1) {
+		die new WWW::Shopify::Exception("Invalid scope: $_") unless $scope1->[$_] =~ m/(read|write)_(\w+)/;
+		my ($scope1_permission, $scope1_type) = ($1, $2);
+		die new WWW::Shopify::Exception("Invalid scope: $_") unless $scope2->[$_] =~ m/(read|write)_(\w+)/;
+		my ($scope2_permission, $scope2_type) = ($1, $2);
+		# If we have not the same type, that means we've got some weird permissions going on, so we return undef, because it's
+		# neither less nor more permissive, necessarily, just different.
+		return undef unless $scope1_type eq $scope2_type;
+		# When we've jumped down to a read in our second scope, we're less permissive.
+		return -1 if $scope2_permission eq "read" && $scope1_permission eq "write";
+		# When we've jumped up to a write in our 
+		return 1 if $scope1_permission eq "read" && $scope2_permission eq "write";
+	}
+	return 0;
+}
+
 =head2 exchange_token($shared_secret, $code)
 
 When you have a temporary code, which you should get from authorize_url's redirect and you want to exchange it for a token, you call this.

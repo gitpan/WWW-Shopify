@@ -10,22 +10,22 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_addresses');
 __PACKAGE__->add_columns(
-	"country_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"last_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"city", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"latitude", { data_type => 'FLOAT', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
-	"province_code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"province", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"first_name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"zip", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"country", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"longitude", { data_type => 'FLOAT', is_nullable => '1' },
-	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"phone", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"address2", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"zip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"province", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"latitude", { is_nullable => '1', data_type => 'FLOAT' },
+	"province_code", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"city", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"phone", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"country_code", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"address1", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"first_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"longitude", { data_type => 'FLOAT', is_nullable => '1' },
+	"last_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

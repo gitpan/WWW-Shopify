@@ -111,11 +111,13 @@ sub validate { return is_int($_[1]); }
 
 package WWW::Shopify::Field::Boolean;
 use Scalar::Util qw(looks_like_number);
+use JSON;
 use parent 'WWW::Shopify::Field';
 sub sql_type { return "bool"; }
 sub generate { return (rand() < 0.5); }
 sub validate { return looks_like_number($_[1]) ? ($_[1] == 0 || $_[1] == 1) : (lc($_[1]) == 'true' || lc($_[1]) == 'false'); }
 sub data_type { return WWW::Shopify::Field::TYPE_BOOLEAN; }
+sub to_shopify { return $_[1] ? JSON::true : JSON::false; }
 
 package WWW::Shopify::Field::Float;
 use parent 'WWW::Shopify::Field';
@@ -126,6 +128,7 @@ sub generate($) {
 	return $_[0]->{arguments}->[0] if (int(@{$_[0]->{arguments}}) == 1);
 	return rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1) + $_[0]->{arguments}->[0];
 }
+sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
 sub validate($$) { return is_float($_[1]); }
 
 package WWW::Shopify::Field::Timezone;
@@ -369,5 +372,16 @@ sub generate($) {
 	return ::rand_datetime(%hash);
 }
 sub data_type { return WWW::Shopify::Field::TYPE_QUANTITATIVE; }
+
+# Freeform datastructure. Meaning we convert it to a JSON hash, but we don't do any further processing at all.
+package WWW::Shopify::Field::Freeform;
+use parent 'WWW::Shopify::Field';
+sub sql_type { return "text"; }
+sub generate { return {}; }
+sub data_type { return WWW::Shopify::Field::TYPE_QUALITATIVE; }
+sub validate { return !defined $_[1] || (ref($_[1]) && ref($_[1]) eq "HASH"); }
+sub to_shopify { return $_[1]; }
+use Data::Dumper;
+sub from_shopify { print STDERR Dumper($_[1]); return $_[1]; }
 
 1;

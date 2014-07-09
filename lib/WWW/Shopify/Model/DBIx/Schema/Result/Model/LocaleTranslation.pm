@@ -10,9 +10,9 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_locales_locale_translations');
 __PACKAGE__->add_columns(
-	"text", { data_type => 'TEXT', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"english", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"text", { is_nullable => '1', data_type => 'TEXT' },
 	"locale_id", { data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );

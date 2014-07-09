@@ -41,7 +41,6 @@ sub delete {
 }
 sub update_or_insert {
 	my ($self) = @_;
-	print STDERR "Updating/Inserting " . ref($self->contents) . "\n";
 	if ($self->parent) {
 		my $relationship = "add_to_" . $self->contents->represents->plural;
 		my $columns = {$self->contents->get_columns};
@@ -59,7 +58,6 @@ sub update_or_insert {
 }
 sub insert {
 	my ($self) = @_;
-	print STDERR "Inserting " . ref($self->contents) . "\n";
 	if ($self->parent) {
 		my $relationship = "add_to_" . $self->contents->represents->plural;
 		my $columns = {$self->contents->get_columns};
@@ -76,12 +74,10 @@ sub ensure_synchronicity {
 	my ($self) = @_;
 	my $package = $self->contents->represents;
 	my $fields = $package->fields;
-	print STDERR "Ensuring synchronicity for $package...\n";
 	foreach my $field (grep { $_->is_relation && ($_->is_many || $_->is_own) && $_->relation !~ m/Metafield/ } values(%$fields)) {
 		my $name = $field->name;
 		my @children = grep { $_->contents->represents eq $field->relation } $self->children;
 		$self->contents->$name->search({ id => { -not_in => [map { $_->contents->id } @children] } })->delete;
-		print STDERR "Remaining $package " . $field->relation .  " Children " . int(@children) . "\n";
 	}
 }
 

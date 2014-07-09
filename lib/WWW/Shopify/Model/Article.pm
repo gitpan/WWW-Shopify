@@ -41,6 +41,7 @@ sub has_metafields { return 1; }
 sub parent { return "WWW::Shopify::Model::Blog" }
 sub creation_minimal { return qw(title); }
 sub update_fields { return qw(author body_html summary_html published_at tags title); }
+sub included_in_parnet { return 0; }
 
 sub read_scope { return "read_content"; }
 sub write_scope { return "write_content"; }

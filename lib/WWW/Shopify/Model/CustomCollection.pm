@@ -22,10 +22,19 @@ BEGIN { $fields = {
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"image" => new WWW::Shopify::Field::Relation::OwnOne('WWW::Shopify::Model::CustomCollection::Image'),
 	"title" => new WWW::Shopify::Field::String::Words(1, 2),
-#	"collects" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::CustomCollection::Collect")
+	"collects" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::CustomCollection::Collect")
+}; }
+my $queries; sub queries { return $queries; }
+BEGIN { $queries = {
+	created_at_min => new WWW::Shopify::Query::LowerBound('created_at'),
+	created_at_max => new WWW::Shopify::Query::UpperBound('created_at'),
+	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
+	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
 }; }
 
-sub creation_minimal { return qw(collects); }
+sub get_fields { return grep { $_ ne "collects" } $_[0]->SUPER::get_fields; }
+
+sub creation_minimal { return qw(title); }
 sub creation_filled { return qw(public_url created_at); }
 sub update_filled { return qw(updated_at); }
 sub throws_webhooks { return 1; }

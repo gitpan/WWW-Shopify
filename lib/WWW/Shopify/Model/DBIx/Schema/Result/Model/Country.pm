@@ -10,9 +10,9 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_countries');
 __PACKAGE__->add_columns(
+	"tax", { is_nullable => '1', data_type => 'FLOAT' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"tax", { data_type => 'FLOAT', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"shop_id", { data_type => "BIGINT" }
 );
