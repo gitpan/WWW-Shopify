@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.998';
+our $VERSION = '0.999';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -154,10 +154,10 @@ sub CALL_LIMIT_MAX { return 40; }
 sub CALL_LIMIT_LEAK_TIME { return 1; }
 sub CALL_LIMIT_LEAK_RATE { return 2; }
 
-sub get_url { return $_[0]->url_handler->get_url($_[1], $_[2], $_[3], $_[4]); }
-sub post_url { return $_[0]->url_handler->post_url($_[1], $_[2], $_[3], $_[4]); }
-sub put_url { return $_[0]->url_handler->put_url($_[1], $_[2], $_[3], $_[4]); }
-sub delete_url { return $_[0]->url_handler->delete_url($_[1], $_[2], $_[3], $_[4]); }
+sub get_url { return $_[0]->url_handler->get_url($_[1], $_[2], $_[3], $_[4], $_[5]); }
+sub post_url { return $_[0]->url_handler->post_url($_[1], $_[2], $_[3], $_[4], $_[5]); }
+sub put_url { return $_[0]->url_handler->put_url($_[1], $_[2], $_[3], $_[4], $_[5]); }
+sub delete_url { return $_[0]->url_handler->delete_url($_[1], $_[2], $_[3], $_[4], $_[5]); }
 
 use Data::Dumper;
 sub use_url {

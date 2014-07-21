@@ -69,6 +69,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/CustomerMetafield.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Discount.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/EmailTemplate.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Event.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/EventGiftCard.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/File.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentLineItem.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/FulfillmentService.pm

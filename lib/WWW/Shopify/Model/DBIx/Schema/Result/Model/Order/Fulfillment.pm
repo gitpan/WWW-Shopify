@@ -10,14 +10,14 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_fulfillments');
 __PACKAGE__->add_columns(
-	"tracking_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"tracking_number", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"service", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"status", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"notify_customer", { data_type => 'BOOL', is_nullable => '1' },
+	"service", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"tracking_company", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"notify_customer", { data_type => 'BOOL', is_nullable => '1' },
+	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"tracking_number", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"order_id", { data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );

@@ -17,6 +17,8 @@ BEGIN { $fields = {
 	"customer_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Customer"),
 	"disabled_at" => new WWW::Shopify::Field::Date(),
 	"expires_on" => new WWW::Shopify::Field::Date(),
+	"events" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Event"),
+	"shares" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Event"),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"initial_value" => new WWW::Shopify::Field::Money(),
 	"line_item_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Order::LineItem"),
@@ -29,7 +31,7 @@ BEGIN { $fields = {
 	"last_characters" => new WWW::Shopify::Field::String::Regex('\w{4}'),
 }; }
 sub singular { return 'gift_card'; }
-sub creation_minimal { return qw(initial_value code); }
+sub creation_minimal { return qw(initial_value code events shares); }
 sub creation_filled { return qw(created_at); }
 sub update_filled { return qw(updated_at); }
 sub get_fields { return grep { $_ ne "code" } keys(%{$_[0]->fields}); }

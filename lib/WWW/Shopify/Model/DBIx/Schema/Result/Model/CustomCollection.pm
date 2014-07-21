@@ -10,16 +10,16 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_custom_collections');
 __PACKAGE__->add_columns(
-	"sort_order", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"body_html", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"handle", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"published_scope", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"published", { data_type => 'BOOL', is_nullable => '1' },
-	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
 	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"published_at", { data_type => 'DATETIME', is_nullable => '1' },
+	"published", { is_nullable => '1', data_type => 'BOOL' },
+	"sort_order", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"published_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"template_suffix", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"published_scope", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"handle", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

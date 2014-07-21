@@ -11,9 +11,9 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_orders_tax_lines');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
+	"rate", { data_type => 'FLOAT', is_nullable => '1' },
+	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"price", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
-	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"rate", { is_nullable => '1', data_type => 'FLOAT' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');

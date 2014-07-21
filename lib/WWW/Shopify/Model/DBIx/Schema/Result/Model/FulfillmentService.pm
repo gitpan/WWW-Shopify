@@ -10,20 +10,20 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_fulfillment_services');
 __PACKAGE__->add_columns(
-	"callback_url", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"provider_id", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"format", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"credential2_exists", { data_type => 'BOOL', is_nullable => '1' },
+	"tracking_support", { data_type => 'BOOL', is_nullable => '1' },
 	"handle", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"credential1", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"include_pending_stock", { is_nullable => '1', data_type => 'BOOL' },
-	"email", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"inventory_management", { is_nullable => '1', data_type => 'BOOL' },
-	"requires_shipping_method", { data_type => 'BOOL', is_nullable => '1' },
-	"service_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"tracking_support", { is_nullable => '1', data_type => 'BOOL' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"email", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"callback_url", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"format", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"include_pending_stock", { data_type => 'BOOL', is_nullable => '1' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"credential1", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"provider_id", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"credential2_exists", { is_nullable => '1', data_type => 'BOOL' },
+	"service_name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"requires_shipping_method", { is_nullable => '1', data_type => 'BOOL' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

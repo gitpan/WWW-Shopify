@@ -11,10 +11,10 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_orders_refunds');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"user_id", { data_type => 'BIGINT', is_nullable => '1' },
-	"restock", { is_nullable => '1', data_type => 'BOOL' },
-	"note", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"restock", { data_type => 'BOOL', is_nullable => '1' },
+	"note", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"user_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"shop_id", { data_type => "BIGINT" }
 );

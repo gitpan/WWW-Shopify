@@ -19,6 +19,11 @@ BEGIN { $fields = {
 	"front_end" => new WWW::Shopify::Field::Int(),
 	"avs_end" => new WWW::Shopify::Field::String(),
 	"avs_result" => new WWW::Shopify::Field::String(),
+	"avs_result_code" => new WWW::Shopify::Field::String(),
+	"card_code" => new WWW::Shopify::Field::String(),
+	"authorization_code" => new WWW::Shopify::Field::String(),
+	"cardholder_authorization_code" => new WWW::Shopify::Field::String(),
+	"action" => new WWW::Shopify::Field::String(),
 	"risk" => new WWW::Shopify::Field::String(),
 	"reference" => new WWW::Shopify::Field::String(),
 	"order_number" => new WWW::Shopify::Field::String(),
@@ -34,7 +39,9 @@ BEGIN { $fields = {
 	"avs_code" => new WWW::Shopify::Field::String(),
 	"cvv2_code" => new WWW::Shopify::Field::String(),
 	"transaction_id" => new WWW::Shopify::Field::String(),
-	"payment_details" => new WWW::Shopify::Field::Freeform()
+	"payment_details" => new WWW::Shopify::Field::Freeform(),
+	"response_code" => new WWW::Shopify::Field::String(),
+	"response_reason_code" =>  new WWW::Shopify::Field::String(),
 }; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;

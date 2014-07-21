@@ -11,10 +11,10 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_orders_client_details');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
-	"user_agent", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"browser_ip", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"accept_language", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"session_hash", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"session_hash", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"user_agent", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"browser_ip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"accept_language", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');

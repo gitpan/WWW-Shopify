@@ -11,15 +11,15 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_carts_line_items');
 __PACKAGE__->add_columns(
 	"cart_id", { data_type => 'bigint' },
-	"vendor", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"line_price", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
-	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"quantity", { is_nullable => '1', data_type => 'INT' },
-	"sku", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"grams", { is_nullable => '1', data_type => 'INT' },
 	"price", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
+	"sku", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"line_price", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
+	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"grams", { data_type => 'INT', is_nullable => '1' },
+	"quantity", { is_nullable => '1', data_type => 'INT' },
+	"vendor", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"variant_id", { is_nullable => '1', data_type => 'BIGINT' }
+	"variant_id", { data_type => 'BIGINT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
 

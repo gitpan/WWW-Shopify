@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.132830",
+   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "unknown"
    ],
@@ -36,6 +36,7 @@
             "Crypt::Eksblowfish" : "0.009",
             "DBIx::Class" : "0.08204",
             "Data::Random" : "0.08",
+            "Date::Parse" : "0",
             "DateTime" : "0.78",
             "DateTime::Format::MySQL" : "0.04",
             "DateTime::Format::SQLite" : "0.11",
@@ -57,7 +58,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.998"
+         "version" : "0.999"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm"
@@ -415,6 +416,9 @@
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Event" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Event.pm"
+      },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::EventGiftCard" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/EventGiftCard.pm"
       },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::File" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/File.pm"
@@ -789,5 +793,5 @@
          "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
       }
    },
-   "version" : "0.998"
+   "version" : "0.999"
 }

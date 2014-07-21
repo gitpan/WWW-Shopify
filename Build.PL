@@ -25,7 +25,8 @@ my $build = Module::Build->new(
 		'URI::Escape' => '3.31',
 		'Scalar::Util' => 0,
 		'Math::Round' => 0,
-		'Clone' => 0
+		'Clone' => 0,
+		'Date::Parse' => 0
 	},
 	build_requires => {
 		'DBD::SQLite' => 0

@@ -19,7 +19,8 @@ sub new {
 sub parent { $_[0]->{_parent} = $_[1] if defined $_[1]; return $_[0]->{_parent}; }
 
 sub get_url {
-	my ($self, $url, $parameters) = @_;
+	my ($self, $url, $parameters, $type) = @_;
+	$type = "application/json" unless $type;
 	my $uri = URI->new($url);
 	my %filtered = ();
 	if ($parameters->{fields} && ref($parameters->{fields}) && ref($parameters->{fields}) eq "ARRAY") {
@@ -35,7 +36,7 @@ sub get_url {
 	}
 	$uri->query_form(\%filtered);
 	my $request = HTTP::Request->new("GET", $uri);
-	$request->header("Accept" => "application/json");
+	$request->header("Accept" => $type);
 	$request->header($_ => $self->{_default_headers}->{$_}) for (keys(%{$self->{_default_headers}}));
 	my $response = $self->parent->ua->request($request);
 	if (!$response->is_success) {
@@ -52,22 +53,22 @@ sub get_url {
 	my $content = $response->decoded_content;
 	# From JSON because decodec content is already a perl internal string.
 	# Sigh. No. It's not. As per https://rt.cpan.org/Public/Bug/Display.html?id=82963; decoded_content doesn't actually do anything.
-	$content = decode("UTF-8", $content);
-	my $decoded = from_json($content);
+	$content = decode("UTF-8", $content) if ($response->header('Content-Type') =~ m/application\/json/);
+	my $decoded = !$response->header('Content-Type') || $response->header('Content-Type') =~ /json/ ? from_json($content) : $content;
 	return ($decoded, $response);
 }
 
 use URI::Escape;
 
 sub use_url{
-	my ($self, $method, $url, $hash, $type) = @_;
+	my ($self, $method, $url, $hash, $needs_login, $type) = @_;
 	$type = "application/json" unless $type;
 	my $request = HTTP::Request->new($method, $url);
 	$request->header("Accept" => "application/json", "Content-Type" => $type);
 	if ($type =~ m/json/) {
-		$request->content($hash ? encode_json($hash) : undef);
+		$request->content($hash ? to_json($hash) : undef);
 	} else {
-		$request->content($hash ? join("&", map { "$_=" . join(",", map { uri_escape($_) } ($hash->{$_} && ref($hash->{$_}) eq "ARRAY" ? @{$hash->{$_}} : ($hash->{$_}))) } keys(%$hash)) : undef);
+		$request->content(join("&", map { my $name = uri_escape_utf8($_); map { $name . "=" . uri_escape_utf8($_) } ($hash->{$_} && ref($hash->{$_}) eq "ARRAY" ? @{$hash->{$_}} : ($hash->{$_})) } keys(%$hash))) if $hash;
 	}
 	my $response = $self->parent->ua->request($request);
 	if (!$response->is_success) {
@@ -83,8 +84,8 @@ sub use_url{
 	my $content = $response->decoded_content;
 	# From JSON because decodec content is already a perl internal string.
 	# Sigh. No. It's not. As per https://rt.cpan.org/Public/Bug/Display.html?id=82963; decoded_content doesn't actually do anything.
-	$content = decode("UTF-8", $content);
-	my $decoded = (length($content) >= 2) ? from_json($content) : undef;
+	$content = decode("UTF-8", $content) if ($response->header('Content-Type') =~ m/application\/json/);
+	my $decoded = (length($content) >= 2 && (!$response->header('Content-Type') || $response->header('Content-Type') =~ /json/ ? from_json($content) : undef));
 	return ($decoded, $response);
 }
 sub put_url { return shift->use_url("PUT", @_); }

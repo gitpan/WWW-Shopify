@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use utf8; 
 
 # All the extra functionality relating to the admin panel should go in here.
 package WWW::Shopify::Login;
@@ -82,9 +83,35 @@ sub create {
 
 sub send_activation_links {
 	my ($self, @customers) = @_;
-	my ($decoded, $response) = $self->use_url('put', "/admin/customers/set", { operation => "invite", 'customer_ids[]' => [map { $_->id } @customers] }, "application/x-www-form-urlencoded");
-	die  new WWW::Shopify::Exception("Unexpected Response.") unless $decoded->{message} =~ m/Updated (\w+) resource/;
+	my ($decoded, $response) = $self->use_url('put', "/admin/customers/set", { operation => "invite", 'customer_ids[]' => [map { $_->id } @customers] }, 1, "application/x-www-form-urlencoded");
+	die  new WWW::Shopify::Exception("Unexpected Response.") unless $decoded->{message} =~ m/Invited (\d+) customer/;
 	return $1;
+}
+
+sub get_activation_link {
+	my ($self, $customer) = @_;
+	my ($decoded, $reponse) = $self->use_url('get', "/admin/customers/" . $customer->id, { }, "text/html");
+	die new WWW::Shopify::Exception("Unable to find activation link for " . $customer->id . ".") unless $decoded =~ m/http:\/\/[\w\.]+\/account\/activate\/\w+/;
+	return $&;
+}
+
+sub get_reset_token {
+	my ($self, $customer) = @_;
+	my ($decoded, $reponse) = $self->use_url('get', "/admin/customers/" . $customer->id, { }, "text/html");
+	die new WWW::Shopify::Exception("Unable to find activation link for " . $customer->id . ".") unless $decoded =~ m/http:\/\/[\w\.]+\/account\/activate\/(\w+)/;
+	return $1;
+}
+
+sub send_activation_link {
+	my ($self, $customer, $from, $subject, $body, $reset_token) = @_;
+	my ($decoded, $response) = $self->use_url('post', "/admin/customers/" . $customer->id . "/invite", {
+		utf => '✓',
+		source => 'adminnext',
+		'customer_invite_message[from]' => $from,
+		'customer_invite_message[subject]' => $subject,
+		'customer_invite_message[body]' => $body,
+		'customer_invite_message[reset_token]' => $reset_token
+	}, "application/x-www-form-urlencoded");
 }
 
 1;

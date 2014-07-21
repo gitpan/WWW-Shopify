@@ -10,16 +10,16 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_metafields');
 __PACKAGE__->add_columns(
-	"value", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"value_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"key", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"namespace", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"description", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"owner_resource", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"key", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"owner_id", { data_type => 'BIGINT', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"description", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"owner_resource", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"namespace", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"value", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"owner_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

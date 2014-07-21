@@ -12,11 +12,11 @@ __PACKAGE__->table('shopify_link_lists_links');
 __PACKAGE__->add_columns(
 	"link_list_id", { data_type => 'bigint' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"subject", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"position", { data_type => 'INT', is_nullable => '1' },
 	"link_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"subject_params", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"subject_params", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"subject_id", { data_type => 'INT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');

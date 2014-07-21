@@ -10,13 +10,13 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_risks');
 __PACKAGE__->add_columns(
-	"recommendation", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"score", { is_nullable => '1', data_type => 'FLOAT' },
-	"order_id", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
-	"message", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"source", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"cause_cancel", { data_type => 'BOOL', is_nullable => '1' },
 	"display", { data_type => 'BOOL', is_nullable => '1' },
+	"message", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"cause_cancel", { data_type => 'BOOL', is_nullable => '1' },
+	"score", { is_nullable => '1', data_type => 'FLOAT' },
+	"source", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"recommendation", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"order_id", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 },
 	"shop_id", { data_type => "BIGINT" }
 );

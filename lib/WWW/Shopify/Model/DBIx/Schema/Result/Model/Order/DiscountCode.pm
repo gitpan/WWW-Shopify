@@ -12,7 +12,7 @@ __PACKAGE__->table('shopify_orders_discount_codes');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
 	"amount", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
-	"code", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"code", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');

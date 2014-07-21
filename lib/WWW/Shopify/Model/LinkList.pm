@@ -22,6 +22,7 @@ sub countable { return undef; }
 
 sub creation_minimal { return qw(handle); }
 sub creation_filled { return qw(id); }
+sub update_fields { return qw(handle title links); }
 sub update_filled { return qw(); }
 
 sub needs_login { return 1; }
