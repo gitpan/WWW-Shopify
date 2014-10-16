@@ -16,12 +16,12 @@ BEGIN { $fields = {
 	"subject_id" => new WWW::Shopify::Field::Int(),
 	"subject_params" => new WWW::Shopify::Field::String(),
 	"title" => new WWW::Shopify::Field::String(),
-	"link_list_id" => new WWW::Shopify::Field::Relation::Parent(),
+	"link_list_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::LinkList'),
 	"link_type" => new WWW::Shopify::Field::String::Enum(["collection", "product", "frontpage", "catalog", "page", "blog", "search", "http"])
 }; }
 
 sub creation_minimal { return qw(title link_type); }
-sub creation_filled { return qw(); }
+sub creation_filled { return qw(link_list_id); }
 sub update_filled { return qw(); }
 
 sub link_model_type {

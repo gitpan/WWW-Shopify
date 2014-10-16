@@ -4,7 +4,7 @@
       "Adam Harrison (adamdharrison@gmail.com)"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4005, CPAN::Meta::Converter version 2.132830",
+   "generated_by" : "Module::Build version 0.4208",
    "license" : [
       "unknown"
    ],
@@ -36,6 +36,7 @@
             "Crypt::Eksblowfish" : "0.009",
             "DBIx::Class" : "0.08204",
             "Data::Random" : "0.08",
+            "Date::Calc" : "0",
             "Date::Parse" : "0",
             "DateTime" : "0.78",
             "DateTime::Format::MySQL" : "0.04",
@@ -58,7 +59,7 @@
    "provides" : {
       "WWW::Shopify" : {
          "file" : "lib/WWW/Shopify.pm",
-         "version" : "0.999"
+         "version" : "0.9999"
       },
       "WWW::Shopify::Common::DBIx" : {
          "file" : "lib/WWW/Shopify/Common/DBIx.pm"
@@ -585,6 +586,9 @@
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction/Receipt.pm"
       },
+      "WWW::Shopify::Model::DBIx::Schema::Result::Model::User" : {
+         "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/User.pm"
+      },
       "WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook" : {
          "file" : "lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Webhook.pm"
       },
@@ -744,6 +748,9 @@
       "WWW::Shopify::Model::Transaction::Receipt" : {
          "file" : "lib/WWW/Shopify/Model/Transaction/Receipt.pm"
       },
+      "WWW::Shopify::Model::User" : {
+         "file" : "lib/WWW/Shopify/Model/User.pm"
+      },
       "WWW::Shopify::Model::Webhook" : {
          "file" : "lib/WWW/Shopify/Model/Webhook.pm"
       },
@@ -790,8 +797,8 @@
    "release_status" : "stable",
    "resources" : {
       "repository" : {
-         "url" : "https://bitbucket.org/bengmn/perl-shopify-api"
+         "url" : "https://bitbucket.org/bengmn/experimental-projects"
       }
    },
-   "version" : "0.999"
+   "version" : "0.9999"
 }

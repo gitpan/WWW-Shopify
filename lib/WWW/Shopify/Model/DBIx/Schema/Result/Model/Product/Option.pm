@@ -10,9 +10,9 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_products_options');
 __PACKAGE__->add_columns(
+	"name", { data_type => 'TEXT', is_nullable => '1' },
+	"position", { is_nullable => '1', data_type => 'INT' },
 	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"position", { data_type => 'INT', is_nullable => '1' },
 	"product_id", { data_type => 'BIGINT' }
 );
 __PACKAGE__->set_primary_key('id');

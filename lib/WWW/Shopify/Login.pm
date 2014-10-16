@@ -78,6 +78,7 @@ sub get_english_translation {
 
 sub create {
 	my ($self, $item, $hash) = @_;
+	
 	return shift->SUPER::create(@_) unless ref($item) =~ m/LocaleTranslation/;
 }
 

@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.999';
+our $VERSION = '0.9999';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -92,7 +92,7 @@ Creates a new shop, without using the actual API, uses automated form submission
 sub new { 
 	my ($package, $shop_url, $email, $password) = @_;
 	die new WWW::Shopify::Exception("Can't create a shop without a shop url.") unless $shop_url;
-	my $ua = LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
+	my $ua = LWP::UserAgent->new( ssl_opts => {'SSL_version' => 'TLSv12' } );
 	$ua->cookie_jar({ });
 	$ua->timeout(30);	
 	$ua->agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.5 Safari/537.22");
@@ -122,9 +122,9 @@ sub encode_url { return "https://" . $_[0]->shop_url . $_[1]; }
 
 Gets/sets the user agent we're using to access shopify's api. By default we use LWP::UserAgent, with a timeout of 5 seconds.
 
-PLEASE NOTE: At the very least, with LWP::UserAgent, at least, on my system, I had to force the SSL layer of the agent to use SSLv3, using the line
+PLEASE NOTE: At the very least, with LWP::UserAgent, at least, on my system, I had to force the SSL layer of the agent to use TLSv12, using the line
 
-	LWP::UserAgent->new( ssl_opts => { SSL_version => 'SSLv3' } );
+	LWP::UserAgent->new( ssl_opts => { SSL_version => 'TLSv12' } );
 
 Otherwise, Shopify does some very weird stuff, and some very weird errors are spit out. Just FYI.
 
@@ -376,6 +376,7 @@ use List::Util qw(first);
 use HTTP::Request::Common;
 sub create {
 	my ($self, $item, $options) = @_;
+	
 	$self->validate_item(ref($item));
 	my $specs = {};
 	my $missing = first { !exists $item->{$_} } $item->creation_minimal;

@@ -125,6 +125,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/SmartCollection/Rule.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Theme.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction/Receipt.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/User.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Webhook.pm
 lib/WWW/Shopify/Model/Discount.pm
 lib/WWW/Shopify/Model/EmailTemplate.pm
@@ -178,6 +179,7 @@ lib/WWW/Shopify/Model/SmartCollection/Rule.pm
 lib/WWW/Shopify/Model/Theme.pm
 lib/WWW/Shopify/Model/Transaction.pm
 lib/WWW/Shopify/Model/Transaction/Receipt.pm
+lib/WWW/Shopify/Model/User.pm
 lib/WWW/Shopify/Model/Webhook.pm
 lib/WWW/Shopify/Nest.pm
 lib/WWW/Shopify/Private.pm
@@ -194,5 +196,4 @@ META.yml
 README
 scripts/dbix.pl
 scripts/descriptions.pl
-shopify_test.db
 t/WWW-Shopify.t

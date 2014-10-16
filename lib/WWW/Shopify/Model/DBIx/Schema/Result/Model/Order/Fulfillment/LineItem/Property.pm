@@ -11,8 +11,8 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_line_items_properties');
 __PACKAGE__->add_columns(
 	"line_item_id", { data_type => 'bigint' },
-	"value", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"value", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');

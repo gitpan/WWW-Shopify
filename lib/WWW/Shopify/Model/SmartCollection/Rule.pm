@@ -13,6 +13,8 @@ BEGIN { $fields = {
 	"condition" => new WWW::Shopify::Field::String(),
 }; }
 
+sub identifier { return ("column", "relation", "condition"); }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

@@ -171,6 +171,7 @@ sub generate_dbix {
 		my $needs_adding;
 		($parent_variable, $needs_adding) = $self->get_parent_column_name($package);
 		push(@columns, "\"$parent_variable\", { data_type => '" . WWW::Shopify::Field::Identifier->sql_type . "' }") if $needs_adding;
+		push(@ids, $parent_variable) if $needs_adding && !$fields->{id};
 	}
 	# All simple columns.
 	foreach my $field_name (grep { !$fields->{$_}->is_relation } keys(%$fields)) {
@@ -182,8 +183,8 @@ sub generate_dbix {
 		
 	}
 	# If we don't have an ID give us one, so that all DB stuff can have primary keys.
-	if (!$fields->{$ids[0]}) {
-		push(@columns, "\"" . $ids[0] . "\", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }");
+	if (!$fields->{'id'}) {
+		push(@columns, "\"id\", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }");
 	}
 	# All relationship columns that are belong to.
 	# ReferenceOne / Non-Nested / Interior : Belongs To
@@ -265,7 +266,7 @@ __PACKAGE__->table('" . $self->table_prefix . $table_name . "');
 __PACKAGE__->add_columns(
 	" . join(",\n\t", @columns) . "
 );
-__PACKAGE__->set_primary_key(" . join(", ", map { "'$_'" } @ids) . ");
+__PACKAGE__->set_primary_key(" . join(", ", map { "'$_'" } (0 ? @ids : "id")) . ");
 
 " . ((int(@unique_keys) > 0) ? "__PACKAGE__->add_unique_constraint(constraint_name => [ " . join(" ", map { "\"$_\"" } @unique_keys) . " ]);" : "") . "
 
@@ -311,7 +312,12 @@ sub from_shopify {
 	die new WWW::Shopify::Exception('Invalid object passed into to_shopify: ' . ref($shopifyObject) . '.') unless ref($shopifyObject) =~ m/Model::/;
 	my $dbPackage = $self->transform_package(ref($shopifyObject));
 	my $dbObject = undef;
-	$dbObject = $schema->resultset($dbPackage)->find({map { $_ => $shopifyObject->$_ } $shopifyObject->identifier}) if $shopifyObject && (!first { !$shopifyObject->{$_} } $shopifyObject->identifier);
+	my %identifiers = map { $_ => $shopifyObject->$_ } $shopifyObject->identifier;
+	if ($shopifyObject->is_nested) {
+		die new WWW::Shopify::Exception("Invalid nested object passed into to_shopify.") unless $shopifyObject->associated_parent;
+		$identifiers{$dbPackage->parent_variable} = $shopifyObject->associated_parent->id;
+	}
+	$dbObject = $schema->resultset($dbPackage)->find(\%identifiers) if $shopifyObject;
 	$dbObject = $schema->resultset($dbPackage)->new({}) unless $dbObject;
 	my $fields = $shopifyObject->fields();
 	my $group = WWW::Shopify::Common::DBIxGroup->new(contents => $dbObject);
@@ -331,14 +337,12 @@ sub from_shopify {
 	foreach my $key (keys(%$fields)) {
 		next if $key =~ m/metafields/;
 		my $data = $shopifyObject->$key();
-		if ($data) {
-			my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data, $shop_id);
-			if ($fields->{$key}->is_relation && $fields->{$key}->is_many()) {
-				$group->add_children(grep { defined $_ } @$db_value);
-			}
-			elsif (!$fields->{$key}->is_relation || $fields->{$key}->is_reference) {
-				$dbObject->$key($db_value);
-			}
+		my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data, $shop_id);
+		if ($fields->{$key}->is_relation && $fields->{$key}->is_many()) {
+			$group->add_children(grep { defined $_ } @$db_value);
+		}
+		elsif (!$fields->{$key}->is_relation || ($fields->{$key}->is_reference && !$fields->{$key}->is_parent)) {
+			$dbObject->$key($db_value);
 		}
 	}
 	return $group;

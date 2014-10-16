@@ -19,15 +19,15 @@ BEGIN { $fields = {
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"shop_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Shop"),
-	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00'),
+	"created_at" => new WWW::Shopify::Field::Date(),
+	"updated_at" => new WWW::Shopify::Field::Date(),
+	"published_at" => new WWW::Shopify::Field::Date(),
 }; }
 
 sub creation_minimal { return qw(title body_html); }
 sub creation_filled { return qw(id created_at published_at); }
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(author body_html summary_html title handle metafields); }
+sub update_fields { return qw(author body_html summary_html title handle metafields published_at template_suffix); }
 
 sub read_scope { return "read_content"; }
 sub write_scope { return "write_content"; }

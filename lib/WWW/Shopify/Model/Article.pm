@@ -14,15 +14,15 @@ BEGIN { $fields = {
 	"body_html" => new WWW::Shopify::Field::Text::HTML(),
 	"summary_html" => new WWW::Shopify::Field::Text::HTML(),
 	"published" => new WWW::Shopify::Field::Boolean(),
-	"published_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00'),
+	"published_at" => new WWW::Shopify::Field::Date(),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"tags" => new WWW::Shopify::Field::String::Words(1, 7),
 	"title" => new WWW::Shopify::Field::String::Words(1, 3),
-	"user_id" => new WWW::Shopify::Field::Int(),
+	"user_id" => new WWW::Shopify::Field::Relation::ReferenceOne('WWW::Shopify::Model::User'),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"blog_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Blog'),
-	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+	"created_at" => new WWW::Shopify::Field::Date(),
+	"updated_at" => new WWW::Shopify::Field::Date()
 }; }
 
 my $queries; sub queries { return $queries; }

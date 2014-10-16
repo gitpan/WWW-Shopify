@@ -11,13 +11,13 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_countries_provinces');
 __PACKAGE__->add_columns(
 	"country_id", { data_type => 'bigint' },
-	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"code", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"tax_percentage", { data_type => 'FLOAT', is_nullable => '1' },
 	"tax", { is_nullable => '1', data_type => 'FLOAT' },
-	"tax_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"tax_name", { data_type => 'VARCHAR(255)', is_nullable => '1' }
+	"tax_type", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"tax_percentage", { is_nullable => '1', data_type => 'FLOAT' },
+	"tax_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' }
 );
 __PACKAGE__->set_primary_key('id');
 

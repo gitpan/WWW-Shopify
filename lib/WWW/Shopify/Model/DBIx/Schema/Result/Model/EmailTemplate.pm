@@ -10,12 +10,12 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_email_templates');
 __PACKAGE__->add_columns(
-	"body", { data_type => 'TEXT', is_nullable => '1' },
-	"include_html", { data_type => 'BOOL', is_nullable => '1' },
-	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"body", { is_nullable => '1', data_type => 'TEXT' },
 	"id", { data_type => 'BIGINT', is_nullable => '0' },
-	"body_html", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"body_html", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"include_html", { data_type => 'BOOL', is_nullable => '1' },
+	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

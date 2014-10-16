@@ -72,6 +72,7 @@ sub new {
 	return $self;
 }
 
+sub db { $_[0]->{_db} = $_[1] if defined $_[1]; return $_[0]->{_db}; }
 sub callback { $_[0]->{_callback} = $_[1] if defined $_[1]; return $_[0]->{_callback}; }
 
 sub access_token { $_[0]->{_access_token} = $_[1] if defined $_[1]; return $_[0]->{_access_token}; }
@@ -266,9 +267,9 @@ sub generate_class {
 	$self->correct_object($object);
 	$object->update;
 	# Many-Many
-	foreach my $field (grep { $_->is_relation && $_->is_db_many_many } values(%$fields)) {
+	foreach my $field (grep { $_->is_relation && $_->is_db_many_many} values(%$fields)) {
 		my $relation = $field->relation;
-		#next if $relation =~ m/Metafield/i;
+		next if $relation =~ m/Metafield/i && $ENV{'SKIP_METAFIELDS'};
 		my $accessor = "add_to_" . $field->name . "_hasmany";
 		if (defined $ids->{$relation}) {
 			my $many_count = $field->db_rand_count;

@@ -16,7 +16,7 @@ BEGIN { $fields = {
 	"quantity" => new WWW::Shopify::Field::Int(),
 }; }
 
-sub singular() { return 'line_item'; }
+sub singular() { return 'refund_line_item'; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

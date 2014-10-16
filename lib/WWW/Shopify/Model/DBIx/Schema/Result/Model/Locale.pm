@@ -10,14 +10,14 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_locales');
 __PACKAGE__->add_columns(
-	"owner_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"progress", { is_nullable => '1', data_type => 'INT' },
+	"progress", { data_type => 'INT', is_nullable => '1' },
+	"owner_email", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"owner_id", { is_nullable => '1', data_type => 'BIGINT' },
-	"shop_count", { data_type => 'INT', is_nullable => '1' },
-	"owner_email", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"owner_name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"user_count", { data_type => 'INT', is_nullable => '1' },
-	"name", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"shop_count", { data_type => 'INT', is_nullable => '1' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

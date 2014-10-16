@@ -10,13 +10,13 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_events');
 __PACKAGE__->add_columns(
-	"subject_id", { is_nullable => '1', data_type => 'BIGINT' },
-	"created_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"body", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"message", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"arguments", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"subject_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"arguments", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"message", { data_type => 'TEXT', is_nullable => '1' },
+	"body", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"subject_id", { is_nullable => '1', data_type => 'BIGINT' },
 	"verb", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"shop_id", { data_type => "BIGINT" }
 );

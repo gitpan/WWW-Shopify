@@ -39,10 +39,15 @@ sub generate($) {
 package WWW::Shopify::Field::String::Words;
 use parent 'WWW::Shopify::Field::String';
 sub generate($) {
-	return join(" ", map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => int(rand(30))+1)) if (!ref($_[0]) || int(@{$_[0]->{arguments}}) == 0);
-	return join(" ", map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => $_[0]->{arguments}->[0])) if (int(@{$_[0]->{arguments}}) == 1);
-	return join(" ", map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => (int(rand($_[0]->{arguments}->[1] - $_[0]->{arguments}->[0] + 1)) + $_[0]->{arguments}->[0]))) if (int(@{$_[0]->{arguments}}) == 2);
+	my ($min, $max, $join);
+	($min, $max, $join) = @{$_[0]->{arguments}} if ref($_[0]);
+	$join = " " unless defined $join;
+	$max = 20 if defined $max && $max eq "*";
+	return join($join, map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => int(rand(30))+1)) if (!ref($_[0]) || int(@{$_[0]->{arguments}}) == 0);
+	return join($join, map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => $min)) if (int(@{$_[0]->{arguments}}) == 1);
+	return join($join, map { $_ . __PACKAGE__->rand_utf8_char() } ::rand_words(size => (int($max - $min) + $min))) if (int(@{$_[0]->{arguments}}) >= 2);
 }
+sub sql_type { return 'TEXT'; }
 
 package WWW::Shopify::Field::String::Hash;
 use parent 'WWW::Shopify::Field::String';

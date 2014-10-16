@@ -18,6 +18,8 @@ BEGIN { $fields = {
 };
 }
 
+sub identifier { return ("code"); }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

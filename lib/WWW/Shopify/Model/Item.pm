@@ -114,6 +114,14 @@ sub plural { return $_[0]->singular() . "s"; }
 
 sub needs_login { return undef; }
 
+=head2 needs_plus($package)
+
+Returns whether or not a Shopify+ account is required to use this resource.
+
+=cut
+
+sub needs_plus { return undef; }
+
 # List of fields that should be filled automatically on creation.
 sub is_nested { return undef; }
 sub identifier { return ("id"); }

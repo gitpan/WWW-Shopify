@@ -21,7 +21,7 @@ BEGIN { $fields = {
 	"published_scope" => new WWW::Shopify::Field::String(),
 	"title" => new WWW::Shopify::Field::String::Words(1,2),
 	"vendor" => new WWW::Shopify::Field::String::Words(1,2),
-	"tags" => new WWW::Shopify::Field::String::Words(1,7),
+	"tags" => new WWW::Shopify::Field::String::Words(0,'*',', '),
 	"images" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Image"),
 	"options" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Product::Option", 1, 3),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
@@ -41,6 +41,7 @@ BEGIN { $queries = {
 	published_status => new WWW::Shopify::Query::Enum('published_status', ['unpublished', 'published', 'any']),
 	product_type => new WWW::Shopify::Query::Match('product_type'),
 	vendor => new WWW::Shopify::Query::Match('vendor'),
+	handle => new WWW::Shopify::Query::Match('handle'),
 	collection_id => new WWW::Shopify::Query::Custom("collection_id", sub { 
 		my ($rs, $value) = @_;
 		return $rs->search({ 'collection_id' => $value },
@@ -56,7 +57,7 @@ sub creation_minimal { return qw(title product_type vendor); }
 sub creation_filled { return qw(id created_at); }
 # Odd, even without an update method, it still has an updated at.
 sub update_filled { return qw(updated_at); }
-sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html variants); }
+sub update_fields { return qw(metafields handle product_type title template_suffix vendor tags images options body_html variants published_at); }
 sub throws_webhooks { return 1; }
 
 sub read_scope { return "read_products"; }

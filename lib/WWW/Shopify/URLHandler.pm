@@ -59,6 +59,7 @@ sub get_url {
 }
 
 use URI::Escape;
+use JSON qw(encode_json);
 
 sub use_url{
 	my ($self, $method, $url, $hash, $needs_login, $type) = @_;
@@ -66,7 +67,7 @@ sub use_url{
 	my $request = HTTP::Request->new($method, $url);
 	$request->header("Accept" => "application/json", "Content-Type" => $type);
 	if ($type =~ m/json/) {
-		$request->content($hash ? to_json($hash) : undef);
+		$request->content($hash ? encode_json($hash) : undef);
 	} else {
 		$request->content(join("&", map { my $name = uri_escape_utf8($_); map { $name . "=" . uri_escape_utf8($_) } ($hash->{$_} && ref($hash->{$_}) eq "ARRAY" ? @{$hash->{$_}} : ($hash->{$_})) } keys(%$hash))) if $hash;
 	}

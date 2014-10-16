@@ -11,8 +11,8 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_checkouts_shipping_lines');
 __PACKAGE__->add_columns(
 	"checkout_id", { data_type => 'bigint' },
-	"rate", { data_type => 'FLOAT', is_nullable => '1' },
-	"title", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"title", { data_type => 'TEXT', is_nullable => '1' },
+	"rate", { is_nullable => '1', data_type => 'FLOAT' },
 	"price", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );

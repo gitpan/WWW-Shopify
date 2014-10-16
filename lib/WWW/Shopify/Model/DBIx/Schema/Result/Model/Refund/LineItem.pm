@@ -14,7 +14,7 @@ __PACKAGE__->add_columns(
 	"quantity", { data_type => 'INT', is_nullable => '1' },
 	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"line_item_id", { data_type => 'BIGINT', is_nullable => '1' },
-	"line_item_id", { is_nullable => '1', data_type => 'BIGINT' }
+	"line_item_id", { data_type => 'BIGINT', is_nullable => '1' }
 );
 __PACKAGE__->set_primary_key('id');
 

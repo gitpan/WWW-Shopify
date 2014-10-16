@@ -3,15 +3,15 @@ abstract: 'Main object representing acess to a particular Shopify store.'
 author:
   - 'Adam Harrison (adamdharrison@gmail.com)'
 build_requires:
-  DBD::SQLite: 0
+  DBD::SQLite: '0'
 configure_requires:
-  Module::Build: 0.38
+  Module::Build: '0.38'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4005, CPAN::Meta::Converter version 2.132830'
+generated_by: 'Module::Build version 0.4208, CPAN::Meta::Converter version 2.141520'
 license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  version: '1.4'
 name: WWW-Shopify
 no_index:
   directory:
@@ -20,7 +20,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: 0.999
+    version: '0.9999'
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
   WWW::Shopify::Common::DBIxGroup:
@@ -371,6 +371,8 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Transaction::Receipt:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Transaction/Receipt.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::User:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/User.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Webhook:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Webhook.pm
   WWW::Shopify::Model::Discount:
@@ -477,6 +479,8 @@ provides:
     file: lib/WWW/Shopify/Model/Transaction.pm
   WWW::Shopify::Model::Transaction::Receipt:
     file: lib/WWW/Shopify/Model/Transaction/Receipt.pm
+  WWW::Shopify::Model::User:
+    file: lib/WWW/Shopify/Model/User.pm
   WWW::Shopify::Model::Webhook:
     file: lib/WWW/Shopify/Model/Webhook.pm
   WWW::Shopify::Nest:
@@ -506,26 +510,27 @@ provides:
   WWW::Shopify::URLHandler::Queued:
     file: lib/WWW/Shopify/URLHandler/Queued.pm
 requires:
-  Clone: 0
-  Crypt::Eksblowfish: 0.009
-  DBIx::Class: 0.08204
-  Data::Random: 0.08
-  Date::Parse: 0
-  DateTime: 0.78
-  DateTime::Format::MySQL: 0.04
-  DateTime::Format::SQLite: 0.11
-  Devel::StackTrace: 1.30
-  HTTP::Request::Common: 6.04
-  JSON: 2.53
-  LWP::Protocol::https: 6.03
-  LWP::UserAgent: 6.04
-  MIME::Base64: 3.13
-  Math::Round: 0
-  SQL::Translator: 0.11016
-  Scalar::Util: 0
-  String::Numeric: 0.9
-  String::Random: 0.22
-  URI::Escape: 3.31
+  Clone: '0'
+  Crypt::Eksblowfish: '0.009'
+  DBIx::Class: '0.08204'
+  Data::Random: '0.08'
+  Date::Calc: '0'
+  Date::Parse: '0'
+  DateTime: '0.78'
+  DateTime::Format::MySQL: '0.04'
+  DateTime::Format::SQLite: '0.11'
+  Devel::StackTrace: '1.30'
+  HTTP::Request::Common: '6.04'
+  JSON: '2.53'
+  LWP::Protocol::https: '6.03'
+  LWP::UserAgent: '6.04'
+  MIME::Base64: '3.13'
+  Math::Round: '0'
+  SQL::Translator: '0.11016'
+  Scalar::Util: '0'
+  String::Numeric: '0.9'
+  String::Random: '0.22'
+  URI::Escape: '3.31'
 resources:
-  repository: https://bitbucket.org/bengmn/perl-shopify-api
-version: 0.999
+  repository: https://bitbucket.org/bengmn/experimental-projects
+version: '0.9999'

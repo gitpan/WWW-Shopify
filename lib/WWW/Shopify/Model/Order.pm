@@ -19,7 +19,7 @@ BEGIN { $fields = {
 	"currency" => new WWW::Shopify::Field::Currency(),
 	"email" => new WWW::Shopify::Field::String::Email(),
 	"financial_status" => new WWW::Shopify::Field::String::Enum(["authorized", "pending", "paid", "abandoned", "refunded", "voided"]),
-	# Rolling eyes here; obviously "restocked" not in the documentation.
+				# Rolling eyes here; obviously "restocked" not in the documentation.
 	"fulfillment_status" => new WWW::Shopify::Field::String::Enum(["fulfilled", undef, "partial", "restocked"]),
 	"gateway" => new WWW::Shopify::Field::String(),
 	"reference" => new WWW::Shopify::Field::String(),
@@ -61,6 +61,8 @@ BEGIN { $fields = {
 	"client_details" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Order::ClientDetails"),
 	"customer" => new WWW::Shopify::Field::Relation::OwnOne("WWW::Shopify::Model::Customer"),
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
+	"transactions" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Transaction"),
+	"refund" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Refund"),
 	
 	"send_webhooks" => new WWW::Shopify::Field::Boolean(),
 	"send_receipt" => new WWW::Shopify::Field::Boolean(),
@@ -73,6 +75,7 @@ BEGIN { $queries = {
 	created_at_max => new WWW::Shopify::Query::UpperBound('created_at'),
 	updated_at_min => new WWW::Shopify::Query::LowerBound('updated_at'),
 	updated_at_max => new WWW::Shopify::Query::UpperBound('updated_at'),
+	name => new WWW::Shopify::Query::Match('name'),
 	status => new WWW::Shopify::Query::Enum('status', ['open', 'closed', 'cancelled', 'any']),
 	financial_status => new WWW::Shopify::Query::Enum('financial_status', ['authorized', 'pending', 'paid', 'partially_paid', 'abandoned', 'refunded', 'voided', 'any']),
 	fulfillment_status => new WWW::Shopify::Query::Enum('fulfillment_status', ['shipped', 'partial', 'unshipped', 'any']),

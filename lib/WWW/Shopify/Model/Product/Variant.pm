@@ -18,9 +18,9 @@ BEGIN { $fields = {
 	"position" => new WWW::Shopify::Field::Int(1, 4),
 	"price" => new WWW::Shopify::Field::Money(),
 	"requires_shipping" => new WWW::Shopify::Field::Boolean(),
-	"sku" => new WWW::Shopify::Field::String(1, 20000),
+	"sku" => new WWW::Shopify::Field::String(1, 2000),
 	"taxable" => new WWW::Shopify::Field::Boolean(),
-	"title" => new WWW::Shopify::Field::String::Words(1, 3),
+	"title" => new WWW::Shopify::Field::String::Words(),
 	"compare_at_price" => new WWW::Shopify::Field::Money(),
 	"inventory_quantity" => new WWW::Shopify::Field::Int(),
 	"old_inventory_quantity" => new WWW::Shopify::Field::Int(),
@@ -28,8 +28,9 @@ BEGIN { $fields = {
 	"metafields" => new WWW::Shopify::Field::Relation::Many("WWW::Shopify::Model::Metafield"),
 	"id" => new WWW::Shopify::Field::Identifier(),
 	"product_id" => new WWW::Shopify::Field::Relation::Parent('WWW::Shopify::Model::Product'),
-	"created_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now'),
-	"updated_at" => new WWW::Shopify::Field::Date(min => '2010-01-01 00:00:00', max => 'now')
+	"created_at" => new WWW::Shopify::Field::Date(),
+	"updated_at" => new WWW::Shopify::Field::Date(),
+	"image_id" => new WWW::Shopify::Field::Relation::ReferenceOne("WWW::Shopify::Model::Product::Image")
 }; }
 
 sub parent { return 'WWW::Shopify::Model::Product'; }

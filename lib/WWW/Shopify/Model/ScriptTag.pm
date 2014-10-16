@@ -23,6 +23,7 @@ sub update_filled { return qw(updated_at); }
 
 sub read_scope { return "read_script_tags"; }
 sub write_scope { return "write_script_tags"; }
+sub update_fields { return qw(event src); };
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

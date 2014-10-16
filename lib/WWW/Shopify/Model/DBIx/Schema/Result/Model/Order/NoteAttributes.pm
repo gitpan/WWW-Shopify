@@ -11,8 +11,8 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_orders_note_attributes');
 __PACKAGE__->add_columns(
 	"order_id", { data_type => 'bigint' },
-	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"value", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"name", { data_type => 'TEXT', is_nullable => '1' },
+	"value", { is_nullable => '1', data_type => 'TEXT' },
 	"id", { data_type => 'BIGINT', is_nullable => 0, is_auto_increment => 1 }
 );
 __PACKAGE__->set_primary_key('id');

@@ -77,7 +77,22 @@ sub ensure_synchronicity {
 	foreach my $field (grep { $_->is_relation && ($_->is_many || $_->is_own) && $_->relation !~ m/Metafield/ } values(%$fields)) {
 		my $name = $field->name;
 		my @children = grep { $_->contents->represents eq $field->relation } $self->children;
-		$self->contents->$name->search({ id => { -not_in => [map { $_->contents->id } @children] } })->delete;
+		# In case we're not actually keeping certain elements in sync.
+		eval {
+			my @ids = $field->relation->identifier;
+			if (int(@ids) == 1 && $ids[0] eq "id") {
+				$self->contents->$name->search({ id => { -not_in => [map { $_->contents->id } @children] } })->delete;
+			} else {
+				my @db_children = $self->contents->$name->all;
+				for my $db_child (@db_children) { 
+					my $exists = 0;
+					for my $pot_child (@children) {
+						$exists = 1 if int(grep { $db_child->$_ eq $pot_child->contents->$_ } (@ids)) == int(@ids);
+					}
+					$db_child->delete if !$exists;
+				}
+			}
+		};
 	}
 }
 

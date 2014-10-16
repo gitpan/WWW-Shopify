@@ -9,6 +9,7 @@ my $build = Module::Build->new(
 	requires => {
 		'Crypt::Eksblowfish' => '0.009',
 		'Data::Random' => '0.08',
+		'Date::Calc' => 0,
 		'DateTime::Format::MySQL' => '0.04',
 		'DateTime::Format::SQLite' => '0.11',
 		'String::Random' => '0.22',
@@ -26,14 +27,14 @@ my $build = Module::Build->new(
 		'Scalar::Util' => 0,
 		'Math::Round' => 0,
 		'Clone' => 0,
-		'Date::Parse' => 0
+		'Date::Parse' => 0,
 	},
 	build_requires => {
 		'DBD::SQLite' => 0
 	},
 	meta_merge => {
 		resources => {
-			 repository  => 'https://bitbucket.org/bengmn/perl-shopify-api'
+			 repository  => 'https://bitbucket.org/bengmn/experimental-projects'
 		},
 		no_index => {
 	    		directory => [ 'lib/WWW/Shopify/Model/DBIx', 'lib/WWW/Shopify/Field' ]
