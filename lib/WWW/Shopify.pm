@@ -64,7 +64,7 @@ use LWP::UserAgent;
 
 package WWW::Shopify;
 
-our $VERSION = '0.9999';
+our $VERSION = '0.99999';
 
 use WWW::Shopify::Exception;
 use WWW::Shopify::Field;
@@ -500,7 +500,7 @@ sub login_admin {
 	$self->{last_login_check} = time;
 	$self->{authenticity_token} = $authenticity_token;
 	$res = $self->ua->request(GET "https://" . $self->shop_url . "/admin");
-	die new WWW::Shopify::Exception() unless $res->decoded_content =~ m/meta content="(.*?)" name="csrf-token"/;
+	die new WWW::Shopify::Exception($res) unless $res->decoded_content =~ m/meta content="(.*?)" name="csrf-token"/;
 	$self->{authenticity_token} = $1;
 	$ua->default_header('X-CSRF-Token' => $self->{authenticity_token});
 	return 1;

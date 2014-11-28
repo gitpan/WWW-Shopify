@@ -20,7 +20,7 @@ no_index:
 provides:
   WWW::Shopify:
     file: lib/WWW/Shopify.pm
-    version: '0.9999'
+    version: '0.99999'
   WWW::Shopify::Common::DBIx:
     file: lib/WWW/Shopify/Common/DBIx.pm
   WWW::Shopify::Common::DBIxGroup:
@@ -353,6 +353,8 @@ provides:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::Refund::LineItem:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund/LineItem.pm
+  WWW::Shopify::Model::DBIx::Schema::Result::Model::Refund::Transaction:
+    file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund/Transaction.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::RefundTransaction:
     file: lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RefundTransaction.pm
   WWW::Shopify::Model::DBIx::Schema::Result::Model::ScriptTag:
@@ -463,6 +465,8 @@ provides:
     file: lib/WWW/Shopify/Model/Refund.pm
   WWW::Shopify::Model::Refund::LineItem:
     file: lib/WWW/Shopify/Model/Refund/LineItem.pm
+  WWW::Shopify::Model::Refund::Transaction:
+    file: lib/WWW/Shopify/Model/Refund/Transaction.pm
   WWW::Shopify::Model::ScriptTag:
     file: lib/WWW/Shopify/Model/ScriptTag.pm
   WWW::Shopify::Model::Shop:
@@ -533,4 +537,4 @@ requires:
   URI::Escape: '3.31'
 resources:
   repository: https://bitbucket.org/bengmn/experimental-projects
-version: '0.9999'
+version: '0.99999'

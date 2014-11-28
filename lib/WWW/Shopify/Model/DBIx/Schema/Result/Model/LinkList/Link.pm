@@ -10,13 +10,13 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_link_lists_links');
 __PACKAGE__->add_columns(
-	"subject_params", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"link_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"position", { data_type => 'INT', is_nullable => '1' },
 	"title", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"subject_params", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"link_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"subject", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"subject_id", { is_nullable => '1', data_type => 'INT' },
-	"position", { data_type => 'INT', is_nullable => '1' },
 	"link_list_id", { data_type => 'BIGINT' }
 );
 __PACKAGE__->set_primary_key('id');

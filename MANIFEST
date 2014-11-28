@@ -116,6 +116,7 @@ lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RecurringApplicationCharge.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Redirect.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund/LineItem.pm
+lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Refund/Transaction.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/RefundTransaction.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/ScriptTag.pm
 lib/WWW/Shopify/Model/DBIx/Schema/Result/Model/Shop.pm
@@ -171,6 +172,7 @@ lib/WWW/Shopify/Model/RecurringApplicationCharge.pm
 lib/WWW/Shopify/Model/Redirect.pm
 lib/WWW/Shopify/Model/Refund.pm
 lib/WWW/Shopify/Model/Refund/LineItem.pm
+lib/WWW/Shopify/Model/Refund/Transaction.pm
 lib/WWW/Shopify/Model/ScriptTag.pm
 lib/WWW/Shopify/Model/Shop.pm
 lib/WWW/Shopify/Model/SmartCollection.pm
@@ -196,4 +198,6 @@ META.yml
 README
 scripts/dbix.pl
 scripts/descriptions.pl
+shopify_test.db
+shopify_test.db-journal
 t/WWW-Shopify.t

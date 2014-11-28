@@ -14,6 +14,7 @@ BEGIN { $fields = {
 	"value" => new WWW::Shopify::Field::String::Words(1, 10)};
 }
 sub singular { return "note_attribute"; }
+sub identifier { return "name"; }
 
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 

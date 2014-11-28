@@ -10,18 +10,18 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_locations');
 __PACKAGE__->add_columns(
-	"address2", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"country", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { is_nullable => '0', data_type => 'BIGINT' },
-	"updated_at", { data_type => 'DATETIME', is_nullable => '1' },
-	"phone", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"zip", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"location_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"city", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"address2", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"city", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"address1", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"province", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"phone", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"location_type", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
 	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"zip", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"name", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"province", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

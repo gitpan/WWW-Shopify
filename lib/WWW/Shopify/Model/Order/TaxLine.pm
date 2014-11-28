@@ -15,6 +15,8 @@ BEGIN { $fields = {
 	"title" => new WWW::Shopify::Field::String::Words(1, 3)
 }; }
 
+sub identifier { return qw(title); }
+
 eval(__PACKAGE__->generate_accessors); die $@ if $@;
 
 1;

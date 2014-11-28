@@ -10,16 +10,16 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_orders_transactions');
 __PACKAGE__->add_columns(
+	"user_id", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"amount", { is_nullable => '1', data_type => 'DECIMAL(10,2)' },
 	"test", { is_nullable => '1', data_type => 'BOOL' },
-	"status", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"authorization", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"amount", { data_type => 'DECIMAL(10,2)', is_nullable => '1' },
-	"gateway", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
-	"device_id", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"user_id", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"gateway", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"kind", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"id", { data_type => 'BIGINT', is_nullable => '0' },
+	"status", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"created_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"authorization", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"device_id", { is_nullable => '1', data_type => 'VARCHAR(255)' },
 	"order_id", { data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );

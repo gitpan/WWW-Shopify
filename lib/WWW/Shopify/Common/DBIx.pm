@@ -42,7 +42,7 @@ our @EXPORT_OK = qw(transform_package strip_head);
 sub new {
 	my $package = shift; 
 	return bless {
-		namespace => [@_],
+		namespace => int(@_) > 0 ? [@_] : undef,
 		classes => {},
 		package_prefix => 'WWW::Shopify::Model::DBIx::Schema::Result',
 		table_prefix => 'shopify_'
@@ -51,7 +51,7 @@ sub new {
 sub package_prefix { $_[0]->{package_prefix} = $_[1] if defined $_[1]; return $_[0]->{package_prefix}; } 
 sub table_prefix { $_[0]->{table_prefix} = $_[1] if defined $_[1]; return $_[0]->{table_prefix}; } 
 use List::Util qw(first);
-sub in_namespace { return defined first { $_ eq $_[1] } @{$_[0]->{namespace}} }
+sub in_namespace { return 1 unless defined $_[0]->{namespace}; return defined first { $_ eq $_[1] } @{$_[0]->{namespace}} }
 
 use Module::Find;
 
@@ -213,7 +213,7 @@ sub generate_dbix {
 		# Geenrally make non-parent fields nullable.
 		$attributes{'is_nullable'} = 1 unless $field->is_parent;
 		push(@columns, "\"$mod_field_name\", { " . join(", ", map { "$_ => '" . uc($attributes{$_}) . "'" } keys(%attributes)) . " }");
-		push(@relationships, "__PACKAGE__->belongs_to($accessor_name => '" . $self->transform_package($field->relation) . "', '$mod_field_name');");
+		push(@relationships, "__PACKAGE__->belongs_to($accessor_name => '" . $self->transform_package($field->relation) . "', '$mod_field_name'" . ($attributes{'is_nullable'} ? ", { join_type => 'left' }" : "") . ");");
 	}
 	# Many / Nested / Interior : Has Many
 	foreach my $field_name (grep { $fields->{$_}->is_db_has_many } @field_relations) {
@@ -313,9 +313,9 @@ sub from_shopify {
 	my $dbPackage = $self->transform_package(ref($shopifyObject));
 	my $dbObject = undef;
 	my %identifiers = map { $_ => $shopifyObject->$_ } $shopifyObject->identifier;
-	if ($shopifyObject->is_nested) {
+	if ($shopifyObject->is_nested && $dbPackage->parent_variable) {
 		die new WWW::Shopify::Exception("Invalid nested object passed into to_shopify.") unless $shopifyObject->associated_parent;
-		$identifiers{$dbPackage->parent_variable} = $shopifyObject->associated_parent->id;
+		$identifiers{$dbPackage->parent_variable} = $shopifyObject->associated_parent->id if $shopifyObject->associated_parent->can('id');
 	}
 	$dbObject = $schema->resultset($dbPackage)->find(\%identifiers) if $shopifyObject;
 	$dbObject = $schema->resultset($dbPackage)->new({}) unless $dbObject;
@@ -325,7 +325,7 @@ sub from_shopify {
 	# Anything that's many-many like metafields shouldn't set parent variables on themselves. Or not.
 	if ($shopifyObject->associated_parent && ref($shopifyObject) !~ m/Metafield$/ && $dbObject->parent_variable) {
 		my $parent_variable = $dbObject->parent_variable;
-		$dbObject->$parent_variable($shopifyObject->associated_parent->id);
+		$dbObject->$parent_variable($shopifyObject->associated_parent->id) if $shopifyObject->associated_parent->can('id');
 	}
 	if (has_shop_field($shopifyObject) && $shop_id) {
 		$dbObject->shop_id($shop_id);
@@ -337,6 +337,9 @@ sub from_shopify {
 	foreach my $key (keys(%$fields)) {
 		next if $key =~ m/metafields/;
 		my $data = $shopifyObject->$key();
+		if ($fields->{$key}->is_relation && $fields->{$key}->is_many()) {
+			$_->associated_parent($shopifyObject) for (@$data);
+		}
 		my $db_value = &$internal_from($self, $schema, $fields->{$key}, $data, $shop_id);
 		if ($fields->{$key}->is_relation && $fields->{$key}->is_many()) {
 			$group->add_children(grep { defined $_ } @$db_value);
@@ -384,7 +387,15 @@ sub to_shopify {
 	my $shopifyObject = $dbObject->represents()->new;
 	my $fields = $shopifyObject->fields();
 	foreach my $key (keys(%$fields)) {
-		my $data = $dbObject->$key();
+		# Easiest way, AFAICT to work around this: http://lists.scsys.co.uk/pipermail/dbix-class/2009-December/008687.html
+		# DBIx strangeness.
+		my $data;
+		if ($dbObject->can($key . "_id")) {
+			my $method = $key . "_id";
+			$data = $dbObject->$key if ($dbObject->$method);
+		} else {
+			$data = $dbObject->$key;
+		}
 		$shopifyObject->{$key} = &$internal_to($self, $fields->{$key}, $data, $shopifyObject, $test) if defined $data;
 	}
 	$shopifyObject->associate($test);

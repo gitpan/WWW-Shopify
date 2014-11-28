@@ -60,6 +60,8 @@ sub insert {
 	my ($self) = @_;
 	if ($self->parent) {
 		my $relationship = "add_to_" . $self->contents->represents->plural;
+		my $parent_variable = $self->contents->parent_variable;
+		$self->contents->$parent_variable($self->parent->contents->id);
 		my $columns = {$self->contents->get_columns};
 		$self->parent->contents->$relationship($columns);
 	}

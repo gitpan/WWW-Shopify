@@ -381,7 +381,6 @@ sub generate { return {}; }
 sub data_type { return WWW::Shopify::Field::TYPE_QUALITATIVE; }
 sub validate { return !defined $_[1] || (ref($_[1]) && ref($_[1]) eq "HASH"); }
 sub to_shopify { return $_[1]; }
-use Data::Dumper;
-sub from_shopify { print STDERR Dumper($_[1]); return $_[1]; }
+sub from_shopify { return $_[1]; }
 
 1;

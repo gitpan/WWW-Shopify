@@ -98,7 +98,9 @@ sub get_activation_link {
 
 sub get_reset_token {
 	my ($self, $customer) = @_;
-	my ($decoded, $reponse) = $self->use_url('get', "/admin/customers/" . $customer->id, { }, "text/html");
+	my ($decoded, $response) = $self->use_url('get', "/admin/customers/" . $customer->id, { }, "text/html");
+	use Data::Dumper;
+	print STDERR Dumper($response);
 	die new WWW::Shopify::Exception("Unable to find activation link for " . $customer->id . ".") unless $decoded =~ m/http:\/\/[\w\.]+\/account\/activate\/(\w+)/;
 	return $1;
 }

@@ -211,8 +211,9 @@ sub generate_class {
 	}
 	$ids->{$package} = [] unless defined $ids->{$package};
 
-	my $identifier = $package->identifier;
-	if ($identifier eq "id" && $restrictions) {
+	my @identifiers = $package->identifier;
+	my $identifier = $identifiers[0];
+	if ($identifiers[0] eq "id" && $restrictions) {
 		my $tentative;
 		my %present = map { $_ => 1 } @{$ids->{$package}};
 		do {
@@ -660,7 +661,7 @@ sub create {
 				}
 				$chosen_ids{$item->id} = 1;
 			}
-			$item->shop_id($self->associate->id);
+			$item->shop_id($self->associate->id) if $item->can('shop_id');
 			$self->post_creation_fields($item);
 		}
 	}
@@ -839,6 +840,22 @@ sub logged_in_admin {
 	$self->{last_login_check} = time;
 	return 1;
 }
+
+
+sub get_activation_link {
+	my ($self, $customer) = @_;
+	die new WWW::Shopify::Exception() unless $customer && $customer->isa('WWW::Shopify::Model::Customer');
+	die new WWW::Shopify::Exception("Getting an activation link requires you to login with an admin account.") if !$self->logged_in_admin;
+	return "http://" . $self->shop_url . "/account/activate/" . md5_hex($customer->id);
+}
+
+sub get_reset_token {
+	my ($self, $customer) = @_;
+	die new WWW::Shopify::Exception() unless $customer && $customer->isa('WWW::Shopify::Model::Customer');
+	die new WWW::Shopify::Exception("Getting a reset token requires you to login with an admin account.") if !$self->logged_in_admin;
+	return md5_hex($customer->id);
+}
+
 
 =head2 authorize_url([scope], redirect)
 

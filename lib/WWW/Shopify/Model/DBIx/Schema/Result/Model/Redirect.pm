@@ -11,8 +11,8 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 __PACKAGE__->table('shopify_redirects');
 __PACKAGE__->add_columns(
 	"path", { is_nullable => '1', data_type => 'VARCHAR(255)' },
-	"target", { data_type => 'VARCHAR(255)', is_nullable => '1' },
-	"id", { is_nullable => '0', data_type => 'BIGINT' },
+	"target", { is_nullable => '1', data_type => 'VARCHAR(255)' },
+	"id", { data_type => 'BIGINT', is_nullable => '0' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');

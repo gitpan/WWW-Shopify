@@ -10,10 +10,10 @@ __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
 
 __PACKAGE__->table('shopify_carts');
 __PACKAGE__->add_columns(
-	"token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
 	"note", { is_nullable => '1', data_type => 'TEXT' },
-	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"updated_at", { is_nullable => '1', data_type => 'DATETIME' },
+	"token", { data_type => 'VARCHAR(255)', is_nullable => '1' },
+	"id", { is_nullable => '0', data_type => 'BIGINT' },
 	"shop_id", { data_type => "BIGINT" }
 );
 __PACKAGE__->set_primary_key('id');
